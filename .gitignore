@@ -1,0 +1,10 @@
+# Ignorar dependencias
+node_modules/
+.env
+.expo/
+.expo-shared/
+package-lock.json
+
+# Archivos temporales
+*.log
+.DS_Store

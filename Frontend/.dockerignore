@@ -1,0 +1,24 @@
+# Ignorar dependencias instaladas
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Archivos y carpetas comunes que no deben ir al contenedor
+.git
+.gitignore
+.dockerignore
+.env
+*.log
+
+# Archivos del sistema o editores
+.DS_Store
+.vscode
+.idea
+
+# Assets grandes (si no los necesitas en el contenedor)
+*.jpg
+*.jpeg
+*.mp4
+*.webp
+
