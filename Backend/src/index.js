@@ -36,7 +36,17 @@ app.use((err, req, res, next) => {
 });
 
 //init de servidor
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
+
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    message: 'Backend funcionando', 
+    routes: {
+      auth: '/api/auth',
+      casos: '/api/casos'
+    }
+  });
 });

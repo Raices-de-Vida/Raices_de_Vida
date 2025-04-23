@@ -1,15 +1,23 @@
+version: '3.9'
+
 services:
   backend:
+    container_name: raices_backend
     build: ./Backend
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
       - DB_HOST=db
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=Proyecto1
     depends_on:
       db:
         condition: service_healthy
+    restart: always
 
   frontend:
+    container_name: raices_frontend
     build: ./Frontend
     ports:
       - "19006:19006"
@@ -17,8 +25,12 @@ services:
       - ./Frontend:/app
     stdin_open: true
     tty: true
+    depends_on:
+      - backend
+    restart: always
 
   db:
+    container_name: raices_db
     image: postgres:13
     environment:
       - POSTGRES_DB=Proyecto1
@@ -33,7 +45,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: always
 
 volumes:
   postgres_data:
-
