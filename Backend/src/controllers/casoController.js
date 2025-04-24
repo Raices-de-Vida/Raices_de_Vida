@@ -35,7 +35,7 @@ exports.getAllCasos = async (req, res) => {
     const casos = await CasoCritico.findAll();
     res.json(casos);
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener casos críticos' });
+    res.status(500).json({ error: 'Error al obtener casos de desnutricion' });
   }
 };
 

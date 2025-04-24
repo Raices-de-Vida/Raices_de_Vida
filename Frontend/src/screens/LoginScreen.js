@@ -23,7 +23,7 @@ export default function LoginScreen({ navigation }) {
   
     if (email.trim() && password.trim()) {
       try { 
-        const response = await axios.post("192.168.32.1:3001/api/auth/login", {
+        const response = await axios.post("192.168.2.1:3001/api/auth/login", {
           email,
           password
         });

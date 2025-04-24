@@ -5,6 +5,7 @@ const Comunidad = require('./Comunidad');
 const Familia = require('./Familia');
 const Nino = require('./Nino');
 const CasoCritico = require('./CasoCritico');
+const Alerta = require('./Alerta');
 
 // Relación Usuario a ONG/Voluntario
 User.belongsTo(Ong, {
@@ -40,6 +41,28 @@ Familia.hasMany(CasoCritico, { foreignKey: 'id_familia' });
 
 CasoCritico.belongsTo(Nino, { foreignKey: 'id_nino' });
 Nino.hasMany(CasoCritico, { foreignKey: 'id_nino' });
+
+Alerta.belongsTo(CasoCritico, { 
+  foreignKey: 'caso_id',
+  as: 'caso' 
+});
+
+CasoCritico.hasMany(Alerta, { 
+  foreignKey: 'caso_id',
+  as: 'alertas' 
+});
+
+Alerta.belongsTo(User, { 
+  foreignKey: 'usuario_id',
+  targetKey: 'usuario_id', // Asegúrate de que coincida con la PK de Usuarios
+  as: 'usuario' 
+});
+
+User.hasMany(Alerta, { 
+  foreignKey: 'usuario_id',
+  sourceKey: 'usuario_id', // Debe coincidir con la PK de Usuarios
+  as: 'alertas_generadas' 
+});
 
 module.exports = {
   setupAssociations: () => {

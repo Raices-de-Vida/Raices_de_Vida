@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const sequelize = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const casoRoutes = require('./routes/casoRoutes');
+const alertaRoutes = require('./routes/alertaRoutes'); 
 
 dotenv.config();
 
@@ -12,41 +13,44 @@ app.use(express.json());
 const cors = require('cors');
 app.use(cors({ origin: '*', credentials: true }));
 
-//conexión a PostgreSQL
+// Conexión a PostgreSQL
 (async () => {
   try {
     await sequelize.authenticate();
     console.log('Conexión a PostgreSQL exitosa');
 
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: true }); // Usamos alter para mantener datos existentes
     console.log('Modelos sincronizados');
   } catch (error) {
     console.error('Error en la base de datos:', error);
   }
 })();
 
-//config rutas
-app.use('/api/auth', authRoutes); // Autenticación
-app.use('/api/casos', casoRoutes); // Rutas de casos críticos
+// Configuración de rutas
+app.use('/api/auth', authRoutes);    // Autenticación
+app.use('/api/casos', casoRoutes);   // Casos críticos
+app.use('/api/alertas', alertaRoutes); 
 
-//manejo de errores
+// Manejo de errores
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);
   res.status(500).json({ error: 'Error interno del servidor' });
 });
 
-//init de servidor
+// Inicio del servidor
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
 
+// Ruta raíz con documentación básica
 app.get('/', (req, res) => {
   res.status(200).json({ 
     message: 'Backend funcionando', 
     routes: {
       auth: '/api/auth',
-      casos: '/api/casos'
+      casos: '/api/casos',
+      alertas: '/api/alertas' // Nueva ruta documentada
     }
   });
 });
