@@ -53,14 +53,14 @@ CasoCritico.hasMany(Alerta, {
 });
 
 Alerta.belongsTo(User, { 
-  foreignKey: 'usuario_id',
-  targetKey: 'usuario_id', // Asegúrate de que coincida con la PK de Usuarios
+  foreignKey: 'id_usuario',
+  targetKey: 'id_usuario', // Asegúrate de que coincida con la PK de Usuarios
   as: 'usuario' 
 });
 
 User.hasMany(Alerta, { 
-  foreignKey: 'usuario_id',
-  sourceKey: 'usuario_id', // Debe coincidir con la PK de Usuarios
+  foreignKey: 'id_usuario',
+  sourceKey: 'id_usuario', // Debe coincidir con la PK de Usuarios
   as: 'alertas_generadas' 
 });
 

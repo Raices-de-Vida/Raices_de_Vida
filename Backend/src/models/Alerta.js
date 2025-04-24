@@ -51,7 +51,7 @@ const Alerta = sequelize.define('Alertas', {
     allowNull: false,
     references: {
       model: 'Usuarios', // Relación con Usuarios (quien reporta la alerta)
-      key: 'usuario_id'
+      key: 'id_usuario'
     }
   },
   observaciones: {
