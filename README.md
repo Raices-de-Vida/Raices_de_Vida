@@ -7,3 +7,5 @@ Tener en cuenta que expo tiene que estar descargado, esto se hace con: npm insta
 Dentro de la carpeta Frontend, tambien se escribe:  npm install --legacy-peer-deps
 
 Adicionalmente, una vez todos los sistemas estan funcionando (docker compose up -d), dentro de la carpeta de Frontend se pone npx expo start. Ahi el programa arrancara :)
+
+instalar npm install @react-native-async-storage/async-storage
