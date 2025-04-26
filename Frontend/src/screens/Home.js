@@ -2,11 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons, Entypo, AntDesign, FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
+import { useTheme } from '../context/ThemeContext';
+import { getTheme } from '../styles/theme';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function Home({ navigation, route }) {
   const [activo, setActivo] = useState(true);
   const [alertas, setAlertas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { isDarkMode } = useTheme();
+  const theme = getTheme(isDarkMode);
 
   // Función para cargar alertas desde la API
   const fetchAlertas = async () => {
@@ -16,7 +21,7 @@ export default function Home({ navigation, route }) {
       // const token = await AsyncStorage.getItem('token');
       
       // Usamos una URL de ejemplo, en producción deberías usar variables de entorno
-      const response = await axios.get('http://192.168.2.1:3001/api/alertas');
+      const response = await axios.get('http://IP:3001/api/alertas');
       
       // Filtrar alertas según el estado activo/inactivo
       const alertasFiltradas = response.data.filter(alerta => 
@@ -76,82 +81,102 @@ export default function Home({ navigation, route }) {
   const renderAlertItem = (alerta) => (
     <TouchableOpacity 
       key={alerta.alerta_id} 
-      style={styles.alertItem}
+      style={[styles.alertItem, { backgroundColor: theme.card, borderLeftColor: theme.primaryButton }]}
       onPress={() => handleEditAlert(alerta)}
     >
       <AntDesign name="exclamationcircle" size={28} color="red" style={{ marginRight: 10 }} />
       <View style={{ flex: 1 }}>
-        <Text style={styles.alertName}>{alerta.nombre}</Text>
-        <Text style={styles.alertDesc}>{alerta.descripcion}</Text>
-        <Text style={styles.alertComunidad}>
+        <Text style={[styles.alertName, { color: theme.text }]}>{alerta.nombre}</Text>
+        <Text style={[styles.alertDesc, { color: theme.secondaryText }]}>{alerta.descripcion}</Text>
+        <Text style={[styles.alertComunidad, { color: theme.secondaryText }]}>
           {alerta.comunidad} {alerta.edad ? `• ${alerta.edad} años` : ''}
         </Text>
       </View>
-      <Text style={[styles.alertStatus, 
-        { color: alerta.estado === 'Pendiente' ? '#FF6B6B' : 
-                 alerta.estado === 'Atendida' ? '#4CAF50' : '#FF9800' }]}>
+      <Text style={[
+        styles.alertStatus, 
+        { color: alerta.estado === 'Pendiente' ? theme.pendingStatus : 
+                 alerta.estado === 'Atendida' ? theme.attendedStatus : 
+                 theme.derivedStatus }]}>
         {alerta.estado}
       </Text>
     </TouchableOpacity>
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: 'white' }}>
-      <ScrollView contentContainerStyle={styles.container}>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      <ThemeToggle />
+      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Home</Text>
+        <View style={[styles.header, { backgroundColor: theme.header }]}>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Home</Text>
         </View>
 
         {/* Sección de Alertas */}
         <View style={styles.alertSection}>
-          <Text style={styles.alertTitle}>Alertas</Text>
+          <Text style={[styles.alertTitle, { color: theme.text }]}>Alertas</Text>
 
           {/* Switch Activos/Inactivos */}
-          <View style={styles.switchContainer}>
+          <View style={[styles.switchContainer, { backgroundColor: theme.switchInactive }]}>
             <TouchableOpacity
-              style={[styles.switchButton, activo && styles.switchButtonActive]}
+              style={[
+                styles.switchButton, 
+                activo && { backgroundColor: theme.switchActive }
+              ]}
               onPress={() => setActivo(true)}
             >
-              <Text style={[styles.switchText, activo && styles.switchTextActive]}>Activos</Text>
+              <Text style={[
+                styles.switchText, 
+                { color: activo ? '#fff' : theme.secondaryText }
+              ]}>Activos</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.switchButton, !activo && styles.switchButtonActive]}
+              style={[
+                styles.switchButton, 
+                !activo && { backgroundColor: theme.switchActive }
+              ]}
               onPress={() => setActivo(false)}
             >
-              <Text style={[styles.switchText, !activo && styles.switchTextActive]}>Inactivos</Text>
+              <Text style={[
+                styles.switchText, 
+                { color: !activo ? '#fff' : theme.secondaryText }
+              ]}>Inactivos</Text>
             </TouchableOpacity>
           </View>
 
           {/* Lista de Alertas */}
           {loading ? (
-            <ActivityIndicator size="large" color="#E8A074" style={{ marginVertical: 20 }} />
+            <ActivityIndicator size="large" color={theme.primaryButton} style={{ marginVertical: 20 }} />
           ) : alertas.length === 0 ? (
-            <Text style={styles.noAlertsText}>No hay alertas {activo ? 'activas' : 'inactivas'} por el momento.</Text>
+            <Text style={[styles.noAlertsText, { color: theme.secondaryText }]}>No hay alertas {activo ? 'activas' : 'inactivas'} por el momento.</Text>
           ) : (
             alertas.map(renderAlertItem)
           )}
 
           {/* Botón Ver Más */}
           {alertas.length > 0 && (
-            <TouchableOpacity style={styles.seeMoreButton}>
-              <Text style={styles.seeMoreText}>VER MÁS</Text>
+            <TouchableOpacity 
+              style={[
+                styles.seeMoreButton, 
+                { borderColor: theme.text }
+              ]}
+            >
+              <Text style={[styles.seeMoreText, { color: theme.text }]}>VER MÁS</Text>
             </TouchableOpacity>
           )}
         </View>
       </ScrollView>
 
       {/* Barra inferior */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { backgroundColor: theme.background, borderColor: theme.borderColor }]}>
         <TouchableOpacity>
-          <Ionicons name="home" size={28} color="black" />
+          <Ionicons name="home" size={28} color={theme.text} />
         </TouchableOpacity>
         <TouchableOpacity>
-          <Ionicons name="search-outline" size={28} color="black" />
+          <Ionicons name="search-outline" size={28} color={theme.text} />
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: theme.addButton }]}
           onPress={handleCreateAlert}
         >
           <Entypo name="plus" size={28} color="white" />
@@ -161,7 +186,7 @@ export default function Home({ navigation, route }) {
           <AntDesign name="exclamationcircle" size={28} color="red" />
         </TouchableOpacity>
         <TouchableOpacity>
-          <FontAwesome name="user-o" size={28} color="black" />
+          <FontAwesome name="user-o" size={28} color={theme.text} />
         </TouchableOpacity>
       </View>
     </View>
@@ -171,12 +196,10 @@ export default function Home({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: 'white',
     flexGrow: 1,
     paddingBottom: 100,
   },
   header: {
-    backgroundColor: '#FFE7A0',
     height: 80,
     borderRadius: 10,
     alignItems: 'center',
@@ -198,7 +221,6 @@ const styles = StyleSheet.create({
   },
   switchContainer: {
     flexDirection: 'row',
-    backgroundColor: '#f0f0f0',
     borderRadius: 25,
     overflow: 'hidden',
     marginBottom: 20,
@@ -208,15 +230,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     alignItems: 'center',
   },
-  switchButtonActive: {
-    backgroundColor: '#F3B27A',
-  },
   switchText: {
-    color: 'gray',
     fontWeight: 'bold',
-  },
-  switchTextActive: {
-    color: 'white',
   },
   alertItem: {
     flexDirection: 'row',
@@ -224,21 +239,17 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingVertical: 10,
     paddingHorizontal: 15,
-    backgroundColor: '#F8F8F8',
     borderRadius: 10,
     borderLeftWidth: 4,
-    borderLeftColor: '#E8A074',
   },
   alertName: {
     fontSize: 16,
     fontWeight: 'bold',
   },
   alertDesc: {
-    color: 'gray',
     marginTop: 2,
   },
   alertComunidad: {
-    color: 'gray',
     fontSize: 12,
     marginTop: 2,
   },
@@ -248,7 +259,6 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   noAlertsText: {
-    color: 'gray',
     fontStyle: 'italic',
     marginVertical: 20,
     textAlign: 'center',
@@ -256,7 +266,6 @@ const styles = StyleSheet.create({
   seeMoreButton: {
     marginTop: 20,
     borderWidth: 1,
-    borderColor: 'black',
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
@@ -274,11 +283,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 60,
     borderTopWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: 'white',
   },
   addButton: {
-    backgroundColor: '#E8A074',
     width: 50,
     height: 50,
     borderRadius: 25,

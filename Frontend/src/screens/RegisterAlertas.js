@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons, Entypo, AntDesign, FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
+import { useTheme } from '../context/ThemeContext';
+import { getTheme } from '../styles/theme';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function RegisterAlertas({ navigation }) {
   const [nombre, setNombre] = useState('');
@@ -10,6 +13,8 @@ export default function RegisterAlertas({ navigation }) {
   const [comunidad, setComunidad] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [loading, setLoading] = useState(false);
+  const { isDarkMode } = useTheme();
+  const theme = getTheme(isDarkMode);
 
   const limpiarFormulario = () => {
     setNombre('');
@@ -63,7 +68,7 @@ export default function RegisterAlertas({ navigation }) {
         estado: 'Pendiente'
       };
 
-      await axios.post('http://192.168.2.1:3001/api/alertas', nuevaAlerta);
+      await axios.post('http://IP:3001/api/alertas', nuevaAlerta);
 
       Alert.alert(
         "Éxito",
@@ -89,85 +94,92 @@ export default function RegisterAlertas({ navigation }) {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: 'white' }}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      <ThemeToggle />
+      
+      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={[styles.header, { backgroundColor: theme.header }]}>
           <TouchableOpacity 
             style={styles.backButton}
             onPress={handleCancel}
           >
-            <Ionicons name="arrow-back" size={24} color="black" />
+            <Ionicons name="arrow-back" size={24} color={theme.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Crear Alerta</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Crear Alerta</Text>
           <View style={styles.placeholder} />
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Nombre: <Text style={styles.required}>*</Text></Text>
-          <View style={styles.inputBox}>
+          <Text style={[styles.label, { color: theme.text }]}>Nombre: <Text style={styles.required}>*</Text></Text>
+          <View style={[styles.inputBox, { backgroundColor: theme.inputBackground }]}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: theme.text }]}
               placeholder="Nombre de la persona"
               value={nombre}
               onChangeText={setNombre}
+              placeholderTextColor={isDarkMode ? '#888' : '#999'}
             />
             <TouchableOpacity onPress={() => setNombre('')}>
-              <Ionicons name="close-circle-outline" size={24} color="black" />
+              <Ionicons name="close-circle-outline" size={24} color={theme.text} />
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.label}>Edad:</Text>
-          <View style={styles.inputBox}>
+          <Text style={[styles.label, { color: theme.text }]}>Edad:</Text>
+          <View style={[styles.inputBox, { backgroundColor: theme.inputBackground }]}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: theme.text }]}
               placeholder="Edad"
               value={edad}
               onChangeText={setEdad}
               keyboardType="numeric"
+              placeholderTextColor={isDarkMode ? '#888' : '#999'}
             />
             <TouchableOpacity onPress={() => setEdad('')}>
-              <Ionicons name="close-circle-outline" size={24} color="black" />
+              <Ionicons name="close-circle-outline" size={24} color={theme.text} />
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.label}>Ubicación:</Text>
-          <View style={styles.inputBox}>
+          <Text style={[styles.label, { color: theme.text }]}>Ubicación:</Text>
+          <View style={[styles.inputBox, { backgroundColor: theme.inputBackground }]}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: theme.text }]}
               placeholder="Ubicación específica"
               value={ubicacion}
               onChangeText={setUbicacion}
+              placeholderTextColor={isDarkMode ? '#888' : '#999'}
             />
             <TouchableOpacity onPress={() => setUbicacion('')}>
-              <Ionicons name="close-circle-outline" size={24} color="black" />
+              <Ionicons name="close-circle-outline" size={24} color={theme.text} />
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.label}>Comunidad: <Text style={styles.required}>*</Text></Text>
-          <View style={styles.inputBox}>
+          <Text style={[styles.label, { color: theme.text }]}>Comunidad: <Text style={styles.required}>*</Text></Text>
+          <View style={[styles.inputBox, { backgroundColor: theme.inputBackground }]}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: theme.text }]}
               placeholder="Comunidad"
               value={comunidad}
               onChangeText={setComunidad}
+              placeholderTextColor={isDarkMode ? '#888' : '#999'}
             />
             <TouchableOpacity onPress={() => setComunidad('')}>
-              <Ionicons name="close-circle-outline" size={24} color="black" />
+              <Ionicons name="close-circle-outline" size={24} color={theme.text} />
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.label}>Descripción de la emergencia: <Text style={styles.required}>*</Text></Text>
-          <View style={styles.inputBoxLarge}>
+          <Text style={[styles.label, { color: theme.text }]}>Descripción de la emergencia: <Text style={styles.required}>*</Text></Text>
+          <View style={[styles.inputBoxLarge, { backgroundColor: theme.inputBackground }]}>
             <TextInput
-              style={styles.inputLarge}
+              style={[styles.inputLarge, { color: theme.text }]}
               placeholder="Describe la situación"
               value={descripcion}
               onChangeText={setDescripcion}
               multiline
               numberOfLines={4}
+              placeholderTextColor={isDarkMode ? '#888' : '#999'}
             />
             <TouchableOpacity onPress={() => setDescripcion('')}>
-              <Ionicons name="close-circle-outline" size={24} color="black" />
+              <Ionicons name="close-circle-outline" size={24} color={theme.text} />
             </TouchableOpacity>
           </View>
 
@@ -175,14 +187,14 @@ export default function RegisterAlertas({ navigation }) {
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
-              style={styles.cancelButton}
+              style={[styles.cancelButton, { backgroundColor: theme.primaryButton }]}
               onPress={handleCancel}
               disabled={loading}
             >
               <Text style={styles.buttonText}>CANCELAR</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={styles.createButton}
+              style={[styles.createButton, { backgroundColor: theme.primaryButton }]}
               onPress={handleCreate}
               disabled={loading}
             >
@@ -197,15 +209,15 @@ export default function RegisterAlertas({ navigation }) {
       </ScrollView>
 
       {/* Barra inferior */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { backgroundColor: theme.background, borderColor: theme.borderColor }]}>
         <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-          <Ionicons name="home-outline" size={28} color="black" />
+          <Ionicons name="home-outline" size={28} color={theme.text} />
         </TouchableOpacity>
         <TouchableOpacity>
-          <Ionicons name="search-outline" size={28} color="black" />
+          <Ionicons name="search-outline" size={28} color={theme.text} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity style={[styles.addButton, { backgroundColor: theme.addButton }]}>
           <Entypo name="plus" size={28} color="white" />
         </TouchableOpacity>
 
@@ -213,7 +225,7 @@ export default function RegisterAlertas({ navigation }) {
           <AntDesign name="exclamationcircle" size={28} color="red" />
         </TouchableOpacity>
         <TouchableOpacity>
-          <FontAwesome name="user-o" size={28} color="black" />
+          <FontAwesome name="user-o" size={28} color={theme.text} />
         </TouchableOpacity>
       </View>
     </View>
@@ -223,12 +235,10 @@ export default function RegisterAlertas({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: 'white',
     flexGrow: 1,
     paddingBottom: 100,
   },
   header: {
-    backgroundColor: '#FFE7A0',
     height: 80,
     borderRadius: 10,
     flexDirection: 'row',
@@ -269,7 +279,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   inputBox: {
-    backgroundColor: '#D9F5B7',
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
@@ -282,7 +291,6 @@ const styles = StyleSheet.create({
     height: 40,
   },
   inputBoxLarge: {
-    backgroundColor: '#D9F5B7',
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -302,7 +310,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   cancelButton: {
-    backgroundColor: '#E8A074',
     padding: 15,
     borderRadius: 8,
     flex: 1,
@@ -310,7 +317,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   createButton: {
-    backgroundColor: '#E8A074',
     padding: 15,
     borderRadius: 8,
     flex: 1,
@@ -331,11 +337,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 60,
     borderTopWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: 'white',
   },
   addButton: {
-    backgroundColor: '#E8A074',
     width: 50,
     height: 50,
     borderRadius: 25,

@@ -8,6 +8,9 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
+import { getTheme } from '../styles/theme';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState('');
@@ -17,6 +20,8 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const { isDarkMode } = useTheme();
+  const theme = getTheme(isDarkMode);
 
   const isEmpty = (value) => submitted && value.trim() === '';
 
@@ -37,7 +42,7 @@ export default function RegisterScreen({ navigation }) {
         return;
       }
 
-      const response = await axios.post('http://192.168.249.99:3000/api/auth/register', {
+      const response = await axios.post('http://IP:3001/api/auth/register', {
         nombre: name,
         apellido: 'SinApellido',
         email,
@@ -56,68 +61,133 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Crear cuenta</Text>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
+      <ThemeToggle />
+      
+      <Text style={[styles.title, { color: theme.text }]}>Crear cuenta</Text>
 
       <TextInput
-        style={[styles.input, isEmpty(name) && styles.errorInput]}
+        style={[
+          styles.input, 
+          isEmpty(name) && styles.errorInput,
+          { 
+            borderColor: isEmpty(name) ? 'red' : theme.inputBorder,
+            backgroundColor: theme.inputBackground,
+            color: theme.text
+          }
+        ]}
         placeholder="Nombre completo"
         value={name}
         onChangeText={setName}
-        placeholderTextColor="#999"
+        placeholderTextColor={isDarkMode ? '#888' : '#999'}
       />
+      
       <TextInput
-        style={[styles.input, isEmpty(phone) && styles.errorInput]}
+        style={[
+          styles.input, 
+          isEmpty(phone) && styles.errorInput,
+          { 
+            borderColor: isEmpty(phone) ? 'red' : theme.inputBorder,
+            backgroundColor: theme.inputBackground,
+            color: theme.text
+          }
+        ]}
         placeholder="Teléfono"
         value={phone}
         onChangeText={setPhone}
         keyboardType="phone-pad"
-        placeholderTextColor="#999"
+        placeholderTextColor={isDarkMode ? '#888' : '#999'}
       />
+      
       <TextInput
-        style={[styles.input, isEmpty(dpi) && styles.errorInput]}
+        style={[
+          styles.input, 
+          isEmpty(dpi) && styles.errorInput,
+          { 
+            borderColor: isEmpty(dpi) ? 'red' : theme.inputBorder,
+            backgroundColor: theme.inputBackground,
+            color: theme.text
+          }
+        ]}
         placeholder="DPI"
         value={dpi}
         onChangeText={setDpi}
         keyboardType="numeric"
-        placeholderTextColor="#999"
+        placeholderTextColor={isDarkMode ? '#888' : '#999'}
       />
-      <Text style={styles.optional}>O ingresa tu correo electrónico</Text>
+      
+      <Text style={[styles.optional, { color: theme.secondaryText }]}>
+        O ingresa tu correo electrónico
+      </Text>
+      
       <TextInput
-        style={[styles.input, isEmpty(email) && styles.errorInput]}
+        style={[
+          styles.input, 
+          isEmpty(email) && styles.errorInput,
+          { 
+            borderColor: isEmpty(email) ? 'red' : theme.inputBorder,
+            backgroundColor: theme.inputBackground,
+            color: theme.text
+          }
+        ]}
         placeholder="Correo electrónico"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
-        placeholderTextColor="#999"
+        placeholderTextColor={isDarkMode ? '#888' : '#999'}
       />
+      
       <TextInput
-        style={[styles.input, isEmpty(password) && styles.errorInput]}
+        style={[
+          styles.input, 
+          isEmpty(password) && styles.errorInput,
+          { 
+            borderColor: isEmpty(password) ? 'red' : theme.inputBorder,
+            backgroundColor: theme.inputBackground,
+            color: theme.text
+          }
+        ]}
         placeholder="Contraseña"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
-        placeholderTextColor="#999"
+        placeholderTextColor={isDarkMode ? '#888' : '#999'}
       />
+      
       <TextInput
-        style={[styles.input, isEmpty(confirmPassword) && styles.errorInput]}
+        style={[
+          styles.input, 
+          isEmpty(confirmPassword) && styles.errorInput,
+          { 
+            borderColor: isEmpty(confirmPassword) ? 'red' : theme.inputBorder,
+            backgroundColor: theme.inputBackground,
+            color: theme.text
+          }
+        ]}
         placeholder="Confirmar contraseña"
         secureTextEntry
         value={confirmPassword}
         onChangeText={setConfirmPassword}
-        placeholderTextColor="#999"
+        placeholderTextColor={isDarkMode ? '#888' : '#999'}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+      <TouchableOpacity 
+        style={[styles.button, { backgroundColor: theme.primaryButton }]} 
+        onPress={handleRegister}
+      >
         <Text style={styles.buttonText}>Registrarme</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.link}>¿Ya tienes cuenta? Inicia sesión</Text>
+        <Text style={[styles.link, { color: theme.secondaryButton }]}>
+          ¿Ya tienes cuenta? Inicia sesión
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Terms')}>
-        <Text style={styles.termsLink}>Términos y condiciones</Text>
+        <Text style={[styles.termsLink, { color: theme.secondaryButton }]}>
+          Términos y condiciones
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -126,7 +196,6 @@ export default function RegisterScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
@@ -136,29 +205,24 @@ const styles = StyleSheet.create({
     fontSize: 24,
     marginBottom: 25,
     fontWeight: 'bold',
-    color: '#1B1F3B',
   },
   optional: {
     fontSize: 12,
-    color: '#6D6D6D',
     marginBottom: 4,
     alignSelf: 'flex-start',
     marginLeft: 5,
   },
   input: {
     width: '100%',
-    backgroundColor: '#fff',
     padding: 12,
     marginBottom: 15,
     borderRadius: 8,
-    borderColor: '#2E7D32',
     borderWidth: 1,
   },
   errorInput: {
     borderColor: 'red',
   },
   button: {
-    backgroundColor: '#F4A261',
     paddingVertical: 14,
     paddingHorizontal: 100,
     borderRadius: 8,
@@ -171,13 +235,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   link: {
-    color: '#2E7D32',
     marginTop: 15,
     textDecorationLine: 'underline',
     fontSize: 14,
   },
   termsLink: {
-    color: '#2E7D32',
     marginTop: 5,
     fontSize: 13,
   },

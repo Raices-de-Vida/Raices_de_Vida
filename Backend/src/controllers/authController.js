@@ -52,20 +52,31 @@ const Voluntario = require('../models/Voluntarios');
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('Intento de inicio de sesión:', email); // Añadir log para depuración
+    
     const user = await User.findOne({ where: { email } });
+    if (!user) {
+      console.log('Usuario no encontrado:', email);
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
 
-    if (!user || !(await user.validPassword(password))) {
+    const jwtSecret = process.env.JWT_SECRET || 'default_secret_key_temporal';
+    
+    const isValid = await user.validPassword(password);
+    if (!isValid) {
+      console.log('Contraseña incorrecta para:', email);
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
     const token = jwt.sign(
       { id: user.id_usuario, rol: user.rol },
-      process.env.JWT_SECRET,
+      jwtSecret,
       { expiresIn: '1h' }
     );
 
     res.json({ token });
   } catch (error) {
+    console.error('Error en inicio de sesión:', error);
     res.status(500).json({ error: 'Error en el servidor' });
   }
 };
