@@ -16,7 +16,7 @@ export default function LoginScreen({ navigation }) {
 
   const isEmpty = (value) => submitted && value.trim() === '';
   const handleLogin = async () => {
-    alert('Se presionó el botón de login'); // Confirmación visual rápida
+    alert('Se presionó el botón de login');
     console.log('Enviando datos:', { email, password });
   
     setSubmitted(true);
@@ -62,10 +62,6 @@ export default function LoginScreen({ navigation }) {
     }
   };
   
-  
-
-
-
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Iniciar sesión</Text>

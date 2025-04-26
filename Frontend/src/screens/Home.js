@@ -1,16 +1,103 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons, Entypo, AntDesign, FontAwesome } from '@expo/vector-icons';
+import axios from 'axios';
 
-export default function App() {
+export default function Home({ navigation, route }) {
   const [activo, setActivo] = useState(true);
+  const [alertas, setAlertas] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const alertas = []; // <-- Lista vacía ahora
+  // Función para cargar alertas desde la API
+  const fetchAlertas = async () => {
+    setLoading(true);
+    try {
+      // En un entorno real, debes usar un token almacenado en AsyncStorage
+      // const token = await AsyncStorage.getItem('token');
+      
+      // Usamos una URL de ejemplo, en producción deberías usar variables de entorno
+      const response = await axios.get('http://192.168.2.1:3001/api/alertas');
+      
+      // Filtrar alertas según el estado activo/inactivo
+      const alertasFiltradas = response.data.filter(alerta => 
+        activo ? alerta.estado !== 'Cerrada' : alerta.estado === 'Cerrada'
+      );
+      
+      setAlertas(alertasFiltradas);
+    } catch (error) {
+      console.error('Error al cargar alertas:', error);
+      // Si estamos en desarrollo, añadimos datos de prueba cuando la API falla
+      if (__DEV__) {
+        setAlertas([
+          {
+            alerta_id: 1,
+            nombre: 'Juan Pérez',
+            descripcion: 'Caso urgente de desnutrición',
+            comunidad: 'San Pedro Ayampuc',
+            edad: 4,
+            estado: 'Pendiente'
+          },
+          {
+            alerta_id: 2,
+            nombre: 'María López',
+            descripcion: 'Requiere asistencia médica',
+            comunidad: 'Villa Nueva',
+            edad: 7,
+            estado: 'Atendida'
+          }
+        ]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAlertas();
+  }, [activo]);
+
+  //efecto para actualizar cuando regresamos de otra pantalla
+  useEffect(() => {
+    if (route.params?.refresh) {
+      fetchAlertas();
+    }
+  }, [route.params?.refresh]);
+
+  //navegación a pantalla de crear alerta
+  const handleCreateAlert = () => {
+    navigation.navigate('RegisterAlertas');
+  };
+
+  //navegación a pantalla de editar alerta
+  const handleEditAlert = (alerta) => {
+    navigation.navigate('EditarAlerta', { alerta });
+  };
+
+  const renderAlertItem = (alerta) => (
+    <TouchableOpacity 
+      key={alerta.alerta_id} 
+      style={styles.alertItem}
+      onPress={() => handleEditAlert(alerta)}
+    >
+      <AntDesign name="exclamationcircle" size={28} color="red" style={{ marginRight: 10 }} />
+      <View style={{ flex: 1 }}>
+        <Text style={styles.alertName}>{alerta.nombre}</Text>
+        <Text style={styles.alertDesc}>{alerta.descripcion}</Text>
+        <Text style={styles.alertComunidad}>
+          {alerta.comunidad} {alerta.edad ? `• ${alerta.edad} años` : ''}
+        </Text>
+      </View>
+      <Text style={[styles.alertStatus, 
+        { color: alerta.estado === 'Pendiente' ? '#FF6B6B' : 
+                 alerta.estado === 'Atendida' ? '#4CAF50' : '#FF9800' }]}>
+        {alerta.estado}
+      </Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <ScrollView contentContainerStyle={styles.container}>
-        
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Home</Text>
@@ -37,40 +124,36 @@ export default function App() {
           </View>
 
           {/* Lista de Alertas */}
-          {alertas.length === 0 ? (
-            <Text style={styles.noAlertsText}>No hay alertas por el momento.</Text>
+          {loading ? (
+            <ActivityIndicator size="large" color="#E8A074" style={{ marginVertical: 20 }} />
+          ) : alertas.length === 0 ? (
+            <Text style={styles.noAlertsText}>No hay alertas {activo ? 'activas' : 'inactivas'} por el momento.</Text>
           ) : (
-            alertas.map((alerta) => (
-              <View key={alerta.id} style={styles.alertItem}>
-                <AntDesign name="exclamationcircle" size={28} color="red" style={{ marginRight: 10 }} />
-                <View>
-                  <Text style={styles.alertName}>{alerta.nombre}</Text>
-                  <Text style={styles.alertDesc}>{alerta.descripcion}</Text>
-                  <Text style={styles.alertComunidad}>{alerta.comunidad}</Text>
-                </View>
-              </View>
-            ))
+            alertas.map(renderAlertItem)
           )}
 
-          {/* Botón See More */}
-          <TouchableOpacity style={styles.seeMoreButton}>
-            <Text style={styles.seeMoreText}>SEE MORE</Text>
-          </TouchableOpacity>
-
+          {/* Botón Ver Más */}
+          {alertas.length > 0 && (
+            <TouchableOpacity style={styles.seeMoreButton}>
+              <Text style={styles.seeMoreText}>VER MÁS</Text>
+            </TouchableOpacity>
+          )}
         </View>
-
       </ScrollView>
 
       {/* Barra inferior */}
       <View style={styles.bottomNav}>
         <TouchableOpacity>
-          <Ionicons name="home-outline" size={28} color="black" />
+          <Ionicons name="home" size={28} color="black" />
         </TouchableOpacity>
         <TouchableOpacity>
           <Ionicons name="search-outline" size={28} color="black" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity 
+          style={styles.addButton}
+          onPress={handleCreateAlert}
+        >
           <Entypo name="plus" size={28} color="white" />
         </TouchableOpacity>
 
@@ -139,6 +222,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 10,
+    borderLeftWidth: 4,
+    borderLeftColor: '#E8A074',
   },
   alertName: {
     fontSize: 16,
@@ -152,6 +241,11 @@ const styles = StyleSheet.create({
     color: 'gray',
     fontSize: 12,
     marginTop: 2,
+  },
+  alertStatus: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    padding: 5,
   },
   noAlertsText: {
     color: 'gray',
@@ -171,6 +265,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   bottomNav: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
@@ -187,5 +285,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: -30,
+    elevation: 5,
   },
 });
