@@ -54,7 +54,7 @@ export default function RegisterScreen({ navigation }) {
 
       console.log(' Usuario registrado:', response.data);
       alert('Registro exitoso');
-      navigation.navigate('Login');
+      navigation.replace('Home');
     } else {
       alert('Por favor llena todos los campos');
     }

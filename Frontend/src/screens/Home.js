@@ -21,7 +21,7 @@ export default function Home({ navigation, route }) {
       // const token = await AsyncStorage.getItem('token');
       
       // Usamos una URL de ejemplo, en producción deberías usar variables de entorno
-      const response = await axios.get('http://IP:3001/api/alertas');
+      const response = await axios.get('http://IP:3001/api/alertas'); 
       
       // Filtrar alertas según el estado activo/inactivo
       const alertasFiltradas = response.data.filter(alerta => 

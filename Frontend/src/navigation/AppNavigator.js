@@ -23,7 +23,7 @@ function AppStack() {
         backgroundColor={isDarkMode ? '#121212' : '#FFFFFF'} 
       />
       <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
-        <Stack.Navigator initialRouteName="Home" 
+        <Stack.Navigator initialRouteName="Welcome" 
           screenOptions={{ 
             headerShown: false,
             animation: 'slide_from_right' 

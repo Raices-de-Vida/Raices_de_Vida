@@ -35,7 +35,7 @@ export default function LoginScreen({ navigation }) {
   
         console.log('Login correcto:', response.data);
         
-        navigation.navigate('Home');
+        navigation.replace('Home');
   
       } catch (err) {
         console.error('Error de login completo:', err);
