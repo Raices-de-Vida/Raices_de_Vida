@@ -18,6 +18,11 @@ export const lightTheme = {
     pendingStatus: '#FF6B6B',
     attendedStatus: '#4CAF50',
     derivedStatus: '#FF9800',
+
+    toastSuccess: '#4CAF50',
+    toastError: '#F44336',
+    toastInfo: '#2196F3',
+    toastText: 'white',
   };
   
   export const darkTheme = {
@@ -40,6 +45,11 @@ export const lightTheme = {
     pendingStatus: '#D32F2F',
     attendedStatus: '#388E3C',
     derivedStatus: '#F57C00',
+
+    toastSuccess: '#388E3C',
+    toastError: '#D32F2F',
+    toastInfo: '#1976D2',
+    toastText: 'white',
   };
   
   export const getTheme = (isDarkMode) => {

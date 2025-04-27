@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import ThemeToggle from '../components/ThemeToggle';
+import { CustomToast, ToastTypes } from '../components/CustomToast';
 
 export default function RegisterAlertas({ navigation }) {
   const [nombre, setNombre] = useState('');
@@ -15,6 +16,23 @@ export default function RegisterAlertas({ navigation }) {
   const [loading, setLoading] = useState(false);
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  
+  // Estados para el toast
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState(ToastTypes.INFO);
+
+  // Función para mostrar el toast
+  const showToast = (message, type) => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
+
+  // Función para ocultar el toast
+  const hideToast = () => {
+    setToastVisible(false);
+  };
 
   const limpiarFormulario = () => {
     setNombre('');
@@ -44,13 +62,13 @@ export default function RegisterAlertas({ navigation }) {
 
   const handleCreate = async () => {
     if (!nombre || !comunidad || !descripcion) {
-      Alert.alert("Error", "Por favor completa todos los campos obligatorios: Nombre, Comunidad y Descripción");
+      showToast("Por favor completa todos los campos obligatorios: Nombre, Comunidad y Descripción", ToastTypes.ERROR);
       return;
     }
 
     setLoading(true);
     try {
-      // En un entorno real, deberías obtener el ID del usuario autenticado
+      //obtener el ID del usuario autenticado
       const userId = 1; // ID de ejemplo
       const casoId = 1; // ID de caso de ejemplo
 
@@ -69,24 +87,26 @@ export default function RegisterAlertas({ navigation }) {
       };
 
       await axios.post('http://IP:3001/api/alertas', nuevaAlerta);
-
-      Alert.alert(
-        "Éxito",
-        "Alerta creada correctamente",
-        [{ text: "OK", onPress: () => navigation.navigate('Home', { refresh: true }) }]
-      );
+      
+      // Mostrar toast del exito
+      showToast("Alerta creada correctamente", ToastTypes.SUCCESS);
+      
+      // Regresar a Home
+      setTimeout(() => {
+        navigation.navigate('Home', { refresh: true });
+      }, 2000);
+      
     } catch (error) {
       console.error('Error al crear la alerta:', error);
       
-      // Si estamos en desarrollo, simulamos un éxito para probar la UI
+      // Se simula un exito para probar la UI (Si estamos en desarrollo )
       if (__DEV__) {
-        Alert.alert(
-          "Éxito (Modo desarrollo)",
-          "Alerta creada correctamente (simulado)",
-          [{ text: "OK", onPress: () => navigation.navigate('Home', { refresh: true }) }]
-        );
+        showToast("Alerta creada correctamente (simulado)", ToastTypes.SUCCESS);
+        setTimeout(() => {
+          navigation.navigate('Home', { refresh: true });
+        }, 2000);
       } else {
-        Alert.alert("Error", "No se pudo crear la alerta. Intenta de nuevo.");
+        showToast("No se pudo crear la alerta. Intenta de nuevo.", ToastTypes.ERROR);
       }
     } finally {
       setLoading(false);
@@ -96,6 +116,15 @@ export default function RegisterAlertas({ navigation }) {
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       <ThemeToggle />
+      
+      {/* Toast component */}
+      <CustomToast 
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onHide={hideToast}
+        duration={3000}
+      />
       
       <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
         <View style={[styles.header, { backgroundColor: theme.header }]}>
