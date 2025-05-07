@@ -35,7 +35,7 @@ export default function EditarAlerta({ navigation, route }) {
       };
 
       //Cambiar la URL a la correcta en cada computadora
-      await axios.put(`http://IP:192.168.144.1:3001/api/alertas/${alerta.alerta_id}`, alertaActualizada);
+      await axios.put(`//localhost:3001/api/alertas/${alerta.alerta_id}`, alertaActualizada);
       
       Alert.alert('Éxito', 'Alerta actualizada correctamente', [
         { text: 'OK', onPress: () => navigation.navigate('Home', { refresh: true }) }
@@ -60,7 +60,7 @@ export default function EditarAlerta({ navigation, route }) {
           onPress: async () => {
             setLoading(true);
             try {
-              await axios.delete(`http://IP:3001/api/alertas/${alerta.alerta_id}`);
+              await axios.delete(`//localhost:3001/api/alertas/${alerta.alerta_id}`);
               Alert.alert('Éxito', 'Alerta eliminada correctamente');
               navigation.navigate('Home', { refresh: true });
             } catch (error) {

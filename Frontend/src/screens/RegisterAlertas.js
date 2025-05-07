@@ -86,7 +86,7 @@ export default function RegisterAlertas({ navigation }) {
         estado: 'Pendiente'
       };
 
-      await axios.post('http://IP:3001/api/alertas', nuevaAlerta);
+      await axios.post('//localhost:3001/api/alertas', nuevaAlerta);
       
       // Mostrar toast del exito
       showToast("Alerta creada correctamente", ToastTypes.SUCCESS);

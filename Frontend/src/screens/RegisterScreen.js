@@ -42,7 +42,7 @@ export default function RegisterScreen({ navigation }) {
         return;
       }
 
-      const response = await axios.post('http://IP:3001/api/auth/register', {
+      const response = await axios.post('//localhost:3001/api/auth/register', {
         nombre: name,
         apellido: 'SinApellido',
         email,
