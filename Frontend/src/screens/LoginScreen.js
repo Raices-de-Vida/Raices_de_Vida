@@ -32,7 +32,9 @@ export default function LoginScreen({ navigation }) {
           email,
           password
         });
-  
+        const { token } = response.data;
+        localStorage.setItem('jwtToken', token);
+        
         console.log('Login correcto:', response.data);
         
         navigation.replace('Home');

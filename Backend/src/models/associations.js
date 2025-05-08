@@ -42,14 +42,15 @@ Familia.hasMany(CasoCritico, { foreignKey: 'id_familia' });
 CasoCritico.belongsTo(Nino, { foreignKey: 'id_nino' });
 Nino.hasMany(CasoCritico, { foreignKey: 'id_nino' });
 
+// associations.js
 Alerta.belongsTo(CasoCritico, { 
   foreignKey: 'caso_id',
-  as: 'caso' 
+  as: 'caso' // Alias usado en la consulta
 });
 
 CasoCritico.hasMany(Alerta, { 
   foreignKey: 'caso_id',
-  as: 'alertas' 
+  as: 'alertas'
 });
 
 Alerta.belongsTo(User, { 

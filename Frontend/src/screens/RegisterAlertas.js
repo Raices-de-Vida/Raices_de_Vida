@@ -68,46 +68,31 @@ export default function RegisterAlertas({ navigation }) {
 
     setLoading(true);
     try {
-      //obtener el ID del usuario autenticado
-      const userId = 1; // ID de ejemplo
-      const casoId = 1; // ID de caso de ejemplo
-
-      // Crear objeto de alerta
+      const token = localStorage.getItem('jwtToken');
+      const userId = 1; // Obtén dinámicamente del token (ej: req.user.id)
+      const casoId = 1; // Asegúrate de que exista en Casos_Criticos
+    
       const nuevaAlerta = {
-        nombre,
-        comunidad,
-        descripcion,
-        edad: edad ? parseInt(edad) : null,
-        ubicacion,
+        descripcion: "Descripción de la alerta", // Campo obligatorio
         caso_id: casoId,
         usuario_id: userId,
         tipo_alerta: 'Nutricional',
         prioridad: 'Alta',
         estado: 'Pendiente'
       };
-
-      await axios.post('//localhost:3001/api/alertas', nuevaAlerta);
-      
-      // Mostrar toast del exito
+    
+      await axios.post('http://localhost:3001/api/alertas', nuevaAlerta, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    
       showToast("Alerta creada correctamente", ToastTypes.SUCCESS);
-      
-      // Regresar a Home
-      setTimeout(() => {
-        navigation.navigate('Home', { refresh: true });
-      }, 2000);
-      
+      setTimeout(() => navigation.navigate('Home', { refresh: true }), 2000);
+    
     } catch (error) {
       console.error('Error al crear la alerta:', error);
-      
-      // Se simula un exito para probar la UI (Si estamos en desarrollo )
-      if (__DEV__) {
-        showToast("Alerta creada correctamente (simulado)", ToastTypes.SUCCESS);
-        setTimeout(() => {
-          navigation.navigate('Home', { refresh: true });
-        }, 2000);
-      } else {
-        showToast("No se pudo crear la alerta. Intenta de nuevo.", ToastTypes.ERROR);
-      }
+      showToast("No se pudo crear la alerta", ToastTypes.ERROR); // Evita simular éxito en DEV
     } finally {
       setLoading(false);
     }

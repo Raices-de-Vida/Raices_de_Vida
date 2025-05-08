@@ -1,17 +1,19 @@
 const Alerta = require('../models/Alerta');
 const CasoCritico = require('../models/CasoCritico');
 
-// Obtener todas las alertas
+// alertaController.js (getAllAlertas)
 exports.getAllAlertas = async (req, res) => {
   try {
     const alertas = await Alerta.findAll({
       include: [{
         model: CasoCritico,
-        attributes: ['id_caso', 'descripcion', 'nivel_urgencia'] // Campos específicos del caso relacionado
+        attributes: ['id_caso', 'descripcion', 'nivel_urgencia'],
+        as: 'caso' // Asegurar que el alias coincida con la asociación
       }]
     });
     res.json(alertas);
   } catch (error) {
+    console.error('Error al obtener alertas:', error); // Log detallado
     res.status(500).json({ error: 'Error al obtener las alertas' });
   }
 };

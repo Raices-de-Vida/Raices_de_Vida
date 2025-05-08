@@ -4,9 +4,10 @@ const alertaController = require('../controllers/alertaController');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
 
 // Obtener todas las alertas (ONG y Voluntarios)
-router.get('/', 
-  authenticate, 
-  authorize(['ONG', 'Voluntario', 'Líder Comunitario']), 
+router.get(
+  '/',
+  authenticate,
+  authorize(['ONG', 'Voluntario', 'Lider Comunitario']), // Corregido: Sin tilde en "Lider"
   alertaController.getAllAlertas
 );
 
@@ -37,5 +38,6 @@ router.delete('/:alerta_id',
   authorize(['ONG', 'Administrador']), 
   alertaController.deleteAlerta
 );
+
 
 module.exports = router;
