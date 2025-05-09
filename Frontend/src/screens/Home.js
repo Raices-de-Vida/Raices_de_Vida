@@ -5,6 +5,8 @@ import axios from 'axios';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import ThemeToggle from '../components/ThemeToggle';
+import { useOffline } from '../context/OfflineContext';
+import OfflineStorage from '../services/OfflineStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Home({ navigation, route }) {
@@ -13,45 +15,66 @@ export default function Home({ navigation, route }) {
   const [loading, setLoading] = useState(true);
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { isConnected, syncInfo, syncNow } = useOffline();
 
-  // Función para cargar alertas desde la API
+  //cargar alertas (combinando online y offline)
   const fetchAlertas = async () => {
     setLoading(true);
     try {
-      // Obtener token de AsyncStorage
-      const token = await AsyncStorage.getItem('token');
+      let alertasData = [];
       
-      // En un entorno real, debes usar un token almacenado en AsyncStorage
-      // const token = await AsyncStorage.getItem('token');
-      
-      // Usamos una URL de ejemplo, en producción deberías usar variables de entorno
-      const response = await axios.get('//localhost:3001/api/alertas', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      //Si hay conexión, intentar cargar desde el servidor
+      if (isConnected) {
+        try {
+          const token = await OfflineStorage.getToken();
+          const response = await axios.get('http://localhost:3001/api/alertas', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          alertasData = response.data.map(alerta => ({
+            alerta_id: alerta.alerta_id,
+            nombre: alerta.CasoCritico?.nombre_paciente || 'Nombre no disponible',
+            descripcion: alerta.descripcion,
+            comunidad: alerta.CasoCritico?.comunidad || 'Comunidad no disponible',
+            edad: alerta.CasoCritico?.edad_paciente,
+            estado: alerta.estado,
+            tipo_alerta: alerta.tipo_alerta,
+            prioridad: alerta.prioridad,
+            pendingSync: false
+          }));
+        } catch (error) {
+          console.error('Error cargando alertas del servidor:', error);
         }
-      });
+      } 
       
-      // Mapear los datos de la API 
-      const alertasFormateadas = response.data.map(alerta => ({
-        alerta_id: alerta.alerta_id,
-        nombre: alerta.CasoCritico?.nombre_paciente || 'Nombre no disponible',
+      //Cargar alertas pendientes del almacenamiento local
+      const pendingAlerts = await OfflineStorage.getPendingAlerts();
+      
+      const localAlertas = pendingAlerts.map(alerta => ({
+        alerta_id: alerta.tempId,
+        nombre: alerta.nombre_paciente || 'Sin nombre',
         descripcion: alerta.descripcion,
-        comunidad: alerta.CasoCritico?.comunidad || 'Comunidad no disponible',
-        edad: alerta.CasoCritico?.edad_paciente,
-        estado: alerta.estado,
-        tipo_alerta: alerta.tipo_alerta,
-        prioridad: alerta.prioridad
+        comunidad: alerta.comunidad || 'Sin comunidad',
+        edad: alerta.edad_paciente,
+        estado: 'Pendiente',
+        tipo_alerta: alerta.tipo_alerta || 'Nutricional',
+        prioridad: alerta.prioridad || 'Alta',
+        pendingSync: true
       }));
-
-      // Filtrar alertas según el estado activo/inactivo
-      const alertasFiltradas = alertasFormateadas.filter(alerta => 
+      
+      //Combinar alertas del servidor y locales
+      const todasAlertas = [...alertasData, ...localAlertas];
+      
+      //Filtrar alertas según el estado activo/inactivo
+      const alertasFiltradas = todasAlertas.filter(alerta => 
         activo ? alerta.estado !== 'Cerrada' : alerta.estado === 'Cerrada'
       );
       
       setAlertas(alertasFiltradas);
     } catch (error) {
       console.error('Error al cargar alertas:', error);
-      Alert.alert('Error', 'No se pudieron cargar las alertas');
     } finally {
       setLoading(false);
     }
@@ -59,254 +82,290 @@ export default function Home({ navigation, route }) {
 
   useEffect(() => {
     fetchAlertas();
-  }, [activo]);
+  }, [activo, isConnected]);
 
-  // efecto para actualizar cuando se regresa a la otra pantalla
+  //Efecto para actualizar cuando se regresa a la pantalla
   useEffect(() => {
     if (route.params?.refresh) {
       fetchAlertas();
     }
   }, [route.params?.refresh]);
 
-  // Renderizar cada item de alerta (navegacion)
- // Datos de prueba (simulando la API)
- const alertasPrueba = [
-  {
-    alerta_id: 1,
-    nombre: 'Juan Pérez',
-    descripcion: 'Caso urgente de desnutrición',
-    comunidad: 'San Pedro Ayampuc',
-    edad: 4,
-    estado: 'Pendiente'
-  },
-  {
-    alerta_id: 2,
-    nombre: 'María López',
-    descripcion: 'Requiere asistencia médica',
-    comunidad: 'Villa Nueva',
-    edad: 7,
-    estado: 'Atendida'
-  }
-];
+  //mostrar un botón de sincronización en modo offline
+  const renderSyncButton = () => {
+    if (!isConnected) {
+      return (
+        <TouchableOpacity 
+          style={[styles.syncButton, { backgroundColor: theme.primaryButton }]}
+          onPress={syncNow}
+          disabled={syncInfo.isSyncing}>
+          <Text style={styles.syncButtonText}>
+            {syncInfo.isSyncing ? 'Sincronizando...' : 'Sincronizar cuando haya conexión'}
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+    return null;
+  };
 
-// Simular carga de datos
-useEffect(() => {
-  const timer = setTimeout(() => {
-    setAlertas(alertasPrueba);
-    setLoading(false);
-  }, 1000);
-  return () => clearTimeout(timer);
-}, []);
-
-// Renderizar cada alerta
-const renderAlertItem = (alerta) => (
-  <TouchableOpacity 
-    key={alerta.alerta_id} 
-    style={[styles.alertItem, { backgroundColor: theme.card }]}
-  >
-    <AntDesign name="exclamationcircle" size={28} color="red" style={{ marginRight: 10 }} />
-    <View style={{ flex: 1 }}>
-      <Text style={[styles.alertName, { color: theme.text }]}>{alerta.nombre}</Text>
-      <Text style={[styles.alertDesc, { color: theme.secondaryText }]}>{alerta.descripcion}</Text>
-      <Text style={[styles.alertComunidad, { color: theme.secondaryText }]}>
-        {alerta.comunidad} {alerta.edad ? `• ${alerta.edad} años` : ''}
-      </Text>
-    </View>
-    <Text style={[
-      styles.alertStatus, 
-      { 
-        color: alerta.estado === 'Pendiente' ? '#E65100' : 
-              alerta.estado === 'Atendida' ? '#2E7D32' : '#1565C0' 
-      }]}>
-      {alerta.estado}
-    </Text>
-  </TouchableOpacity>
-);
-
-return (
-  <View style={{ flex: 1, backgroundColor: theme.background }}>
-    <ThemeToggle />
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.header }]}>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>Home</Text>
+  //Renderizar cada alerta con indicador de pendiente de sincronización
+  const renderAlertItem = (alerta) => (
+    <TouchableOpacity 
+      key={alerta.alerta_id} 
+      style={[styles.alertItem, { backgroundColor: theme.card }]}
+    >
+      <AntDesign name="exclamationcircle" size={28} color="red" style={{ marginRight: 10 }} />
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.alertName, { color: theme.text }]}>
+          {alerta.nombre}
+          {alerta.pendingSync && (
+            <Text style={styles.pendingBadge}> • Sin sincronizar</Text>
+          )}
+        </Text>
+        <Text style={[styles.alertDesc, { color: theme.secondaryText }]}>{alerta.descripcion}</Text>
+        <Text style={[styles.alertComunidad, { color: theme.secondaryText }]}>
+          {alerta.comunidad} {alerta.edad ? `• ${alerta.edad} años` : ''}
+        </Text>
       </View>
+      <Text style={[
+        styles.alertStatus, 
+        { 
+          color: alerta.estado === 'Pendiente' ? '#E65100' : 
+                alerta.estado === 'Atendida' ? '#2E7D32' : '#1565C0' 
+        }]}>
+        {alerta.estado}
+      </Text>
+    </TouchableOpacity>
+  );
 
-      {/* Sección de Alertas */}
-      <View style={styles.alertSection}>
-        <Text style={[styles.alertTitle, { color: theme.text }]}>Alertas</Text>
-
-        {/* Filtro Activos/Inactivos */}
-        <View style={[styles.switchContainer, { backgroundColor: theme.switchInactive }]}>
-          <TouchableOpacity
-            style={[
-              styles.switchButton, 
-              activo && { backgroundColor: theme.switchActive }
-            ]}
-            onPress={() => setActivo(true)}
-          >
-            <Text style={[
-              styles.switchText, 
-              { color: activo ? '#fff' : theme.secondaryText }
-            ]}>Activos</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.switchButton, 
-              !activo && { backgroundColor: theme.switchActive }
-            ]}
-            onPress={() => setActivo(false)}
-          >
-            <Text style={[
-              styles.switchText, 
-              { color: !activo ? '#fff' : theme.secondaryText }
-            ]}>Inactivos</Text>
-          </TouchableOpacity>
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      <ThemeToggle />
+      
+      {/* Indicador de modo offline */}
+      {!isConnected && (
+        <View style={[styles.offlineIndicator, { backgroundColor: theme.toastInfo }]}>
+          <Ionicons name="cloud-offline-outline" size={18} color="white" />
+          <Text style={styles.offlineText}>Modo sin conexión</Text>
+        </View>
+      )}
+      
+      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
+        {/* Header */}
+        <View style={[styles.header, { backgroundColor: theme.header }]}>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Home</Text>
         </View>
 
-        {/* Lista de Alertas */}
-        {loading ? (
-          <ActivityIndicator size="large" color={theme.primaryButton} style={{ marginVertical: 20 }} />
-        ) : alertas.length === 0 ? (
-          <Text style={[styles.noAlertsText, { color: theme.secondaryText }]}>
-            No hay alertas {activo ? 'activas' : 'inactivas'} por el momento.
-          </Text>
-        ) : (
-          <>
-            {alertas.map(renderAlertItem)}
-            <TouchableOpacity style={[styles.seeMoreButton, { borderColor: theme.text }]}>
-              <Text style={[styles.seeMoreText, { color: theme.text }]}>VER MÁS</Text>
-            </TouchableOpacity>
-          </>
-        )}
-      </View>
-    </ScrollView>
+        {/* Botón de sincronización cuando hay alertas pendientes */}
+        {renderSyncButton()}
 
-    {/* Barra inferior */}
-    <View style={[styles.bottomNav, { backgroundColor: theme.background, borderColor: theme.borderColor }]}>
-      <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-        <Ionicons name="home" size={28} color={theme.text} />
-      </TouchableOpacity>
-      <TouchableOpacity>
-        <Ionicons name="search-outline" size={28} color={theme.text} />
-      </TouchableOpacity>
-      <TouchableOpacity 
-        style={[styles.addButton, { backgroundColor: theme.addButton }]}
-        onPress={() => navigation.navigate('RegisterAlertas')}
-      >
-        <Entypo name="plus" size={28} color="white" />
-      </TouchableOpacity>
-      <TouchableOpacity>
-        <AntDesign name="exclamationcircle" size={28} color="red" />
-      </TouchableOpacity>
-      <TouchableOpacity>
-        <FontAwesome name="user-o" size={28} color={theme.text} />
-      </TouchableOpacity>
+        {/* Sección de Alertas */}
+        <View style={styles.alertSection}>
+          <Text style={[styles.alertTitle, { color: theme.text }]}>Alertas</Text>
+
+          {/* Filtro Activos/Inactivos */}
+          <View style={[styles.switchContainer, { backgroundColor: theme.switchInactive }]}>
+            <TouchableOpacity
+              style={[
+                styles.switchButton, 
+                activo && { backgroundColor: theme.switchActive }
+              ]}
+              onPress={() => setActivo(true)}
+            >
+              <Text style={[
+                styles.switchText, 
+                { color: activo ? '#fff' : theme.secondaryText }
+              ]}>Activos</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.switchButton, 
+                !activo && { backgroundColor: theme.switchActive }
+              ]}
+              onPress={() => setActivo(false)}
+            >
+              <Text style={[
+                styles.switchText, 
+                { color: !activo ? '#fff' : theme.secondaryText }
+              ]}>Inactivos</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Lista de Alertas */}
+          {loading ? (
+            <ActivityIndicator size="large" color={theme.primaryButton} style={{ marginVertical: 20 }} />
+          ) : alertas.length === 0 ? (
+            <Text style={[styles.noAlertsText, { color: theme.secondaryText }]}>
+              No hay alertas {activo ? 'activas' : 'inactivas'} por el momento.
+            </Text>
+          ) : (
+            <>
+              {alertas.map(renderAlertItem)}
+              <TouchableOpacity style={[styles.seeMoreButton, { borderColor: theme.text }]}>
+                <Text style={[styles.seeMoreText, { color: theme.text }]}>VER MÁS</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </ScrollView>
+
+      {/* Barra inferior */}
+      <View style={[styles.bottomNav, { backgroundColor: theme.background, borderColor: theme.borderColor }]}>
+        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+          <Ionicons name="home" size={28} color={theme.text} />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Ionicons name="search-outline" size={28} color={theme.text} />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.addButton, { backgroundColor: theme.addButton }]}
+          onPress={() => navigation.navigate('RegisterAlertas')}
+        >
+          <Entypo name="plus" size={28} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <AntDesign name="exclamationcircle" size={28} color="red" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <FontAwesome name="user-o" size={28} color={theme.text} />
+        </TouchableOpacity>
+      </View>
     </View>
-  </View>
-);
+  );
 }
 
 const styles = StyleSheet.create({
-container: {
-  padding: 20,
-  flexGrow: 1,
-  paddingBottom: 100,
-},
-header: {
-  height: 80,
-  borderRadius: 10,
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginBottom: 20,
-},
-headerTitle: {
-  fontSize: 20,
-  fontWeight: 'bold',
-},
-alertSection: {
-  marginTop: 10,
-},
-alertTitle: {
-  fontSize: 18,
-  fontWeight: 'bold',
-  marginBottom: 10,
-},
-switchContainer: {
-  flexDirection: 'row',
-  borderRadius: 25,
-  overflow: 'hidden',
-  marginBottom: 20,
-},
-switchButton: {
-  flex: 1,
-  paddingVertical: 8,
-  alignItems: 'center',
-},
-switchText: {
-  fontWeight: 'bold',
-},
-alertItem: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  padding: 15,
-  marginBottom: 15,
-  borderRadius: 10,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 3,
-},
-alertName: {
-  fontSize: 16,
-  fontWeight: 'bold',
-},
-alertDesc: {
-  fontSize: 14,
-  marginVertical: 4,
-},
-alertComunidad: {
-  fontSize: 12,
-},
-alertStatus: {
-  fontSize: 12,
-  fontWeight: 'bold',
-  padding: 5,
-},
-noAlertsText: {
-  textAlign: 'center',
-  marginTop: 20,
-  fontSize: 16,
-},
-seeMoreButton: {
-  borderWidth: 1,
-  borderRadius: 8,
-  padding: 12,
-  alignItems: 'center',
-  marginTop: 10,
-},
-seeMoreText: {
-  fontWeight: 'bold',
-},
-bottomNav: {
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  right: 0,
-  flexDirection: 'row',
-  justifyContent: 'space-around',
-  alignItems: 'center',
-  height: 60,
-  borderTopWidth: 1,
-},
-addButton: {
-  width: 50,
-  height: 50,
-  borderRadius: 25,
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginTop: -30,
-  elevation: 5,
-},
+  container: {
+    padding: 20,
+    flexGrow: 1,
+    paddingBottom: 100,
+  },
+  header: {
+    height: 80,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  alertSection: {
+    marginTop: 10,
+  },
+  alertTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    borderRadius: 25,
+    overflow: 'hidden',
+    marginBottom: 20,
+  },
+  switchButton: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  switchText: {
+    fontWeight: 'bold',
+  },
+  alertItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    marginBottom: 15,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  alertName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  alertDesc: {
+    fontSize: 14,
+    marginVertical: 4,
+  },
+  alertComunidad: {
+    fontSize: 12,
+  },
+  alertStatus: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    padding: 5,
+  },
+  noAlertsText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+  },
+  seeMoreButton: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  seeMoreText: {
+    fontWeight: 'bold',
+  },
+  bottomNav: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    height: 60,
+    borderTopWidth: 1,
+  },
+  addButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: -30,
+    elevation: 5,
+  },
+  offlineIndicator: {
+    position: 'absolute',
+    top: 80,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 4,
+    zIndex: 5,
+  },
+  offlineText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+    marginLeft: 5,
+  },
+  syncButton: {
+    marginVertical: 10,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  syncButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  pendingBadge: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    color: '#E65100',
+  },
 });
