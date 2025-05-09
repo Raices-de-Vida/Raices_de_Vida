@@ -6,6 +6,8 @@ import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import ThemeToggle from '../components/ThemeToggle';
 import { CustomToast, ToastTypes } from '../components/CustomToast';
+import { useOffline } from '../context/OfflineContext';
+import OfflineStorage from '../services/OfflineStorage';
 
 export default function RegisterAlertas({ navigation }) {
   const [nombre, setNombre] = useState('');
@@ -16,20 +18,19 @@ export default function RegisterAlertas({ navigation }) {
   const [loading, setLoading] = useState(false);
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { isConnected } = useOffline();
   
-  // Estados para el toast
+  //Estados
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState(ToastTypes.INFO);
 
-  // Función para mostrar el toast
   const showToast = (message, type) => {
     setToastMessage(message);
     setToastType(type);
     setToastVisible(true);
   };
 
-  // Función para ocultar el toast
   const hideToast = () => {
     setToastVisible(false);
   };
@@ -68,31 +69,45 @@ export default function RegisterAlertas({ navigation }) {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('jwtToken');
-      const userId = 1; // Obtén dinámicamente del token (ej: req.user.id)
-      const casoId = 1; // Asegúrate de que exista en Casos_Criticos
-    
+      //Obtener el ID de usuario desde el almacenamiento local
+      const userData = await OfflineStorage.getUserData();
+      const userId = userData?.id || 1; // Valor por defecto si no hay ID
+      
       const nuevaAlerta = {
-        descripcion: "Descripción de la alerta", // Campo obligatorio
-        caso_id: casoId,
+        descripcion: descripcion,
+        nombre_paciente: nombre,
+        edad_paciente: edad ? parseInt(edad) : null,
+        ubicacion: ubicacion,
+        comunidad: comunidad,
+        caso_id: 1, //Valor por defecto (debe ser modificado por el backend)
         usuario_id: userId,
         tipo_alerta: 'Nutricional',
         prioridad: 'Alta',
         estado: 'Pendiente'
       };
-    
-      await axios.post('http://localhost:3001/api/alertas', nuevaAlerta, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-    
-      showToast("Alerta creada correctamente", ToastTypes.SUCCESS);
+      
+      if (isConnected) {
+        //Modo online: envía directamente al servidor
+        const token = await OfflineStorage.getToken();
+        await axios.post('http://localhost:3001/api/alertas', nuevaAlerta, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        showToast("Alerta creada correctamente", ToastTypes.SUCCESS);
+      } else {
+        //Modo offline: guardar localmente
+        await OfflineStorage.savePendingAlert(nuevaAlerta);
+        showToast("Alerta guardada localmente. Se sincronizará cuando haya conexión a internet.", ToastTypes.INFO);
+      }
+      
+      //En cualquier caso, limpiar formulario y navegar de vuelta
+      limpiarFormulario();
       setTimeout(() => navigation.navigate('Home', { refresh: true }), 2000);
     
     } catch (error) {
       console.error('Error al crear la alerta:', error);
-      showToast("No se pudo crear la alerta", ToastTypes.ERROR); // Evita simular éxito en DEV
+      showToast("Ocurrió un error al procesar la alerta", ToastTypes.ERROR);
     } finally {
       setLoading(false);
     }
@@ -101,6 +116,14 @@ export default function RegisterAlertas({ navigation }) {
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       <ThemeToggle />
+      
+      {/* Indicador de modo offline */}
+      {!isConnected && (
+        <View style={[styles.offlineIndicator, { backgroundColor: theme.toastInfo }]}>
+          <Ionicons name="cloud-offline-outline" size={18} color="white" />
+          <Text style={styles.offlineText}>Modo sin conexión</Text>
+        </View>
+      )}
       
       {/* Toast component */}
       <CustomToast 
@@ -359,5 +382,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: -30,
+  },
+  offlineIndicator: {
+    position: 'absolute',
+    top: 80,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 4,
+    zIndex: 5,
+  },
+  offlineText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+    marginLeft: 5,
   },
 });
