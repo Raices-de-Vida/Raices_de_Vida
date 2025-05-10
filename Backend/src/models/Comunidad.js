@@ -37,7 +37,11 @@ const Comunidad = sequelize.define('Comunidades', {
   coordenadas_gps: DataTypes.STRING(255),
   recursos_disponibles: DataTypes.TEXT,
   necesidades_comunidad: DataTypes.TEXT,
-  proyectos_en_comunidad: DataTypes.TEXT
+  proyectos_en_comunidad: DataTypes.TEXT,
+  fecha_registro: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
+  }
 }, {
   tableName: 'Comunidades',
   timestamps: false,

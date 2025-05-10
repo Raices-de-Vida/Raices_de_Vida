@@ -9,15 +9,15 @@ const STORAGE_KEYS = {
 export default {
   async savePendingAlert(alert) {
     try {
-      //Se obtienen alertas existentes
       const existingAlerts = await this.getPendingAlerts();
       
-      //ID temporal para identificarla localmente
+      //ID temporal
       const alertWithId = {
         ...alert,
         tempId: Date.now().toString(),
         createdAt: new Date().toISOString(),
-        pendingSync: true
+        pendingSync: true,
+        syncAttempts: 0
       };
       
       const updatedAlerts = [...existingAlerts, alertWithId];
@@ -40,6 +40,40 @@ export default {
     } catch (error) {
       console.error('Error obteniendo alertas pendientes:', error);
       return [];
+    }
+  },
+  
+  //Obtener una alerta específica
+  async getPendingAlert(tempId) {
+    try {
+      const alerts = await this.getPendingAlerts();
+      return alerts.find(alert => alert.tempId === tempId) || null;
+    } catch (error) {
+      console.error('Error obteniendo alerta pendiente:', error);
+      return null;
+    }
+  },
+
+  //actualizar una alerta específica
+  async updatePendingAlert(tempId, updates) {
+    try {
+      const alerts = await this.getPendingAlerts();
+      const updatedAlerts = alerts.map(alert => {
+        if (alert.tempId === tempId) {
+          return { ...alert, ...updates };
+        }
+        return alert;
+      });
+      
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.PENDING_ALERTS, 
+        JSON.stringify(updatedAlerts)
+      );
+      
+      return true;
+    } catch (error) {
+      console.error('Error actualizando alerta pendiente:', error);
+      return false;
     }
   },
 
