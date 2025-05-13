@@ -9,6 +9,9 @@ import TermsScreen from '../screens/TermsScreen';
 import HomeScreen from '../screens/Home';
 import RegisterAlertasScreen from '../screens/RegisterAlertas';
 import EditarAlertaScreen from '../screens/EditarAlerta';
+import DatosAyudaScreen from '../screens/DatosAyudaScreen'; // ajusta el path si es necesario
+import ConfiguracionScreen from '../screens/ConfiguracionScreen'; //  Asegúrate que el nombre y path coincidan
+
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 
 const Stack = createNativeStackNavigator();
@@ -35,6 +38,9 @@ function AppStack() {
           <Stack.Screen name="Home" component={HomeScreen} />         
           <Stack.Screen name="RegisterAlertas" component={RegisterAlertasScreen} />
           <Stack.Screen name="EditarAlerta" component={EditarAlertaScreen} />
+          <Stack.Screen name="DatosAyuda" component={DatosAyudaScreen} />
+          <Stack.Screen name="Configuracion" component={ConfiguracionScreen} />
+
         </Stack.Navigator>
       </NavigationContainer>
     </>

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, FlatList } from 'react-native';
-import { Ionicons, Entypo, AntDesign, FontAwesome } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { Ionicons, AntDesign } from '@expo/vector-icons';
 import axios from 'axios';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import ThemeToggle from '../components/ThemeToggle';
 import { useOffline } from '../context/OfflineContext';
 import OfflineStorage from '../services/OfflineStorage';
+import BottomNav from '../components/BottomNav';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Home({ navigation, route }) {
@@ -17,13 +18,11 @@ export default function Home({ navigation, route }) {
   const theme = getTheme(isDarkMode);
   const { isConnected, syncInfo, syncNow } = useOffline();
 
-  //cargar alertas (combinando online y offline)
   const fetchAlertas = async () => {
     setLoading(true);
     try {
       let alertasData = [];
-      
-      //Si hay conexión, intentar cargar desde el servidor
+
       if (isConnected) {
         try {
           const token = await OfflineStorage.getToken();
@@ -32,7 +31,7 @@ export default function Home({ navigation, route }) {
               'Authorization': `Bearer ${token}`
             }
           });
-          
+
           alertasData = response.data.map(alerta => ({
             alerta_id: alerta.alerta_id,
             nombre: alerta.CasoCritico?.nombre_paciente || 'Nombre no disponible',
@@ -47,11 +46,10 @@ export default function Home({ navigation, route }) {
         } catch (error) {
           console.error('Error cargando alertas del servidor:', error);
         }
-      } 
-      
-      //Cargar alertas pendientes del almacenamiento local
+      }
+
       const pendingAlerts = await OfflineStorage.getPendingAlerts();
-      
+
       const localAlertas = pendingAlerts.map(alerta => ({
         alerta_id: alerta.tempId,
         nombre: alerta.nombre_paciente || 'Sin nombre',
@@ -63,15 +61,13 @@ export default function Home({ navigation, route }) {
         prioridad: alerta.prioridad || 'Alta',
         pendingSync: true
       }));
-      
-      //Combinar alertas del servidor y locales
+
       const todasAlertas = [...alertasData, ...localAlertas];
-      
-      //Filtrar alertas según el estado activo/inactivo
-      const alertasFiltradas = todasAlertas.filter(alerta => 
+
+      const alertasFiltradas = todasAlertas.filter(alerta =>
         activo ? alerta.estado !== 'Cerrada' : alerta.estado === 'Cerrada'
       );
-      
+
       setAlertas(alertasFiltradas);
     } catch (error) {
       console.error('Error al cargar alertas:', error);
@@ -84,18 +80,16 @@ export default function Home({ navigation, route }) {
     fetchAlertas();
   }, [activo, isConnected]);
 
-  //Efecto para actualizar cuando se regresa a la pantalla
   useEffect(() => {
     if (route.params?.refresh) {
       fetchAlertas();
     }
   }, [route.params?.refresh]);
 
-  //mostrar un botón de sincronización en modo offline
   const renderSyncButton = () => {
     if (!isConnected) {
       return (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.syncButton, { backgroundColor: theme.primaryButton }]}
           onPress={syncNow}
           disabled={syncInfo.isSyncing}>
@@ -108,10 +102,9 @@ export default function Home({ navigation, route }) {
     return null;
   };
 
-  //Renderizar cada alerta con indicador de pendiente de sincronización
   const renderAlertItem = (alerta) => (
-    <TouchableOpacity 
-      key={alerta.alerta_id} 
+    <TouchableOpacity
+      key={alerta.alerta_id}
       style={[styles.alertItem, { backgroundColor: theme.card }]}
     >
       <AntDesign name="exclamationcircle" size={28} color="red" style={{ marginRight: 10 }} />
@@ -128,10 +121,10 @@ export default function Home({ navigation, route }) {
         </Text>
       </View>
       <Text style={[
-        styles.alertStatus, 
-        { 
-          color: alerta.estado === 'Pendiente' ? '#E65100' : 
-                alerta.estado === 'Atendida' ? '#2E7D32' : '#1565C0' 
+        styles.alertStatus,
+        {
+          color: alerta.estado === 'Pendiente' ? '#E65100' :
+                 alerta.estado === 'Atendida' ? '#2E7D32' : '#1565C0'
         }]}>
         {alerta.estado}
       </Text>
@@ -141,57 +134,51 @@ export default function Home({ navigation, route }) {
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       <ThemeToggle />
-      
-      {/* Indicador de modo offline */}
+
       {!isConnected && (
         <View style={[styles.offlineIndicator, { backgroundColor: theme.toastInfo }]}>
           <Ionicons name="cloud-offline-outline" size={18} color="white" />
           <Text style={styles.offlineText}>Modo sin conexión</Text>
         </View>
       )}
-      
+
       <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
-        {/* Header */}
         <View style={[styles.header, { backgroundColor: theme.header }]}>
           <Text style={[styles.headerTitle, { color: theme.text }]}>Home</Text>
         </View>
 
-        {/* Botón de sincronización cuando hay alertas pendientes */}
         {renderSyncButton()}
 
-        {/* Sección de Alertas */}
         <View style={styles.alertSection}>
           <Text style={[styles.alertTitle, { color: theme.text }]}>Alertas</Text>
 
-          {/* Filtro Activos/Inactivos */}
           <View style={[styles.switchContainer, { backgroundColor: theme.switchInactive }]}>
             <TouchableOpacity
               style={[
-                styles.switchButton, 
+                styles.switchButton,
                 activo && { backgroundColor: theme.switchActive }
               ]}
               onPress={() => setActivo(true)}
             >
               <Text style={[
-                styles.switchText, 
+                styles.switchText,
                 { color: activo ? '#fff' : theme.secondaryText }
               ]}>Activos</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
-                styles.switchButton, 
+                styles.switchButton,
                 !activo && { backgroundColor: theme.switchActive }
               ]}
               onPress={() => setActivo(false)}
             >
               <Text style={[
-                styles.switchText, 
+                styles.switchText,
                 { color: !activo ? '#fff' : theme.secondaryText }
               ]}>Inactivos</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Lista de Alertas */}
           {loading ? (
             <ActivityIndicator size="large" color={theme.primaryButton} style={{ marginVertical: 20 }} />
           ) : alertas.length === 0 ? (
@@ -209,27 +196,8 @@ export default function Home({ navigation, route }) {
         </View>
       </ScrollView>
 
-      {/* Barra inferior */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.background, borderColor: theme.borderColor }]}>
-        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-          <Ionicons name="home" size={28} color={theme.text} />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Ionicons name="search-outline" size={28} color={theme.text} />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.addButton, { backgroundColor: theme.addButton }]}
-          onPress={() => navigation.navigate('RegisterAlertas')}
-        >
-          <Entypo name="plus" size={28} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <AntDesign name="exclamationcircle" size={28} color="red" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <FontAwesome name="user-o" size={28} color={theme.text} />
-        </TouchableOpacity>
-      </View>
+      {/* Barra de navegación reutilizable */}
+      <BottomNav navigation={navigation} />
     </View>
   );
 }
@@ -315,26 +283,6 @@ const styles = StyleSheet.create({
   },
   seeMoreText: {
     fontWeight: 'bold',
-  },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    height: 60,
-    borderTopWidth: 1,
-  },
-  addButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: -30,
-    elevation: 5,
   },
   offlineIndicator: {
     position: 'absolute',
