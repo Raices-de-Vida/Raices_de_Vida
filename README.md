@@ -9,13 +9,17 @@ git clone --recurse-submodules https://github.com/bar23354/Ra-ces-de-Vida.git
 cd Ra-ces-de-Vida/sprint2/Frontend
 
 ## 3. Instalar paquetes (con compatibilidad legacy) dentro de la carpeta del Frontend
+cd Frontend
 npm install --legacy-peer-deps
 npm install @react-native-async-storage/async-storage
+npm install @react-native-community/netinfo
+
 
 ## 4. Iniciar backend en Docker
 docker compose up -d
 
 ## 5. Iniciar aplicación móvil
+cd Frontend
 npx expo start
 
 # ¡ATENCIÓN!
