@@ -5,13 +5,13 @@ import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 
 export default function ThemeToggle({ style }) {
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
   
   return (
     <TouchableOpacity 
       style={[styles.themeToggle, style]} 
-      onPress={toggleTheme}
+      onPress={toggleDarkMode}
     >
       <Ionicons 
         name={isDarkMode ? "sunny-outline" : "moon-outline"} 

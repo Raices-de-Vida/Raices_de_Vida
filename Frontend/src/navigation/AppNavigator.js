@@ -10,6 +10,10 @@ import HomeScreen from '../screens/Home';
 import RegisterAlertasScreen from '../screens/RegisterAlertas';
 import EditarAlertaScreen from '../screens/EditarAlerta';
 import DatosAyudaScreen from '../screens/DatosAyudaScreen'; // ajusta el path si es necesario
+import CambiarContrasenaScreen from '../screens/CambiarContrasenaScreen'; // ajusta la ruta si es distinta
+import ImportanciaScreen from '../screens/ImportanciaScreen';
+import RecomendacionesScreen from '../screens/RecomendacionesScreen';
+
 import ConfiguracionScreen from '../screens/ConfiguracionScreen'; //  Asegúrate que el nombre y path coincidan
 
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
@@ -40,6 +44,9 @@ function AppStack() {
           <Stack.Screen name="EditarAlerta" component={EditarAlertaScreen} />
           <Stack.Screen name="DatosAyuda" component={DatosAyudaScreen} />
           <Stack.Screen name="Configuracion" component={ConfiguracionScreen} />
+          <Stack.Screen name="CambiarContrasena" component={CambiarContrasenaScreen} />
+          <Stack.Screen name="Importancia" component={ImportanciaScreen} />
+          <Stack.Screen name="Recomendaciones" component={RecomendacionesScreen} />
 
         </Stack.Navigator>
       </NavigationContainer>
