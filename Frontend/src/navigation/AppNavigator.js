@@ -10,7 +10,7 @@ import HomeScreen from '../screens/Home';
 import RegisterAlertasScreen from '../screens/RegisterAlertas';
 import EditarAlertaScreen from '../screens/EditarAlerta';
 import DatosAyudaScreen from '../screens/DatosAyudaScreen'; // ajusta el path si es necesario
-import CambiarContrasenaScreen from '../screens/CambiarContrasenaScreen'; // ajusta la ruta si es distinta
+import CambiarContrasenaScreen from '../screens/cambiarContrasenaScreen'; // ajusta la ruta si es distinta
 import ImportanciaScreen from '../screens/ImportanciaScreen';
 import RecomendacionesScreen from '../screens/RecomendacionesScreen';
 
