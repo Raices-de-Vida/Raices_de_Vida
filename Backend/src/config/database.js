@@ -18,26 +18,35 @@
  */
 
 const { Sequelize } = require('sequelize');
+require('dotenv').config(); // Carga las variables de .env
 
-// Configuración segura con valores por defecto
+console.log('DB Connection Info:', {
+  database: process.env.DB_NAME || 'Proyecto1',
+  username: process.env.DB_USER || 'user',
+  password: process.env.DB_PASSWORD ? '******' : 'password', // No imprimas la contraseña real
+  host: process.env.DB_HOST || 'db',
+  port: process.env.DB_PORT || 5432
+});
+
+// Configuración segura con prioridad a variables de entorno
 const sequelize = new Sequelize({
-  database: 'Proyecto1',  // Coincide con POSTGRES_DB
-  username: process.env.DB_USER || 'user',      // Valor por defecto 'user'
-  password: process.env.DB_PASSWORD || 'password', // Valor por defecto 'password'
-  host: process.env.DB_HOST || 'db',           // Nombre del servicio en Docker
+  database: process.env.DB_NAME || 'Proyecto1',
+  username: process.env.DB_USER || 'user',
+  password: process.env.DB_PASSWORD || 'password',
+  host: process.env.DB_HOST || 'db',
   port: process.env.DB_PORT || 5432,
   dialect: 'postgres',
   logging: false,
   define: {
     timestamps: false
   },
-  retry: {  // ¡Añade reintentos para evitar fallos en Docker!
+  retry: {
     max: 5,
     timeout: 5000
   }
 });
 
-// Verificación de conexión (opcional pero útil)
+// Verificación de conexión
 sequelize.authenticate()
   .then(() => console.log('Conexión a PostgreSQL establecida correctamente.'))
   .catch(err => console.error('Error de conexión a PostgreSQL:', err));
