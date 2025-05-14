@@ -1,8 +1,8 @@
 FROM node:20-alpine
 WORKDIR /app
-COPY package*.json ./
+COPY Backend/package*.json ./
 RUN npm install
-COPY . .
+COPY Backend/ ./
 RUN ls -la && ls -la src || (echo "El directorio src no existe" && exit 1)
 EXPOSE 3001
 CMD ["npm", "start"]
