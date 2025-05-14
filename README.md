@@ -15,6 +15,7 @@ npm install @react-native-async-storage/async-storage
 npm install @react-native-community/netinfo
 npx expo install expo-notifications
 npx expo install expo-device
+npm install @react-navigation/bottom-tabs --legacy-peer-deps
 
 
 ## 4. Iniciar backend en Docker
