@@ -14,6 +14,7 @@ export default function Home({ navigation, route }) {
   const [activo, setActivo] = useState(true);
   const [alertas, setAlertas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState(null);
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
   const { isConnected, syncInfo, syncNow } = useOffline();
@@ -86,6 +87,20 @@ export default function Home({ navigation, route }) {
     }
   }, [route.params?.refresh]);
 
+  // Cargar datos del usuario
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const data = await OfflineStorage.getUserData();
+        setUserData(data);
+      } catch (error) {
+        console.error('Error cargando datos del usuario:', error);
+      }
+    };
+    
+    loadUserData();
+  }, []);
+
   const renderSyncButton = () => {
     if (!isConnected) {
       return (
@@ -131,18 +146,61 @@ export default function Home({ navigation, route }) {
     </TouchableOpacity>
   );
 
-  return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
-      <ThemeToggle />
-
-      {!isConnected && (
-        <View style={[styles.offlineIndicator, { backgroundColor: theme.toastInfo }]}>
-          <Ionicons name="cloud-offline-outline" size={18} color="white" />
-          <Text style={styles.offlineText}>Modo sin conexión</Text>
+  // Renderizar contenido basado en el rol del usuario
+  const renderContent = () => {
+    // Si no hay datos de usuario, mostrar cargando
+    if (!userData) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.primaryButton} />
+          <Text style={[styles.loadingText, { color: theme.text }]}>Cargando...</Text>
         </View>
-      )}
+      );
+    }
 
-      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
+    // Roles comunitarios
+    if (userData.rol === 'Lider Comunitario' || userData.rol === 'Miembro Comunidad') {
+      return (
+        <View style={styles.communityContent}>
+          <Text style={[styles.welcomeText, { color: theme.text }]}>
+            Bienvenido/a {userData.nombre}
+          </Text>
+          
+          {/* Sección de alertas comunitarias */}
+          <View style={[styles.sectionCard, { backgroundColor: theme.card }]}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>Alertas en tu comunidad</Text>
+            {/* Aquí mostrar alertas relevantes para la comunidad */}
+            {/* ... */}
+          </View>
+          
+          {/* Sección de información nutricional */}
+          <TouchableOpacity 
+            style={[styles.sectionCard, { backgroundColor: theme.card }]}
+            onPress={() => navigation.navigate('DatosAyuda')}
+          >
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>Información nutricional</Text>
+            <Text style={[styles.sectionDescription, { color: theme.secondaryText }]}>
+              Consejos y recursos para mejorar la nutrición en tu comunidad
+            </Text>
+          </TouchableOpacity>
+          
+          {/* Si es Líder Comunitario, mostrar botón para crear alerta */}
+          {userData.rol === 'Lider Comunitario' && (
+            <TouchableOpacity 
+              style={[styles.createAlertButton, { backgroundColor: theme.primaryButton }]}
+              onPress={() => navigation.navigate('RegisterAlertas')}
+            >
+              <Ionicons name="add-circle" size={24} color="white" />
+              <Text style={styles.createAlertText}>Crear Alerta</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      );
+    }
+    
+    // Roles de ONG o Voluntario (contenido original)
+    return (
+      <>
         <View style={[styles.header, { backgroundColor: theme.header }]}>
           <Text style={[styles.headerTitle, { color: theme.text }]}>Home</Text>
         </View>
@@ -194,6 +252,23 @@ export default function Home({ navigation, route }) {
             </>
           )}
         </View>
+      </>
+    );
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      <ThemeToggle />
+
+      {!isConnected && (
+        <View style={[styles.offlineIndicator, { backgroundColor: theme.toastInfo }]}>
+          <Ionicons name="cloud-offline-outline" size={18} color="white" />
+          <Text style={styles.offlineText}>Modo sin conexión</Text>
+        </View>
+      )}
+
+      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
+        {renderContent()}
       </ScrollView>
 
       {/* Barra de navegación reutilizable */}
@@ -201,6 +276,58 @@ export default function Home({ navigation, route }) {
     </View>
   );
 }
+
+// Añadir estos nuevos estilos
+const additionalStyles = {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+  },
+  communityContent: {
+    padding: 5,
+  },
+  welcomeText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginVertical: 20,
+    textAlign: 'center',
+  },
+  sectionCard: {
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 20,
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  sectionDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  createAlertButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 15,
+  },
+  createAlertText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginLeft: 10,
+  },
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -316,4 +443,5 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: '#E65100',
   },
+  ...additionalStyles,
 });
