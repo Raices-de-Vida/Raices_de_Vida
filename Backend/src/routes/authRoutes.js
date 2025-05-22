@@ -39,5 +39,6 @@ const authController = require('../controllers/authController');
 
 router.post('/login', authController.login);
 router.post('/register', authController.register);
+router.post('/register/community', authController.registerCommunityMember);
 
 module.exports = router;
