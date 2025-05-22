@@ -14,6 +14,7 @@ import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import ThemeToggle from '../components/ThemeToggle';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
 
 export default function RegisterCommunityScreen({ navigation }) {
   const { isDarkMode } = useTheme();
@@ -61,19 +62,45 @@ export default function RegisterCommunityScreen({ navigation }) {
   const handleRegister = async () => {
     setSubmitted(true);
     
-    // Validación de campos obligatorios
-    if (!nombre || !apellido || !dpi || !comunidad || !password || !confirmPassword) {
-      Alert.alert('Error', 'Por favor completa todos los campos obligatorios');
-      return;
+    // Validaciones avanzadas
+    const dpiRegex = /^\d{13}$/;
+    const phoneRegex = /^\d{8,10}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    let errors = [];
+    
+    if (!nombre) errors.push('Nombre es obligatorio');
+    if (!apellido) errors.push('Apellido es obligatorio');
+    if (!dpi) {
+      errors.push('DPI es obligatorio');
+    } else if (!dpiRegex.test(dpi)) {
+      errors.push('DPI debe contener exactamente 13 dígitos numéricos');
     }
-
+    
+    if (telefono && !phoneRegex.test(telefono)) {
+      errors.push('Formato de teléfono inválido');
+    }
+    
+    if (email && !emailRegex.test(email)) {
+      errors.push('Formato de correo electrónico inválido');
+    }
+    
+    if (!password) {
+      errors.push('Contraseña es obligatoria');
+    } else if (password.length < 6) {
+      errors.push('La contraseña debe tener al menos 6 caracteres');
+    }
+    
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Las contraseñas no coinciden');
-      return;
+      errors.push('Las contraseñas no coinciden');
     }
-
-    if (dpi.length !== 13 || isNaN(dpi)) {
-      Alert.alert('Error', 'El DPI debe tener 13 dígitos numéricos');
+    
+    if (!comunidad) {
+      errors.push('Debe seleccionar una comunidad');
+    }
+    
+    if (errors.length > 0) {
+      Alert.alert('Error', errors.join('\n'));
       return;
     }
 
@@ -97,26 +124,47 @@ export default function RegisterCommunityScreen({ navigation }) {
         id_referencia: id_comunidad
       };
 
+      // Mostrar feedback al usuario
+      const loadingToast = Toast.show({
+        type: 'info',
+        text1: 'Procesando registro',
+        text2: 'Por favor espere...',
+        visibilityTime: 2000,
+        autoHide: false
+      });
+      
       const response = await axios.post('//localhost:3001/api/auth/register/community', userData);
       
-      Alert.alert(
-        'Registro exitoso',
-        'Tu cuenta ha sido creada correctamente.',
-        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
-      );
-    } catch (error) {
-      console.error('Error en el registro:', error);
+      // Eliminar el toast de carga y mostrar éxito
+      Toast.hide(loadingToast);
+      Toast.show({
+        type: 'success',
+        text1: 'Registro exitoso',
+        text2: 'Su cuenta ha sido creada correctamente'
+      });
       
+      navigation.navigate('Login');
+    } catch (error) {
+      // Manejo de errores mejorado
       let errorMessage = 'No se pudo completar el registro.';
+      
       if (error.response) {
         if (error.response.status === 409) {
-          errorMessage = 'Este DPI o email ya está registrado.';
-        } else if (error.response.data?.error) {
+          errorMessage = 'Este DPI o correo electrónico ya está registrado.';
+        } else if (error.response.status === 400 && error.response.data?.error) {
           errorMessage = error.response.data.error;
+        } else if (error.response.status === 500) {
+          errorMessage = 'Error en el servidor. Intente más tarde.';
         }
+      } else if (error.request) {
+        errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
       }
       
-      Alert.alert('Error', errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: 'Error de registro',
+        text2: errorMessage
+      });
     } finally {
       setLoading(false);
     }
@@ -331,6 +379,7 @@ export default function RegisterCommunityScreen({ navigation }) {
           </Text>
         </TouchableOpacity>
       </ScrollView>
+      <Toast ref={(ref) => Toast.setRef(ref)} />
     </View>
   );
 }

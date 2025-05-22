@@ -13,5 +13,6 @@ router.get('/:id', authenticate, comunidadController.getComunidadById);
 router.post('/', authenticate, authorize(['ONG']), comunidadController.createComunidad);
 router.put('/:id', authenticate, authorize(['ONG']), comunidadController.updateComunidad);
 router.delete('/:id', authenticate, authorize(['ONG']), comunidadController.deleteComunidad);
+router.get('/registro', comunidadController.getComunidadesMiembros);
 
 module.exports = router;

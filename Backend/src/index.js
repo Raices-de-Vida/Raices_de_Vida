@@ -4,6 +4,7 @@ const sequelize = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const casoRoutes = require('./routes/casoRoutes');
 const alertaRoutes = require('./routes/alertaRoutes'); 
+const comunidadRoutes = require('./routes/comunidadRoutes');
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use(cors({ origin: '*', credentials: true }));
 app.use('/api/auth', authRoutes);    // Autenticación
 app.use('/api/casos', casoRoutes);   // Casos críticos
 app.use('/api/alertas', alertaRoutes); 
+app.use('/api/comunidades', comunidadRoutes);
 
 // Manejo de errores
 app.use((err, req, res, next) => {
@@ -50,7 +52,8 @@ app.get('/', (req, res) => {
     routes: {
       auth: '/api/auth',
       casos: '/api/casos',
-      alertas: '/api/alertas' // Nueva ruta documentada
+      alertas: '/api/alertas', // Nueva ruta documentada
+      comunidades: '/api/comunidades' // Ruta de comunidades
     }
   });
 });
