@@ -48,7 +48,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Ong = require('../models/Ong');
 const Voluntario = require('../models/Voluntarios');
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
 const Comunidad = require('../models/Comunidad');
 const MiembroComunidad = require('../models/MiembroComunidad');
 
