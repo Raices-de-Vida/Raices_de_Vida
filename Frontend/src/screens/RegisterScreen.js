@@ -11,6 +11,8 @@ import {
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import ThemeToggle from '../components/ThemeToggle';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState('');
@@ -20,13 +22,16 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [tipoUsuario, setTipoUsuario] = useState('');
+  const [mostrarOpciones, setMostrarOpciones] = useState(false);
+  const opcionesTipo = ['Líder comunitario', 'Trabajador ONG', 'Voluntario'];
+
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
 
   const isEmpty = (value) => submitted && value.trim() === '';
 
   const handleRegister = async () => {
-    alert('Se presionó el botón');
     setSubmitted(true);
 
     if (
@@ -35,26 +40,37 @@ export default function RegisterScreen({ navigation }) {
       dpi.trim() &&
       (email.trim() || dpi.trim()) &&
       password.trim() &&
-      confirmPassword.trim()
+      confirmPassword.trim() &&
+      tipoUsuario
     ) {
       if (password !== confirmPassword) {
         alert('Las contraseñas no coinciden');
         return;
       }
 
-      const response = await axios.post('//localhost:3001/api/auth/register', {
-        nombre: name,
-        apellido: 'SinApellido',
-        email,
-        password,
-        rol: 'ONG',
-        tipo_referencia: 'ONG',
-        id_referencia: 1,
-      });
+      try {
+        const response = await axios.post('//localhost:3001/api/auth/register', {
+          nombre: name,
+          apellido: 'SinApellido',
+          email,
+          password,
+          rol: tipoUsuario,
+          tipo_referencia: tipoUsuario,
+          id_referencia: 1,
+        });
 
-      console.log(' Usuario registrado:', response.data);
-      alert('Registro exitoso');
-      navigation.replace('Home');
+        console.log('Usuario registrado:', response.data);
+        alert('Registro exitoso');
+        await AsyncStorage.setItem('nombre', name);
+        await AsyncStorage.setItem('dpi', dpi);
+        await AsyncStorage.setItem('telefono', phone);
+        await AsyncStorage.setItem('tipo', tipoUsuario);
+
+        navigation.replace('Home');
+      } catch (error) {
+        console.error('Error en el registro:', error);
+        alert('Error al registrar usuario');
+      }
     } else {
       alert('Por favor llena todos los campos');
     }
@@ -63,34 +79,34 @@ export default function RegisterScreen({ navigation }) {
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
       <ThemeToggle />
-      
+
       <Text style={[styles.title, { color: theme.text }]}>Crear cuenta</Text>
 
       <TextInput
         style={[
-          styles.input, 
+          styles.input,
           isEmpty(name) && styles.errorInput,
-          { 
+          {
             borderColor: isEmpty(name) ? 'red' : theme.inputBorder,
             backgroundColor: theme.inputBackground,
-            color: theme.text
-          }
+            color: theme.text,
+          },
         ]}
         placeholder="Nombre completo"
         value={name}
         onChangeText={setName}
         placeholderTextColor={isDarkMode ? '#888' : '#999'}
       />
-      
+
       <TextInput
         style={[
-          styles.input, 
+          styles.input,
           isEmpty(phone) && styles.errorInput,
-          { 
+          {
             borderColor: isEmpty(phone) ? 'red' : theme.inputBorder,
             backgroundColor: theme.inputBackground,
-            color: theme.text
-          }
+            color: theme.text,
+          },
         ]}
         placeholder="Teléfono"
         value={phone}
@@ -98,16 +114,16 @@ export default function RegisterScreen({ navigation }) {
         keyboardType="phone-pad"
         placeholderTextColor={isDarkMode ? '#888' : '#999'}
       />
-      
+
       <TextInput
         style={[
-          styles.input, 
+          styles.input,
           isEmpty(dpi) && styles.errorInput,
-          { 
+          {
             borderColor: isEmpty(dpi) ? 'red' : theme.inputBorder,
             backgroundColor: theme.inputBackground,
-            color: theme.text
-          }
+            color: theme.text,
+          },
         ]}
         placeholder="DPI"
         value={dpi}
@@ -115,20 +131,20 @@ export default function RegisterScreen({ navigation }) {
         keyboardType="numeric"
         placeholderTextColor={isDarkMode ? '#888' : '#999'}
       />
-      
+
       <Text style={[styles.optional, { color: theme.secondaryText }]}>
         O ingresa tu correo electrónico
       </Text>
-      
+
       <TextInput
         style={[
-          styles.input, 
+          styles.input,
           isEmpty(email) && styles.errorInput,
-          { 
+          {
             borderColor: isEmpty(email) ? 'red' : theme.inputBorder,
             backgroundColor: theme.inputBackground,
-            color: theme.text
-          }
+            color: theme.text,
+          },
         ]}
         placeholder="Correo electrónico"
         value={email}
@@ -136,16 +152,16 @@ export default function RegisterScreen({ navigation }) {
         keyboardType="email-address"
         placeholderTextColor={isDarkMode ? '#888' : '#999'}
       />
-      
+
       <TextInput
         style={[
-          styles.input, 
+          styles.input,
           isEmpty(password) && styles.errorInput,
-          { 
+          {
             borderColor: isEmpty(password) ? 'red' : theme.inputBorder,
             backgroundColor: theme.inputBackground,
-            color: theme.text
-          }
+            color: theme.text,
+          },
         ]}
         placeholder="Contraseña"
         secureTextEntry
@@ -153,16 +169,16 @@ export default function RegisterScreen({ navigation }) {
         onChangeText={setPassword}
         placeholderTextColor={isDarkMode ? '#888' : '#999'}
       />
-      
+
       <TextInput
         style={[
-          styles.input, 
+          styles.input,
           isEmpty(confirmPassword) && styles.errorInput,
-          { 
+          {
             borderColor: isEmpty(confirmPassword) ? 'red' : theme.inputBorder,
             backgroundColor: theme.inputBackground,
-            color: theme.text
-          }
+            color: theme.text,
+          },
         ]}
         placeholder="Confirmar contraseña"
         secureTextEntry
@@ -171,8 +187,57 @@ export default function RegisterScreen({ navigation }) {
         placeholderTextColor={isDarkMode ? '#888' : '#999'}
       />
 
-      <TouchableOpacity 
-        style={[styles.button, { backgroundColor: theme.primaryButton }]} 
+      {/* Dropdown Tipo de Usuario */}
+      <View style={{ width: '100%', marginBottom: 15 }}>
+        <Text style={{ marginBottom: 8, color: theme.text, fontWeight: 'bold' }}>Tipo de usuario</Text>
+
+        <TouchableOpacity
+          style={[
+            styles.input,
+            {
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: theme.inputBackground,
+              borderColor: isEmpty(tipoUsuario) ? 'red' : theme.inputBorder,
+            },
+          ]}
+          onPress={() => setMostrarOpciones(!mostrarOpciones)}
+        >
+          <Text style={{ color: tipoUsuario ? theme.text : theme.secondaryText }}>
+            {tipoUsuario || 'Selecciona un tipo'}
+          </Text>
+          <Ionicons name={mostrarOpciones ? 'chevron-up' : 'chevron-down'} size={20} color={theme.text} />
+        </TouchableOpacity>
+
+        {mostrarOpciones && (
+          <View
+            style={{
+              marginTop: 8,
+              backgroundColor: theme.inputBackground,
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: theme.inputBorder,
+            }}
+          >
+            {opcionesTipo.map((opcion) => (
+              <TouchableOpacity
+                key={opcion}
+                onPress={() => {
+                  setTipoUsuario(opcion);
+                  setMostrarOpciones(false);
+                }}
+                style={{ padding: 12 }}
+              >
+                <Text style={{ color: theme.text }}>{opcion}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
+
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: theme.primaryButton }]}
         onPress={handleRegister}
       >
         <Text style={styles.buttonText}>Registrarme</Text>

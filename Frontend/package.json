@@ -11,7 +11,7 @@
   "dependencies": {
     "@expo/metro-runtime": "~4.0.1",
     "@expo/vector-icons": "^14.0.2",
-    "@react-native-async-storage/async-storage": "^2.1.2",
+    "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-community/netinfo": "^11.4.1",
     "@react-navigation/native": "^6.1.7",
     "@react-navigation/native-stack": "^6.9.12",
@@ -29,7 +29,8 @@
     "react-native-screens": "~4.4.0",
     "react-native-web": "~0.19.13",
     "expo-notifications": "~0.29.14",
-    "expo-device": "~7.0.3"
+    "expo-device": "~7.0.3",
+    "expo-image-picker": "~16.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

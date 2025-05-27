@@ -1,6 +1,5 @@
-// RecomendacionesScreen.js
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
@@ -18,9 +17,11 @@ export default function RecomendacionesScreen({ navigation }) {
         <Text style={[styles.headerTitle, { color: theme.text }]}>Recomendaciones</Text>
       </View>
 
-      <View style={[styles.placeholder, { backgroundColor: theme.card }]}> 
-        <Text style={[styles.placeholderText, { color: theme.secondaryText }]}>[Aquí iría la imagen del plato equilibrado]</Text>
-      </View>
+      <Image
+        source={require('../../assets/recomendaciones-plato.png')} // Asegúrate que el archivo exista
+        style={styles.infografia}
+        resizeMode="contain"
+      />
     </ScrollView>
   );
 }
@@ -38,11 +39,9 @@ const styles = StyleSheet.create({
   },
   backButton: { padding: 4 },
   headerTitle: { fontSize: 20, fontWeight: 'bold' },
-  placeholder: {
+  infografia: {
+    width: '100%',
     height: 400,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  placeholderText: { fontStyle: 'italic' },
 });

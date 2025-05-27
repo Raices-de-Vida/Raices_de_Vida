@@ -10,8 +10,6 @@ export default {
   async savePendingAlert(alert) {
     try {
       const existingAlerts = await this.getPendingAlerts();
-      
-      //ID temporal
       const alertWithId = {
         ...alert,
         tempId: Date.now().toString(),
@@ -19,13 +17,8 @@ export default {
         pendingSync: true,
         syncAttempts: 0
       };
-      
       const updatedAlerts = [...existingAlerts, alertWithId];
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.PENDING_ALERTS, 
-        JSON.stringify(updatedAlerts)
-      );
-      
+      await AsyncStorage.setItem(STORAGE_KEYS.PENDING_ALERTS, JSON.stringify(updatedAlerts));
       return alertWithId;
     } catch (error) {
       console.error('Error guardando alerta pendiente:', error);
@@ -42,8 +35,7 @@ export default {
       return [];
     }
   },
-  
-  //Obtener una alerta específica
+
   async getPendingAlert(tempId) {
     try {
       const alerts = await this.getPendingAlerts();
@@ -54,7 +46,6 @@ export default {
     }
   },
 
-  //actualizar una alerta específica
   async updatePendingAlert(tempId, updates) {
     try {
       const alerts = await this.getPendingAlerts();
@@ -64,12 +55,7 @@ export default {
         }
         return alert;
       });
-      
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.PENDING_ALERTS, 
-        JSON.stringify(updatedAlerts)
-      );
-      
+      await AsyncStorage.setItem(STORAGE_KEYS.PENDING_ALERTS, JSON.stringify(updatedAlerts));
       return true;
     } catch (error) {
       console.error('Error actualizando alerta pendiente:', error);
@@ -77,21 +63,16 @@ export default {
     }
   },
 
-  //Eliminar una alerta pendiente después de sincronizarla
   async removePendingAlert(tempId) {
     try {
       const alerts = await this.getPendingAlerts();
       const updatedAlerts = alerts.filter(alert => alert.tempId !== tempId);
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.PENDING_ALERTS, 
-        JSON.stringify(updatedAlerts)
-      );
+      await AsyncStorage.setItem(STORAGE_KEYS.PENDING_ALERTS, JSON.stringify(updatedAlerts));
     } catch (error) {
       console.error('Error eliminando alerta pendiente:', error);
     }
   },
 
-  //Guardar datos del usuario para acceso offline
   async saveUserData(userData) {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
@@ -100,7 +81,6 @@ export default {
     }
   },
 
-  //Obtener datos del usuario guardados
   async getUserData() {
     try {
       const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
@@ -111,7 +91,6 @@ export default {
     }
   },
 
-  //Guardar token de autenticación
   async saveToken(token) {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.USER_TOKEN, token);
@@ -119,6 +98,7 @@ export default {
       console.error('Error guardando token:', error);
     }
   },
+
   async getToken() {
     try {
       return await AsyncStorage.getItem(STORAGE_KEYS.USER_TOKEN);
@@ -128,13 +108,21 @@ export default {
     }
   },
 
-  //Limpiar datos de sesión
   async clearSession() {
     try {
       await AsyncStorage.removeItem(STORAGE_KEYS.USER_TOKEN);
       await AsyncStorage.removeItem(STORAGE_KEYS.USER_DATA);
     } catch (error) {
       console.error('Error limpiando sesión:', error);
+    }
+  },
+
+  // NUEVO: Limpiar TODO el almacenamiento (no solo sesión)
+  async clearAll() {
+    try {
+      await AsyncStorage.clear();
+    } catch (error) {
+      console.error('Error limpiando todo el almacenamiento:', error);
     }
   }
 };

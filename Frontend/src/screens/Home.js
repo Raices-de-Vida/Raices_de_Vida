@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert
+} from 'react-native';
 import { Ionicons, AntDesign } from '@expo/vector-icons';
 import axios from 'axios';
+import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import ThemeToggle from '../components/ThemeToggle';
 import { useOffline } from '../context/OfflineContext';
 import OfflineStorage from '../services/OfflineStorage';
 import BottomNav from '../components/BottomNav';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Home({ navigation, route }) {
   const [activo, setActivo] = useState(true);
@@ -17,6 +20,31 @@ export default function Home({ navigation, route }) {
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
   const { isConnected, syncInfo, syncNow } = useOffline();
+
+  // Solicitar permiso de notificaciones una sola vez
+  useEffect(() => {
+    const solicitarPermisoNotificaciones = async () => {
+      const yaPreguntado = await AsyncStorage.getItem('notificacionesPermitidas');
+      if (yaPreguntado === 'true' || yaPreguntado === 'false') {
+        return;
+      }
+
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status === 'granted') {
+          await AsyncStorage.setItem('notificacionesPermitidas', 'true');
+        } else {
+          await AsyncStorage.setItem('notificacionesPermitidas', 'false');
+          Alert.alert('Permiso denegado', 'No recibirás notificaciones.');
+        }
+      } else {
+        await AsyncStorage.setItem('notificacionesPermitidas', 'true');
+      }
+    };
+
+    solicitarPermisoNotificaciones();
+  }, []);
 
   const fetchAlertas = async () => {
     setLoading(true);
@@ -27,9 +55,7 @@ export default function Home({ navigation, route }) {
         try {
           const token = await OfflineStorage.getToken();
           const response = await axios.get('http://localhost:3001/api/alertas', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+            headers: { 'Authorization': `Bearer ${token}` }
           });
 
           alertasData = response.data.map(alerta => ({
@@ -120,12 +146,10 @@ export default function Home({ navigation, route }) {
           {alerta.comunidad} {alerta.edad ? `• ${alerta.edad} años` : ''}
         </Text>
       </View>
-      <Text style={[
-        styles.alertStatus,
-        {
-          color: alerta.estado === 'Pendiente' ? '#E65100' :
-                 alerta.estado === 'Atendida' ? '#2E7D32' : '#1565C0'
-        }]}>
+      <Text style={[styles.alertStatus, {
+        color: alerta.estado === 'Pendiente' ? '#E65100' :
+               alerta.estado === 'Atendida' ? '#2E7D32' : '#1565C0'
+      }]}>
         {alerta.estado}
       </Text>
     </TouchableOpacity>
@@ -154,28 +178,14 @@ export default function Home({ navigation, route }) {
 
           <View style={[styles.switchContainer, { backgroundColor: theme.switchInactive }]}>
             <TouchableOpacity
-              style={[
-                styles.switchButton,
-                activo && { backgroundColor: theme.switchActive }
-              ]}
-              onPress={() => setActivo(true)}
-            >
-              <Text style={[
-                styles.switchText,
-                { color: activo ? '#fff' : theme.secondaryText }
-              ]}>Activos</Text>
+              style={[styles.switchButton, activo && { backgroundColor: theme.switchActive }]}
+              onPress={() => setActivo(true)}>
+              <Text style={[styles.switchText, { color: activo ? '#fff' : theme.secondaryText }]}>Activos</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[
-                styles.switchButton,
-                !activo && { backgroundColor: theme.switchActive }
-              ]}
-              onPress={() => setActivo(false)}
-            >
-              <Text style={[
-                styles.switchText,
-                { color: !activo ? '#fff' : theme.secondaryText }
-              ]}>Inactivos</Text>
+              style={[styles.switchButton, !activo && { backgroundColor: theme.switchActive }]}
+              onPress={() => setActivo(false)}>
+              <Text style={[styles.switchText, { color: !activo ? '#fff' : theme.secondaryText }]}>Inactivos</Text>
             </TouchableOpacity>
           </View>
 
@@ -196,7 +206,6 @@ export default function Home({ navigation, route }) {
         </View>
       </ScrollView>
 
-      {/* Barra de navegación reutilizable */}
       <BottomNav navigation={navigation} />
     </View>
   );

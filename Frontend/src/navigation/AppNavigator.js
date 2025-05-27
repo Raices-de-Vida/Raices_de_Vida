@@ -13,8 +13,10 @@ import DatosAyudaScreen from '../screens/DatosAyudaScreen'; // ajusta el path si
 import CambiarContrasenaScreen from '../screens/CambiarContrasenaScreen'; // ajusta la ruta si es distinta
 import ImportanciaScreen from '../screens/ImportanciaScreen';
 import RecomendacionesScreen from '../screens/RecomendacionesScreen';
-
+import PerfilScreen from '../screens/PerfilScreen';
 import ConfiguracionScreen from '../screens/ConfiguracionScreen'; //  Asegúrate que el nombre y path coincidan
+import AlertasDepartamento from '../screens/AlertasDepartamento'; // Asegúrate que el nombre y path coincidan
+import MapaDepartamentos from '../screens/MapaDepartamentos';
 
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 
@@ -47,6 +49,11 @@ function AppStack() {
           <Stack.Screen name="CambiarContrasena" component={CambiarContrasenaScreen} />
           <Stack.Screen name="Importancia" component={ImportanciaScreen} />
           <Stack.Screen name="Recomendaciones" component={RecomendacionesScreen} />
+          <Stack.Screen name="Perfil" component={PerfilScreen} />
+          <Stack.Screen name="MapaDepartamentos" component={require('../screens/MapaDepartamentos').default} />
+          <Stack.Screen name="AlertasDepartamento" component={AlertasDepartamento} options={{ headerShown: true }}/>
+          <Stack.Screen name="DatosUsuario" component={require('../screens/DatosUsuarioScreen').default} />
+
 
         </Stack.Navigator>
       </NavigationContainer>

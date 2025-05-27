@@ -84,6 +84,8 @@ export default function LoginScreen({ navigation }) {
           id: user?.id,
           email: email,
           nombre: user?.nombre,
+          dpi: user?.dpi,
+          telefono: user?.telefono,
           rol: user?.rol
         });
         

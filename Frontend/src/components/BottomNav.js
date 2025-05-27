@@ -13,7 +13,7 @@ export default function BottomNav({ navigation }) {
       <TouchableOpacity onPress={() => navigation.navigate('Home')}>
         <Ionicons name="home" size={28} color={theme.text} />
       </TouchableOpacity>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('MapaDepartamentos')}>
         <Ionicons name="search-outline" size={28} color={theme.text} />
       </TouchableOpacity>
       <TouchableOpacity
@@ -25,7 +25,7 @@ export default function BottomNav({ navigation }) {
       <TouchableOpacity onPress={() => navigation.navigate('DatosAyuda')}>
         <AntDesign name="exclamationcircle" size={28} color="red" />
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Configuracion')}>
+      <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
         <FontAwesome name="user-o" size={28} color={theme.text} />
       </TouchableOpacity>
 

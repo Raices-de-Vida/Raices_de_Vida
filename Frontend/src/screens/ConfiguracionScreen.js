@@ -1,82 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch, Alert } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
-import BottomNav from '../components/BottomNav';
 
 export default function ConfiguracionScreen({ navigation }) {
   const [mostrarIdiomas, setMostrarIdiomas] = useState(false);
   const [mostrarRegiones, setMostrarRegiones] = useState(false);
   const [idiomaSeleccionado, setIdiomaSeleccionado] = useState(null);
   const [regionSeleccionada, setRegionSeleccionada] = useState(null);
-  const [notificacionesActivas, setNotificacionesActivas] = useState(false);
 
   const { isDarkMode, toggleDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
-
-  useEffect(() => {
-    const cargarPreferencia = async () => {
-      try {
-        const valorGuardado = await AsyncStorage.getItem('notificacionesActivas');
-        if (valorGuardado !== null) {
-          setNotificacionesActivas(JSON.parse(valorGuardado));
-        }
-      } catch (error) {
-        console.error('Error al leer estado de notificaciones:', error);
-      }
-    };
-
-    cargarPreferencia();
-  }, []);
-
-  const manejarToggleNotificaciones = async () => {
-    const nuevoEstado = !notificacionesActivas;
-    setNotificacionesActivas(nuevoEstado);
-    await AsyncStorage.setItem('notificacionesActivas', JSON.stringify(nuevoEstado));
-
-    if (nuevoEstado) {
-      if (Device.isDevice) {
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        let finalStatus = existingStatus;
-
-        if (existingStatus !== 'granted') {
-          const { status } = await Notifications.requestPermissionsAsync();
-          finalStatus = status;
-        }
-
-        if (finalStatus !== 'granted') {
-          Alert.alert('Permiso denegado', 'No se pueden enviar notificaciones');
-          setNotificacionesActivas(false);
-          await AsyncStorage.setItem('notificacionesActivas', JSON.stringify(false));
-          return;
-        }
-
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: 'Notificaciones activadas ✅',
-            body: 'Ahora recibirás alertas importantes.',
-          },
-          trigger: null,
-        });
-      } else {
-        Alert.alert('Simulador no compatible', 'Debes usar un dispositivo físico');
-        setNotificacionesActivas(false);
-        await AsyncStorage.setItem('notificacionesActivas', JSON.stringify(false));
-      }
-    } else {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Notificaciones desactivadas',
-          body: 'Ya no recibirás notificaciones.',
-        },
-        trigger: null,
-      });
-    }
-  };
 
   const cerrarSesion = async () => {
     try {
@@ -166,19 +102,6 @@ export default function ConfiguracionScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Notificaciones */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="notifications-outline" size={20} color="green" />
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>Notificaciones</Text>
-            <Switch
-              value={notificacionesActivas}
-              onValueChange={manejarToggleNotificaciones}
-              style={{ marginLeft: 'auto' }}
-            />
-          </View>
-        </View>
-
         {/* Tema oscuro */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -194,10 +117,7 @@ export default function ConfiguracionScreen({ navigation }) {
 
         {/* Cambiar contraseña */}
         <View style={styles.section}>
-          <TouchableOpacity 
-            style={styles.sectionHeader}
-            onPress={() => navigation.navigate('CambiarContrasena')}
-          >
+          <TouchableOpacity style={styles.sectionHeader} onPress={() => navigation.navigate('CambiarContrasena')}>
             <Ionicons name="lock-closed-outline" size={20} color="green" />
             <Text style={[styles.sectionTitle, { color: theme.text }]}>Cambiar contraseña</Text>
           </TouchableOpacity>
@@ -211,8 +131,6 @@ export default function ConfiguracionScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      <BottomNav navigation={navigation} />
     </View>
   );
 }
