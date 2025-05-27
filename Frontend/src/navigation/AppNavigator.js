@@ -10,13 +10,18 @@ import HomeScreen from '../screens/Home';
 import RegisterAlertasScreen from '../screens/RegisterAlertas';
 import EditarAlertaScreen from '../screens/EditarAlerta';
 import DatosAyudaScreen from '../screens/DatosAyudaScreen'; // ajusta el path si es necesario
-import CambiarContrasenaScreen from '../screens/CambiarContrasenaScreen'; // ajusta la ruta si es distinta
+import CambiarContrasenaScreen from '../screens/cambiarContrasenaScreen'; 
 import ImportanciaScreen from '../screens/ImportanciaScreen';
 import RecomendacionesScreen from '../screens/RecomendacionesScreen';
 import PerfilScreen from '../screens/PerfilScreen';
 import ConfiguracionScreen from '../screens/ConfiguracionScreen'; //  Asegúrate que el nombre y path coincidan
 import AlertasDepartamento from '../screens/AlertasDepartamento'; // Asegúrate que el nombre y path coincidan
 import MapaDepartamentos from '../screens/MapaDepartamentos';
+
+
+//import ConfiguracionScreen from '../screens/ConfiguracionScreen'; 
+//import RegisterCommunityScreen from '../screens/RegisterCommunityScreen';
+
 
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 
@@ -40,6 +45,7 @@ function AppStack() {
           <Stack.Screen name="Welcome" component={WelcomeScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="RegisterCommunity" component={RegisterCommunityScreen} />
           <Stack.Screen name="Terms" component={TermsScreen} />
           <Stack.Screen name="Home" component={HomeScreen} />         
           <Stack.Screen name="RegisterAlertas" component={RegisterAlertasScreen} />

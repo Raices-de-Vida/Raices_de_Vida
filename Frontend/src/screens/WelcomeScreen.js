@@ -17,20 +17,33 @@ export default function WelcomeScreen({ navigation }) {
       <Text style={[styles.title, { color: theme.text }]}>Raíces de vida</Text>
       <Text style={[styles.subtitle, { color: theme.secondaryText }]}>ayudar es nuestra misión</Text>
 
-      <View style={styles.buttonRow}>
-        <TouchableOpacity 
-          style={[styles.loginButton, { borderColor: theme.secondaryButton }]} 
-          onPress={() => navigation.navigate('Login')}
-        >
-          <Text style={[styles.loginText, { color: theme.secondaryButton }]}>LOG IN</Text>
-        </TouchableOpacity>
+      {/* Botones de inicio de sesión */}
+      <TouchableOpacity 
+        style={[styles.loginButton, { backgroundColor: theme.secondaryButton }]} 
+        onPress={() => navigation.navigate('Login')}
+      >
+        <Text style={styles.loginText}>Iniciar sesión</Text>
+      </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.registerButton, { backgroundColor: theme.primaryButton }]} 
-          onPress={() => navigation.navigate('Register')}
-        >
-          <Text style={styles.registerText}>REGISTER</Text>
-        </TouchableOpacity>
+      {/* Registrarse como grupo */}
+      <View style={styles.registerGroup}>
+        <Text style={[styles.registerText, { color: theme.secondaryText }]}>Registrarse como:</Text>
+        
+        <View style={styles.buttonRow}>
+          <TouchableOpacity 
+            style={[styles.registerButton, { backgroundColor: theme.primaryButton }]} 
+            onPress={() => navigation.navigate('Register')}
+          >
+            <Text style={styles.registerButtonText}>ONG</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.registerButton, { backgroundColor: theme.primaryButton }]} 
+            onPress={() => navigation.navigate('RegisterCommunity')}
+          >
+            <Text style={styles.registerButtonText}>Comunidad</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -57,30 +70,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 50,
   },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 12,
-  },
   loginButton: {
-    borderWidth: 1.5,
-    borderRadius: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginRight: 10,
+    width: '80%',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 24,
   },
   loginText: {
+    color: 'white',
     fontWeight: '500',
-    fontSize: 13,
+    fontSize: 16,
   },
-  registerButton: {
-    borderRadius: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+  registerGroup: {
+    width: '100%',
+    alignItems: 'center',
   },
   registerText: {
-    color: '#fff',
-    fontWeight: '500',
-    fontSize: 13,
+    marginBottom: 12,
+    fontSize: 14,
   },
+  buttonRow: {
+    flexDirection: 'row',
+    width: '80%',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  registerButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  registerButtonText: {
+    color: 'white',
+    fontWeight: '500',
+    fontSize: 16,
+  }
 });
