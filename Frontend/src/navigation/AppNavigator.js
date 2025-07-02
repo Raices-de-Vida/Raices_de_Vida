@@ -23,6 +23,8 @@ import MapaDepartamentos from '../screens/MapaDepartamentos';
 //import RegisterCommunityScreen from '../screens/RegisterCommunityScreen';
 
 
+
+import ConfiguracionScreen from '../screens/ConfiguracionScreen'; 
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 
 const Stack = createNativeStackNavigator();
@@ -45,7 +47,6 @@ function AppStack() {
           <Stack.Screen name="Welcome" component={WelcomeScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
-          <Stack.Screen name="RegisterCommunity" component={RegisterCommunityScreen} />
           <Stack.Screen name="Terms" component={TermsScreen} />
           <Stack.Screen name="Home" component={HomeScreen} />         
           <Stack.Screen name="RegisterAlertas" component={RegisterAlertasScreen} />

@@ -6,7 +6,6 @@ const Familia = require('./Familia');
 const Nino = require('./Nino');
 const CasoCritico = require('./CasoCritico');
 const Alerta = require('./Alerta');
-const MiembroComunidad = require('./MiembroComunidad');
 
 // Relación Usuario a ONG/Voluntario
 User.belongsTo(Ong, {
@@ -64,26 +63,6 @@ User.hasMany(Alerta, {
   foreignKey: 'id_usuario',
   sourceKey: 'id_usuario', // Debe coincidir con la PK de Usuarios
   as: 'alertas_generadas' 
-});
-
-// Asociaciones para Miembros de Comunidad
-MiembroComunidad.belongsTo(User, { 
-  foreignKey: 'id_usuario',
-  targetKey: 'id_usuario',
-  as: 'usuario'
-});
-
-MiembroComunidad.belongsTo(Comunidad, {
-  foreignKey: 'id_comunidad',
-  targetKey: 'id_comunidad',
-  as: 'comunidad'
-});
-
-// User puede ser un miembro de comunidad
-User.hasOne(MiembroComunidad, {
-  foreignKey: 'id_usuario',
-  sourceKey: 'id_usuario',
-  as: 'miembro_comunidad'
 });
 
 module.exports = {
