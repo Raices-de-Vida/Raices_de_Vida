@@ -24,7 +24,7 @@ export default function RegisterScreen({ navigation }) {
   const [submitted, setSubmitted] = useState(false);
   const [tipoUsuario, setTipoUsuario] = useState('');
   const [mostrarOpciones, setMostrarOpciones] = useState(false);
-  const opcionesTipo = ['Líder comunitario', 'Trabajador ONG', 'Voluntario'];
+  const opcionesTipo = ['ONG', 'Voluntario', 'Lider Comunitario'];
 
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
@@ -49,7 +49,7 @@ export default function RegisterScreen({ navigation }) {
       }
 
       try {
-        const response = await axios.post('//localhost:3001/api/auth/register', {
+        const response = await axios.post('http://localhost:3001/api/auth/register', {
           nombre: name,
           apellido: 'SinApellido',
           email,
