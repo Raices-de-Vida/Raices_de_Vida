@@ -5,7 +5,25 @@
     "main": "src/index.js",
     "scripts": {
         "start": "node src/index.js",
-        "dev": "NODE_ENV=development node -r dotenv/config src/index.js dotenv_config_path=.env.local"
+        "dev": "NODE_ENV=development node -r dotenv/config src/index.js dotenv_config_path=.env.local",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage"
+    },
+    "jest": {
+        "testEnvironment": "node",
+        "setupFilesAfterEnv": [
+            "<rootDir>/src/tests/setup.js"
+        ],
+        "testMatch": [
+            "<rootDir>/src/tests//*.test.js",
+            "<rootDir>/src//*.test.js"
+        ],
+        "collectCoverageFrom": [
+            "src//*.js",
+            "!src/tests/",
+            "!src/index.js"
+        ]
     },
     "dependencies": {
         "@react-native-async-storage/async-storage": "^2.1.2",
@@ -19,6 +37,9 @@
         "sequelize": "^6.37.7"
     },
     "devDependencies": {
-        "nodemon": "^3.0.2"
+        "jest": "^30.0.4",
+        "nodemon": "^3.0.2",
+        "sqlite3": "^5.1.7",
+        "supertest": "^7.1.3"
     }
 }
