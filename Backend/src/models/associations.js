@@ -1,6 +1,6 @@
 const User = require('./User');
 const Ong = require('./Ong');
-const Voluntario = require('./Voluntario');
+const Voluntario = require('./Voluntarios');
 const Comunidad = require('./Comunidad');
 const Familia = require('./Familia');
 const Nino = require('./Nino');

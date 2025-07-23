@@ -5,6 +5,9 @@ const authRoutes = require('./routes/authRoutes');
 const casoRoutes = require('./routes/casoRoutes');
 const alertaRoutes = require('./routes/alertaRoutes'); 
 
+// AGREGAR: Importar las asociaciones
+require('./models/associations');
+
 dotenv.config();
 
 const app = express();

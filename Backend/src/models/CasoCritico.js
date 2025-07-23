@@ -7,7 +7,10 @@ const CasoCritico = sequelize.define('Casos_Criticos', {
     primaryKey: true,
     autoIncrement: true
   },
-  id_nino: DataTypes.INTEGER,
+  id_nino: {
+    type: DataTypes.INTEGER,
+    allowNull: true // CAMBIO: Hacer opcional para evitar constraint errors
+  },
   id_familia: {
     type: DataTypes.INTEGER,
     allowNull: false

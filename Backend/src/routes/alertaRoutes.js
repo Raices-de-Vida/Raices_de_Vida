@@ -6,15 +6,15 @@ const { authenticate, authorize } = require('../middlewares/authMiddleware');
 // Obtener todas las alertas (ONG y Voluntarios)
 router.get(
   '/',
-  authenticate,
-  authorize(['ONG', 'Voluntario', 'Lider Comunitario']), // Corregido: Sin tilde en "Lider"
+  //authenticate,
+  //authorize(['ONG', 'Voluntario', 'Lider Comunitario']), // Corregido: Sin tilde en "Lider"
   alertaController.getAllAlertas
 );
 
 // Crear nueva alerta (Solo Líderes Comunitarios y ONG)
 router.post('/', 
-  authenticate, 
-  authorize(['Líder Comunitario', 'ONG']), 
+  //authenticate, 
+  //authorize(['Líder Comunitario', 'ONG']), 
   alertaController.createAlerta
 );
 

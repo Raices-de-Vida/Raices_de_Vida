@@ -1,14 +1,14 @@
 const Alerta = require('../models/Alerta');
 const CasoCritico = require('../models/CasoCritico');
 
-// alertaController.js (getAllAlertas)
+// alertaController.js (getAllAlertas) - CORREGIDO
 exports.getAllAlertas = async (req, res) => {
   try {
     const alertas = await Alerta.findAll({
       include: [{
         model: CasoCritico,
         attributes: ['id_caso', 'descripcion', 'nivel_urgencia'],
-        as: 'caso' // Asegurar que el alias coincida con la asociación
+        as: 'caso' // Este alias debe coincidir con el definido en associations.js
       }]
     });
     res.json(alertas);
