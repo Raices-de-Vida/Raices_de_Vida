@@ -1,25 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image
+} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav from '../components/BottomNav';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import { Ionicons } from '@expo/vector-icons';
+import OfflineStorage from '../services/OfflineStorage';
 
 export default function PerfilScreen({ navigation }) {
   const [fotoPerfil, setFotoPerfil] = useState(null);
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('');
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
 
   useEffect(() => {
-    const cargarFotoGuardada = async () => {
+    const cargarDatos = async () => {
+      // 1) Foto de perfil
       const uriGuardado = await AsyncStorage.getItem('fotoPerfil');
       if (uriGuardado) {
         setFotoPerfil(uriGuardado);
       }
+
+      // 2) Intentar leer desde OfflineStorage (login)
+      let firstName = '';
+      let userRole = '';
+      try {
+        const userData = await OfflineStorage.getUserData();
+        if (userData?.nombre) {
+          firstName = userData.nombre.split(' ')[0];
+        }
+        if (userData?.rol) {
+          userRole = userData.rol;
+        }
+      } catch (err) {
+        // No había datos en OfflineStorage
+      }
+
+      // 3) Si no viene de login, leer desde AsyncStorage (register)
+      if (!firstName) {
+        const nombreRegistro = await AsyncStorage.getItem('nombre');
+        if (nombreRegistro) {
+          firstName = nombreRegistro.split(' ')[0];
+        }
+      }
+      if (!userRole) {
+        const tipoRegistro = await AsyncStorage.getItem('tipo');
+        if (tipoRegistro) {
+          userRole = tipoRegistro;
+        }
+      }
+
+      // 4) Setear en estado
+      if (firstName) setName(firstName);
+      if (userRole) setRole(userRole);
     };
-    cargarFotoGuardada();
+
+    cargarDatos();
   }, []);
 
   const seleccionarFoto = async () => {
@@ -70,11 +114,14 @@ export default function PerfilScreen({ navigation }) {
         </TouchableOpacity>
       )}
 
-      <Text style={[styles.nameText, { color: theme.text }]}>Nombre</Text>
-      <Text style={[styles.roleText, { color: theme.secondaryText }]}>rol de usuario</Text>
+      <Text style={[styles.nameText, { color: theme.text }]}>
+        {name || 'Nombre'}
+      </Text>
+      <Text style={[styles.roleText, { color: theme.secondaryText }]}>
+        {role || 'Rol de usuario'}
+      </Text>
 
       <View style={styles.cardContainer}>
-        {/* Botón que navega a DatosUsuario */}
         <TouchableOpacity
           style={[styles.infoCard, { backgroundColor: theme.card }]}
           onPress={() => navigation.navigate('DatosUsuario')}
