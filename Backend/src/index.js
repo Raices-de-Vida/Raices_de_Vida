@@ -4,6 +4,7 @@ const sequelize = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const casoRoutes = require('./routes/casoRoutes');
 const alertaRoutes = require('./routes/alertaRoutes'); 
+const userInfoRoutes = require('./routes/UserInfoRoutes'); // NUEVO
 
 // AGREGAR: Importar las asociaciones
 require('./models/associations');
@@ -30,9 +31,10 @@ app.use(cors({ origin: '*', credentials: true }));
 })();
 
 // Configuración de rutas
-app.use('/api/auth', authRoutes);    // Autenticación
-app.use('/api/casos', casoRoutes);   // Casos críticos
-app.use('/api/alertas', alertaRoutes); 
+app.use('/api/auth', authRoutes);         // Autenticación
+app.use('/api/casos', casoRoutes);        // Casos críticos
+app.use('/api/alertas', alertaRoutes);    // Alertas
+app.use('/api/user-info', userInfoRoutes); // NUEVO: Información de usuarios
 
 // Manejo de errores
 app.use((err, req, res, next) => {
@@ -53,7 +55,8 @@ app.get('/', (req, res) => {
     routes: {
       auth: '/api/auth',
       casos: '/api/casos',
-      alertas: '/api/alertas' // Nueva ruta documentada
+      alertas: '/api/alertas',
+      userInfo: '/api/user-info'  // NUEVO
     }
   });
 });
