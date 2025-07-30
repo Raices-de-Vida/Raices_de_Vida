@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -13,8 +13,11 @@ import { getTheme } from '../styles/theme';
 import ThemeToggle from '../components/ThemeToggle';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { AuthContext } from '../context/AuthContext';
 
 export default function RegisterScreen({ navigation }) {
+  const { signIn } = useContext(AuthContext);
+
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [dpi, setDpi] = useState('');
@@ -28,58 +31,67 @@ export default function RegisterScreen({ navigation }) {
 
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const isEmpty = (val) => submitted && val.trim() === '';
 
-  const isEmpty = (value) => submitted && value.trim() === '';
+  // dentro de RegisterScreen.js, justo antes de handleRegister:
+const normalizeRole = (rol) => {
+  if (rol === 'ONG') return 'Ong';
+  if (rol === 'Voluntario') return 'Volunteer';
+  return rol;
+};
 
-  const handleRegister = async () => {
-    setSubmitted(true);
-
-    if (
-      name.trim() &&
-      phone.trim() &&
-      dpi.trim() &&
-      (email.trim() || dpi.trim()) &&
-      password.trim() &&
-      confirmPassword.trim() &&
-      tipoUsuario
-    ) {
-      if (password !== confirmPassword) {
-        alert('Las contraseñas no coinciden');
-        return;
-      }
-
-      try {
-        const response = await axios.post('http://localhost:3001/api/auth/register', {
-          nombre: name,
-          apellido: 'SinApellido',
+const handleRegister = async () => {
+  setSubmitted(true);
+  if (
+    name.trim() &&
+    phone.trim() &&
+    dpi.trim() &&
+    (email.trim() || dpi.trim()) &&
+    password.trim() &&
+    confirmPassword.trim() &&
+    tipoUsuario
+  ) {
+    if (password !== confirmPassword) {
+      alert('Las contraseñas no coinciden');
+      return;
+    }
+    try {
+      const { data: user } = await axios.post(
+        'http://localhost:3001/api/auth/register',
+        {
+          nombre:           name,
+          apellido:         'SinApellido',
           email,
           password,
-          rol: tipoUsuario,
-          tipo_referencia: tipoUsuario,
-          id_referencia: 1,
-        });
+          rol:              tipoUsuario,
+          tipo_referencia:  tipoUsuario,
+          id_referencia:    1,
+        }
+      );
 
-        console.log('Usuario registrado:', response.data);
-        alert('Registro exitoso');
-        await AsyncStorage.setItem('nombre', name);
-        await AsyncStorage.setItem('dpi', dpi);
-        await AsyncStorage.setItem('telefono', phone);
-        await AsyncStorage.setItem('tipo', tipoUsuario);
+      // Guardar datos
+      await AsyncStorage.setItem('nombre',   user.nombre);
+      await AsyncStorage.setItem('dpi',      dpi);
+      await AsyncStorage.setItem('telefono', phone);
+      await AsyncStorage.setItem('tipo',     user.rol);
 
-        navigation.replace('Home');
-      } catch (error) {
-        console.error('Error en el registro:', error);
-        alert('Error al registrar usuario');
-      }
-    } else {
-      alert('Por favor llena todos los campos');
+      // Normalizar rol al nombre de ruta y disparar contexto
+      const mapped = normalizeRole(user.rol);
+      signIn(mapped);
+
+    } catch (error) {
+      console.error('Error en el registro:', error);
+      const msg = error.response?.data?.error || 'Error al registrar usuario';
+      alert(msg);
     }
-  };
+  } else {
+    alert('Por favor llena todos los campos');
+  }
+};
 
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
       <ThemeToggle />
-
       <Text style={[styles.title, { color: theme.text }]}>Crear cuenta</Text>
 
       <TextInput
@@ -187,7 +199,6 @@ export default function RegisterScreen({ navigation }) {
         placeholderTextColor={isDarkMode ? '#888' : '#999'}
       />
 
-      {/* Dropdown Tipo de Usuario */}
       <View style={{ width: '100%', marginBottom: 15 }}>
         <Text style={{ marginBottom: 8, color: theme.text, fontWeight: 'bold' }}>Tipo de usuario</Text>
 
@@ -236,76 +247,28 @@ export default function RegisterScreen({ navigation }) {
         )}
       </View>
 
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: theme.primaryButton }]}
-        onPress={handleRegister}
-      >
+      <TouchableOpacity style={[styles.button, { backgroundColor: theme.primaryButton }]} onPress={handleRegister}>
         <Text style={styles.buttonText}>Registrarme</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={[styles.link, { color: theme.secondaryButton }]}>
-          ¿Ya tienes cuenta? Inicia sesión
-        </Text>
+        <Text style={[styles.link, { color: theme.secondaryButton }]}>¿Ya tienes cuenta? Inicia sesión</Text>
       </TouchableOpacity>
-
       <TouchableOpacity onPress={() => navigation.navigate('Terms')}>
-        <Text style={[styles.termsLink, { color: theme.secondaryButton }]}>
-          Términos y condiciones
-        </Text>
+        <Text style={[styles.termsLink, { color: theme.secondaryButton }]}>Términos y condiciones</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    paddingBottom: 40,
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 25,
-    fontWeight: 'bold',
-  },
-  optional: {
-    fontSize: 12,
-    marginBottom: 4,
-    alignSelf: 'flex-start',
-    marginLeft: 5,
-  },
-  input: {
-    width: '100%',
-    padding: 12,
-    marginBottom: 15,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  errorInput: {
-    borderColor: 'red',
-  },
-  button: {
-    paddingVertical: 14,
-    paddingHorizontal: 100,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  link: {
-    marginTop: 15,
-    textDecorationLine: 'underline',
-    fontSize: 14,
-  },
-  termsLink: {
-    marginTop: 5,
-    fontSize: 13,
-  },
+  container: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 20, paddingBottom: 40 },
+  title: { fontSize: 24, marginBottom: 25, fontWeight: 'bold' },
+  optional: { fontSize: 12, marginBottom: 4, alignSelf: 'flex-start', marginLeft: 5 },
+  input: { width: '100%', padding: 12, marginBottom: 15, borderRadius: 8, borderWidth: 1 },
+  errorInput: { borderColor: 'red' },
+  button: { paddingVertical: 14, paddingHorizontal: 100, borderRadius: 8, marginTop: 10 },
+  buttonText: { color: '#fff', fontWeight: '600', fontSize: 16, textAlign: 'center' },
+  link: { marginTop: 15, textDecorationLine: 'underline', fontSize: 14 },
+  termsLink: { marginTop: 5, fontSize: 13 },
 });

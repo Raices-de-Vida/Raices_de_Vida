@@ -1,19 +1,19 @@
+// src/screens/SubirInfografiaScreen.js
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Platform,
-  Image
+  View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import RNPickerSelect from 'react-native-picker-select';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import BottomNav from '../components/BottomNav';
+import { useTheme } from '../context/ThemeContext';
+import { getTheme } from '../styles/theme';
 
-export default function App() {
+export default function SubirInfografiaScreen({ navigation }) {
+  const { isDarkMode } = useTheme();
+  const theme = getTheme(isDarkMode);
+
   const [form, setForm] = useState({
     autor: '',
     fecha: new Date(),
@@ -32,19 +32,117 @@ export default function App() {
   };
 
   const handleBack = () => {
-    alert('Regresar');
+    navigation.goBack();
   };
 
   const handleAgregarFoto = () => {
     alert('Abrir cámara o galería');
   };
 
+  const handleSubir = () => {
+    alert('Infografía subida correctamente');
+  };
+
+  const pickerSelectStyles = {
+    inputIOS: {
+      fontSize: 16,
+      paddingVertical: 10,
+      color: theme.text
+    },
+    inputAndroid: {
+      fontSize: 16,
+      paddingVertical: 10,
+      color: theme.text
+    }
+  };
+
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    header: {
+      height: 80,
+      backgroundColor: theme.header,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 10,
+      elevation: 3,
+      borderRadius: 10,
+      marginBottom: 10,
+    },
+    backButton: {
+      position: 'absolute',
+      left: 15,
+      top: 25,
+      zIndex: 1
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: theme.text,
+      textAlign: 'center'
+    },
+    form: {
+      padding: 20,
+      paddingBottom: 100,
+    },
+    inputContainer: {
+      marginBottom: 15
+    },
+    label: {
+      marginBottom: 5,
+      fontWeight: '600',
+      color: theme.text
+    },
+    inputBox: {
+      backgroundColor: theme.inputBackground,
+      borderRadius: 6,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 10
+    },
+    input: {
+      flex: 1,
+      paddingVertical: 10,
+      color: theme.text
+    },
+    clearIcon: {
+      fontSize: 18,
+      color: theme.text,
+      marginLeft: 10
+    },
+    imageBox: {
+      marginTop: 20,
+      height: 100,
+      borderWidth: 2,
+      borderColor: theme.borderColor,
+      borderRadius: 8,
+      borderStyle: 'dashed',
+      justifyContent: 'center',
+      alignItems: 'center'
+    },
+    imageText: {
+      marginTop: 6,
+      color: theme.text
+    },
+    submitButton: {
+      marginTop: 30,
+      backgroundColor: '#4CAF50',
+      paddingVertical: 14,
+      borderRadius: 8,
+      alignItems: 'center'
+    },
+    submitButtonText: {
+      color: '#fff',
+      fontWeight: 'bold',
+      fontSize: 16
+    }
+  });
+
   return (
     <View style={styles.container}>
-      {/* Encabezado con Back */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Infografías</Text>
       </View>
@@ -55,6 +153,7 @@ export default function App() {
           value={form.autor}
           onChange={(text) => handleChange('autor', text)}
           onClear={() => clearField('autor')}
+          theme={theme}
         />
 
         <View style={styles.inputContainer}>
@@ -120,113 +219,49 @@ export default function App() {
           onChange={(text) => handleChange('bibliografia', text)}
           onClear={() => clearField('bibliografia')}
           multiline={true}
+          theme={theme}
         />
 
-        {/* Botón de subir foto */}
         <TouchableOpacity style={styles.imageBox} onPress={handleAgregarFoto}>
-          <MaterialCommunityIcons name="camera" size={32} color="#666" />
+          <MaterialCommunityIcons name="camera" size={32} color={theme.text} />
           <Text style={styles.imageText}>Agregar Foto</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubir}>
+          <Text style={styles.submitButtonText}>Subir infografía</Text>
+        </TouchableOpacity>
       </ScrollView>
+
+      <BottomNav navigation={navigation} />
     </View>
   );
 }
 
-function InputField({ label, value, onChange, onClear, multiline }) {
+function InputField({ label, value, onChange, onClear, multiline, theme }) {
   return (
-    <View style={styles.inputContainer}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={styles.inputBox}>
+    <View style={{ marginBottom: 15 }}>
+      <Text style={{ marginBottom: 5, fontWeight: '600', color: theme.text }}>{label}</Text>
+      <View style={{
+        backgroundColor: theme.inputBackground,
+        borderRadius: 6,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10
+      }}>
         <TextInput
-          style={[styles.input, multiline && { height: 80, textAlignVertical: 'top' }]}
+          style={[{ flex: 1, paddingVertical: 10, color: theme.text }, multiline && { height: 80, textAlignVertical: 'top' }]}
           placeholder="Input"
+          placeholderTextColor={theme.placeholder}
           value={value}
           onChangeText={onChange}
           multiline={multiline}
         />
         {value.length > 0 && (
           <TouchableOpacity onPress={onClear}>
-            <Text style={styles.clearIcon}>✖</Text>
+            <Text style={{ fontSize: 18, color: theme.text, marginLeft: 10 }}>✖</Text>
           </TouchableOpacity>
         )}
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF' },
-  header: {
-    height: 60,
-    backgroundColor: '#FFECB3',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    elevation: 3
-  },
-  backButton: {
-    padding: 5,
-    marginRight: 10
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    flex: 1,
-    textAlign: 'center',
-    marginRight: 30
-  },
-  form: {
-    padding: 20
-  },
-  inputContainer: {
-    marginBottom: 15
-  },
-  label: {
-    marginBottom: 5,
-    fontWeight: '600'
-  },
-  inputBox: {
-    backgroundColor: '#D0F0B3',
-    borderRadius: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 10
-  },
-  clearIcon: {
-    fontSize: 18,
-    color: '#444',
-    marginLeft: 10
-  },
-  imageBox: {
-    marginTop: 20,
-    height: 100,
-    borderWidth: 2,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  imageText: {
-    marginTop: 6,
-    color: '#666'
-  }
-});
-
-const pickerSelectStyles = {
-  inputIOS: {
-    fontSize: 16,
-    paddingVertical: 10,
-    color: '#000'
-  },
-  inputAndroid: {
-    fontSize: 16,
-    paddingVertical: 10,
-    color: '#000'
-  }
-};

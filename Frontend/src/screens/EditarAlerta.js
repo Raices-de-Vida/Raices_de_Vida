@@ -175,6 +175,7 @@ export default function EditarAlerta({ navigation, route }) {
           </View>
         </View>
       </ScrollView>
+      <BottomNav navigation={navigation} />
     </View>
   );
 }

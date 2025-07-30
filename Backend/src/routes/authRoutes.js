@@ -32,12 +32,12 @@
  * 2. Llama al controlador para registrar al usuario.
  * 3. Devuelve el objeto del usuario creado.
  */
-
+// src/routes/authRoutes.js
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 
-router.post('/login', authController.login);
+router.post('/login',    authController.login);
 router.post('/register', authController.register);
 
 module.exports = router;

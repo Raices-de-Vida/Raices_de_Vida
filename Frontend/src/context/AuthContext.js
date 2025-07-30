@@ -1,6 +1,7 @@
+// src/context/AuthContext.js 
 import React, { createContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import OfflineStorage from '../services/OfflineStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const AuthContext = createContext();
 
@@ -8,39 +9,21 @@ export function AuthProvider({ children }) {
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const bootstrap = async () => {
-      let userRole = null;
-
-      // 1) Intentar leer del login (OfflineStorage)
-      try {
-        const userData = await OfflineStorage.getUserData();
-        if (userData?.rol) userRole = userData.rol;
-      } catch (e) { /* no data */ }
-
-      // 2) Si no existe, caemos al registro (AsyncStorage)
-      if (!userRole) {
-        const tipo = await AsyncStorage.getItem('tipo');
-        if (tipo) userRole = tipo;
-      }
-
-      setRole(userRole);
-      setLoading(false);
-    };
-
-    bootstrap();
-  }, []);
-
-  const signIn = (newRole) => {
-    // Úsalo si necesitas cambiar rol manualmente
+  const signIn = async (newRole) => {
     setRole(newRole);
+    setLoading(false);
+    await AsyncStorage.setItem('userRole', newRole); // ← opcional si usas persistencia
   };
 
   const signOut = async () => {
-    // Limpia todo: token, userData y demás
     await OfflineStorage.clearAll();
+    await AsyncStorage.clear(); // ← este es el agregado necesario
     setRole(null);
   };
+
+  useEffect(() => {
+    setLoading(false);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ role, loading, signIn, signOut }}>

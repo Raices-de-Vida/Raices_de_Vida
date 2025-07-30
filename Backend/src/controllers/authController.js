@@ -43,47 +43,46 @@
  * 2. Crea un nuevo usuario en la base de datos con los datos proporcionados.
  * 3. Devuelve el objeto del usuario creado al cliente.
  */
-
-const jwt = require('jsonwebtoken');
+// src/controllers/authController.js
+// src/controllers/authController.js
 const User = require('../models/User');
-const Ong = require('../models/Ong');
-const Voluntario = require('../models/Voluntarios');
 
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log('Intento de inicio de sesión:', email); // Añadir log para depuración
-    
     const user = await User.findOne({ where: { email } });
-    if (!user) {
-      console.log('Usuario no encontrado:', email);
+    if (!user || !(await user.validPassword(password))) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    const jwtSecret = process.env.JWT_SECRET || 'default_secret_key_temporal';
-    
-    const isValid = await user.validPassword(password);
-    if (!isValid) {
-      console.log('Contraseña incorrecta para:', email);
-      return res.status(401).json({ error: 'Credenciales inválidas' });
-    }
-
-    const token = jwt.sign(
-      { id: user.id_usuario, rol: user.rol },
-      jwtSecret,
-      { expiresIn: '1h' }
-    );
-
-    res.json({ token });
-  } catch (error) {
-    console.error('Error en inicio de sesión:', error);
-    res.status(500).json({ error: 'Error en el servidor' });
+    // Devuelve sólo el objeto user
+    return res.json({
+      id:           user.id_usuario,
+      nombre:       user.nombre,
+      apellido:     user.apellido,
+      email:        user.email,
+      rol:          user.rol,
+      tipo_ref:     user.tipo_referencia,
+      id_ref:       user.id_referencia
+    });
+  } catch (err) {
+    console.error('Error en inicio de sesión:', err);
+    return res.status(500).json({ error: 'Error en el servidor' });
   }
 };
 
 exports.register = async (req, res) => {
   try {
-    const { nombre ,apellido, email, password, rol, tipo_referencia, id_referencia } = req.body;
+    const {
+      nombre,
+      apellido,
+      email,
+      password,
+      rol,
+      tipo_referencia,
+      id_referencia
+    } = req.body;
+
     const newUser = await User.create({
       nombre,
       apellido,
@@ -94,8 +93,18 @@ exports.register = async (req, res) => {
       id_referencia
     });
 
-    res.status(201).json(newUser);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+    // Devuelve sólo el objeto user creado
+    return res.status(201).json({
+      id:           newUser.id_usuario,
+      nombre:       newUser.nombre,
+      apellido:     newUser.apellido,
+      email:        newUser.email,
+      rol:          newUser.rol,
+      tipo_ref:     newUser.tipo_referencia,
+      id_ref:       newUser.id_referencia
+    });
+  } catch (err) {
+    console.error('Error en registro:', err);
+    return res.status(400).json({ error: err.message });
   }
 };

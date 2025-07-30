@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch, Alert } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
+import { AuthContext } from '../context/AuthContext';
 
 export default function ConfiguracionScreen({ navigation }) {
   const [mostrarIdiomas, setMostrarIdiomas] = useState(false);
@@ -14,13 +14,11 @@ export default function ConfiguracionScreen({ navigation }) {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
 
+  const { signOut } = useContext(AuthContext);
+
   const cerrarSesion = async () => {
     try {
-      await AsyncStorage.clear();
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Login' }],
-      });
+      await signOut(); // Esto hará que role = null y redirija a Login automáticamente
     } catch (error) {
       Alert.alert('Error', 'No se pudo cerrar sesión.');
     }

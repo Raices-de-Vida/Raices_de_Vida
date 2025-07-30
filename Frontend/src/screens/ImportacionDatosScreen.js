@@ -1,3 +1,4 @@
+// src/screens/ImportacionDatosScreen.js
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -5,53 +6,51 @@ import BottomNav from '../components/BottomNav';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 
-export default function DatosAyudaScreen({ navigation }) {
+export default function ImportacionDatosScreen({ navigation }) {
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
-      <View style={[styles.container]}>
+      <View style={styles.container}>
         <View style={[styles.header, { backgroundColor: theme.header }]}>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Datos de ayuda</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Importación de datos</Text>
         </View>
 
         <TouchableOpacity 
           style={[styles.card, { backgroundColor: theme.card }]} 
-          onPress={() => navigation.navigate('Recomendaciones')}
+          onPress={() => {}} // aún sin ruta
         >
-          <Ionicons name="thumbs-up-outline" size={30} color={theme.text} />
+          <Ionicons name="cloud-upload-outline" size={30} color={theme.text} />
           <View>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>Recomendaciones</Text>
-            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>cómo utilizar un alimento</Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>Cargar desde Excel</Text>
+            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>Importa datos desde archivo Excel</Text>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity 
           style={[styles.card, { backgroundColor: theme.card }]} 
-          onPress={() => navigation.navigate('Importancia')}
+          onPress={() => {}} // aún sin ruta
         >
-          <Ionicons name="information-circle-outline" size={30} color={theme.text} />
+          <Ionicons name="download-outline" size={30} color={theme.text} />
           <View>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>Importancia</Text>
-            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>Buena salud</Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>Exportar a Excel</Text>
+            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>Guarda los datos en un Excel</Text>
           </View>
         </TouchableOpacity>
 
-        {/* Nuevo botón: Agregar Infografías */}
         <TouchableOpacity 
           style={[styles.card, { backgroundColor: theme.card }]} 
-          onPress={() => navigation.navigate('SubirInfografia')}
+          onPress={() => navigation.navigate('MapaDepartamentos')}
         >
-          <Ionicons name="add-circle-outline" size={30} color={theme.text} />
+          <Ionicons name="map-outline" size={30} color={theme.text} />
           <View>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>Agregar infografías</Text>
-            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>Sube nuevas infografías</Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>Mapa de Guatemala</Text>
+            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>Visualiza los departamentos</Text>
           </View>
         </TouchableOpacity>
       </View>
 
-      {/* Barra inferior reutilizable */}
       <BottomNav navigation={navigation} />
     </View>
   );

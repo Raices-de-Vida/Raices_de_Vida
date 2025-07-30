@@ -1,30 +1,31 @@
 import React, { useContext } from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { StatusBar } from 'react-native';
-import { ThemeProvider, useTheme }     from '../context/ThemeContext';
-import { OfflineProvider }              from '../context/OfflineContext';
-import { AuthProvider, AuthContext }    from '../context/AuthContext';
 
-import AuthStack       from './AuthStack';
-import OngStack        from './OngStack';
-import VolunteerStack  from './VolunteerStack';
+import { ThemeProvider, useTheme } from '../context/ThemeContext';
+import { OfflineProvider } from '../context/OfflineContext';
+import { AuthProvider, AuthContext } from '../context/AuthContext';
+
+import AuthStack from './AuthStack';
+import OngStack from './OngStack';
+import VolunteerStack from './VolunteerStack';
 
 function RootNavigator() {
   const { role, loading } = useContext(AuthContext);
-  const { isDarkMode }    = useTheme();
+  const { isDarkMode } = useTheme();
 
-  if (loading) return null; // o un splash screen
+  if (loading) return null;
 
   return (
     <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
-      <StatusBar 
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'} 
-        backgroundColor={isDarkMode ? '#121212' : '#FFFFFF'} 
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={isDarkMode ? '#121212' : '#FFFFFF'}
       />
 
       {!role
         ? <AuthStack />
-        : role === 'ONG'
+        : role === 'Ong'
           ? <OngStack />
           : <VolunteerStack />
       }

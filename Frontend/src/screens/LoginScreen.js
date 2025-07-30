@@ -1,5 +1,6 @@
+// src/screens/LoginScreen.js
 import axios from 'axios';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -14,8 +15,11 @@ import { getTheme } from '../styles/theme';
 import ThemeToggle from '../components/ThemeToggle';
 import { useOffline } from '../context/OfflineContext';
 import OfflineStorage from '../services/OfflineStorage';
+import { AuthContext } from '../context/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen({ navigation }) {
+  const { signIn } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -24,164 +28,124 @@ export default function LoginScreen({ navigation }) {
   const theme = getTheme(isDarkMode);
   const { isConnected } = useOffline();
 
-  const isEmpty = (value) => submitted && value.trim() === '';
-  
+  const isEmpty = (val) => submitted && val.trim() === '';
+
   useEffect(() => {
-    const checkSession = async () => {
+    (async () => {
       try {
-        const token = await OfflineStorage.getToken();
         const userData = await OfflineStorage.getUserData();
-        
-        if (token && userData) {
-          navigation.replace('Home');
+        if (userData?.rol) {
+          signIn(userData.rol);
         }
-      } catch (error) {
-        console.error('Error verificando sesión:', error);
-      } finally {
-        setIsCheckingSession(false);
-      }
-    };
-    
-    checkSession();
+      } catch {}
+      setIsCheckingSession(false);
+    })();
   }, []);
-  
+
   const handleLogin = async () => {
-    console.log('Enviando datos:', { email, password });
-  
+    console.log('🔑 handleLogin disparado');
     setSubmitted(true);
-  
-    if (email.trim() && password.trim()) {
-      //Si no hay conexión pero hay credenciales guardadas, verificar localmente
-      if (!isConnected) {
-        try {
-          //Verificar si las credenciales coinciden con las guardadas
-          const userData = await OfflineStorage.getUserData();
-          if (userData && userData.email === email) {
-            Alert.alert('Modo sin conexión', 'Has iniciado sesión en modo offline');
-            navigation.replace('Home');
-            return;
-          } else {
-            Alert.alert('Error', 'No se puede verificar en modo offline. Necesitas conexión a internet para el primer inicio de sesión.');
-            return;
-          }
-        } catch (error) {
-          Alert.alert('Error', 'No se puede iniciar sesión en modo offline');
+
+    if (!email.trim() || !password.trim()) {
+      alert('Por favor llena todos los campos');
+      return;
+    }
+
+    const normalizeRole = (rol) => {
+      if (rol === 'ONG') return 'Ong';
+      if (rol === 'Voluntario') return 'Volunteer';
+      return rol;
+    };
+
+    if (!isConnected) {
+      try {
+        const userData = await OfflineStorage.getUserData();
+        if (userData?.email === email) {
+          Alert.alert('Modo sin conexión', 'Has iniciado sesión en modo offline');
+          const mapped = normalizeRole(userData.rol);
+          signIn(mapped);
+          return;
+        } else {
+          Alert.alert('Error', 'Necesitas conexión para el primer inicio.');
           return;
         }
+      } catch {
+        Alert.alert('Error', 'No se puede iniciar en modo offline');
+        return;
       }
-      
-      //Si hay conexión, intentar login normal
-      try { 
-        const response = await axios.post("//localhost:3001/api/auth/login", {
-          email,
-          password
-        });
-        const { token, user } = response.data;
-        
-        //Guardar token y datos de usuario para uso offline
-        await OfflineStorage.saveToken(token);
-        await OfflineStorage.saveUserData({
-          id: user?.id,
-          email: email,
-          nombre: user?.nombre,
-          dpi: user?.dpi,
-          telefono: user?.telefono,
-          rol: user?.rol
-        });
-        
-        console.log('Login correcto:', response.data);
-        
-        navigation.replace('Home');
-  
-      } catch (err) {
-        console.error('Error de login completo:', err);
-  
-        if (err.response) {
-          if (err.response.status === 401) {
-            alert('Correo o contraseña incorrectos.');
-          } else if (err.response.status === 400) {
-            alert('Solicitud inválida. Verifica los datos.');
-          } else {
-            alert(`Error del servidor: ${err.response.status}`);
-          }
-        } else if (err.request) {
-          alert('No se pudo conectar con el servidor. ¿Está el backend corriendo?');
-        } else {
-          alert('Ocurrió un error: ' + err.message);
+    }
+
+    try {
+      const { data: user } = await axios.post(
+        'http://localhost:3001/api/auth/login',
+        { email, password }
+      );
+
+      // Guardar datos en AsyncStorage de forma segura
+      const safeSet = async (key, value) => {
+        if (value !== undefined && value !== null) {
+          await AsyncStorage.setItem(key, String(value));
         }
-      }
-    } else {
-      alert('Por favor llena todos los campos');
+      };
+
+      await safeSet('nombre', user.nombre);
+      await safeSet('dpi', user.dpi);
+      await safeSet('telefono', user.telefono);
+      await safeSet('tipo', user.rol);
+      await safeSet('fotoPerfil', user.fotoPerfil);
+
+      await OfflineStorage.saveUserData(user);
+
+      const mapped = normalizeRole(user.rol);
+      signIn(mapped);
+
+    } catch (error) {
+      console.error('Error de login:', error);
+      Alert.alert('Error', 'Credenciales incorrectas o problema de conexión');
     }
   };
-  
-  if (isCheckingSession) {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <Text style={[{ color: theme.text }]}>Verificando sesión...</Text>
-      </View>
-    );
-  }
-  
+
   return (
-    <ScrollView 
-      contentContainerStyle={[
-        styles.container,
-        { backgroundColor: theme.background }
-      ]}
-    >
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
       <ThemeToggle />
-      
-      {/* Indicador de modo offline */}
+      <Text style={[styles.title, { color: theme.text }]}>Iniciar Sesión</Text>
       {!isConnected && (
-        <View style={[styles.offlineIndicator, { backgroundColor: theme.toastInfo }]}>
-          <Text style={styles.offlineText}>Modo sin conexión</Text>
+        <View style={[styles.offlineIndicator, { backgroundColor: theme.error }]}>
+          <Text style={styles.offlineText}>Sin conexión</Text>
         </View>
       )}
-      
-      <Text style={[styles.title, { color: theme.text }]}>Iniciar sesión</Text>
-
       <TextInput
         style={[
-          styles.input, 
+          styles.input,
+          { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border },
           isEmpty(email) && styles.errorInput,
-          { 
-            borderColor: isEmpty(email) ? 'red' : theme.inputBorder,
-            backgroundColor: theme.inputBackground,
-            color: theme.text
-          }
         ]}
-        placeholder="correo electrónico"
+        placeholder="Correo electrónico"
+        placeholderTextColor={theme.placeholder}
         value={email}
         onChangeText={setEmail}
+        autoCapitalize="none"
         keyboardType="email-address"
-        placeholderTextColor={isDarkMode ? '#888' : '#999'}
       />
-      
       <TextInput
         style={[
-          styles.input, 
+          styles.input,
+          { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border },
           isEmpty(password) && styles.errorInput,
-          { 
-            borderColor: isEmpty(password) ? 'red' : theme.inputBorder,
-            backgroundColor: theme.inputBackground,
-            color: theme.text
-          }
         ]}
         placeholder="Contraseña"
-        secureTextEntry
+        placeholderTextColor={theme.placeholder}
         value={password}
         onChangeText={setPassword}
-        placeholderTextColor={isDarkMode ? '#888' : '#999'}
+        secureTextEntry
       />
-
-      <TouchableOpacity 
-        style={[styles.button, { backgroundColor: theme.secondaryButton }]} 
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: theme.primaryButton }]}
         onPress={handleLogin}
+        disabled={isCheckingSession}
       >
-        <Text style={styles.buttonText}>Iniciar sesión</Text>
+        <Text style={styles.buttonText}>Ingresar</Text>
       </TouchableOpacity>
-
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
         <Text style={[styles.link, { color: theme.secondaryButton }]}>¿No tienes cuenta? Regístrate</Text>
       </TouchableOpacity>
@@ -190,53 +154,13 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    paddingBottom: 40,
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 25,
-    fontWeight: 'bold',
-  },
-  input: {
-    width: '100%',
-    padding: 12,
-    marginBottom: 15,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  errorInput: {
-    borderColor: 'red',
-  },
-  button: {
-    paddingVertical: 14,
-    paddingHorizontal: 100,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  link: {
-    marginTop: 15,
-    textDecorationLine: 'underline',
-    fontSize: 14,
-  },
-  offlineIndicator: {
-    padding: 8,
-    borderRadius: 4,
-    marginBottom: 20,
-    alignSelf: 'center',
-  },
-  offlineText: {
-    color: 'white',
-    fontWeight: '500',
-  },
+  container: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 20, paddingBottom: 40 },
+  title: { fontSize: 24, marginBottom: 25, fontWeight: 'bold' },
+  offlineIndicator: { padding: 8, borderRadius: 4, marginBottom: 20 },
+  offlineText: { color: 'white', fontWeight: '500' },
+  input: { width: '100%', padding: 12, marginBottom: 15, borderRadius: 8, borderWidth: 1 },
+  errorInput: { borderColor: 'red' },
+  button: { paddingVertical: 14, paddingHorizontal: 100, borderRadius: 8, marginTop: 10 },
+  buttonText: { color: '#fff', fontWeight: '600', fontSize: 16, textAlign: 'center' },
+  link: { marginTop: 15, textDecorationLine: 'underline', fontSize: 14 },
 });

@@ -1,50 +1,59 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function DatosUsuarioScreen({ navigation }) {
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
 
-  const [user, setUser] = useState({
-    nombre: '',
-    dpi: '',
-    telefono: '',
-    tipo: '',
-    foto: null,
-  });
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const cargarUsuario = async () => {
-      try {
-        const nombre = await AsyncStorage.getItem('nombre');
-        const dpi = await AsyncStorage.getItem('dpi');
-        const telefono = await AsyncStorage.getItem('telefono');
-        const tipo = await AsyncStorage.getItem('tipo');
-        const foto = await AsyncStorage.getItem('fotoPerfil');
+  useFocusEffect(
+    React.useCallback(() => {
+      const cargarUsuario = async () => {
+        setLoading(true);
+        try {
+          const nombre = await AsyncStorage.getItem('nombre');
+          const dpi = await AsyncStorage.getItem('dpi');
+          const telefono = await AsyncStorage.getItem('telefono');
+          const tipo = await AsyncStorage.getItem('tipo');
+          const foto = await AsyncStorage.getItem('fotoPerfil');
 
-        setUser({
-          nombre: nombre || '',
-          dpi: dpi || '',
-          telefono: telefono || '',
-          tipo: tipo || '',
-          foto: foto || null,
-        });
-      } catch (error) {
-        console.error('Error al cargar datos del usuario', error);
-      }
-    };
+          setUser({
+            nombre: nombre || 'Nombre no disponible',
+            dpi: dpi || '---',
+            telefono: telefono || '---',
+            tipo: tipo || '---',
+            foto: foto || null,
+          });
+        } catch (error) {
+          console.error('Error al cargar datos del usuario', error);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-    cargarUsuario();
-  }, []);
+      cargarUsuario();
+    }, [])
+  );
+
+  if (loading || !user) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="green" />
+        <Text style={{ color: theme.text, marginTop: 10 }}>Cargando datos...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      
-      {/* Header con estilo de configuración */}
+      {/* Header con botón de regreso */}
       <View style={[styles.header, { backgroundColor: theme.header }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={20} color={theme.text} />
@@ -52,7 +61,7 @@ export default function DatosUsuarioScreen({ navigation }) {
         <Text style={[styles.headerTitle, { color: theme.text }]}>Datos de usuario</Text>
       </View>
 
-      {/* Foto de perfil o ícono */}
+      {/* Avatar */}
       <View style={styles.avatarWrapper}>
         {user.foto ? (
           <Image source={{ uri: user.foto }} style={styles.avatarImage} />
@@ -61,7 +70,7 @@ export default function DatosUsuarioScreen({ navigation }) {
         )}
       </View>
 
-      {/* Información de usuario */}
+      {/* Datos básicos */}
       <View style={[styles.card, { backgroundColor: theme.card }]}>
         <Text style={[styles.name, { color: theme.text }]}>{user.nombre}</Text>
         <Text style={[styles.role, { color: theme.secondaryText }]}>{user.tipo}</Text>

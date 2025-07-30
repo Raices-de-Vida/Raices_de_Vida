@@ -1,7 +1,13 @@
+// src/screens/Graficas.js
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import {
+  View, Text, StyleSheet, FlatList, TouchableOpacity
+} from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
+import BottomNav from '../components/BottomNav';
+import { useTheme } from '../context/ThemeContext';
+import { getTheme } from '../styles/theme';
 
 const GRAFICAS = [
   { id: '1', titulo: 'Casos reportados por departamento', icono: 'chart-bar', ruta: 'GraficaDepartamento', color: '#ff7043' },
@@ -12,6 +18,49 @@ const GRAFICAS = [
 
 export default function PantallaGraficas() {
   const navigation = useNavigation();
+  const { isDarkMode } = useTheme();
+  const theme = getTheme(isDarkMode);
+
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    header: {
+      backgroundColor: theme.header,
+      height: 80,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: 10,
+      marginBottom: 10,
+      elevation: 3
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: theme.text,
+      textAlign: 'center'
+    },
+    card: {
+      backgroundColor: theme.cardBackground || (isDarkMode ? '#1E1E1E' : '#fff'),
+      borderRadius: 12,
+      padding: 15,
+      marginBottom: 15,
+      flexDirection: 'row',
+      alignItems: 'center',
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2
+    },
+    icono: {
+      marginRight: 15
+    },
+    texto: {
+      fontSize: 16,
+      flex: 1,
+      flexWrap: 'wrap',
+      color: theme.text
+    }
+  });
 
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.card} onPress={() => navigation.navigate(item.ruta)}>
@@ -31,45 +80,7 @@ export default function PantallaGraficas() {
         renderItem={renderItem}
         contentContainerStyle={{ padding: 20, paddingTop: 10 }}
       />
+      <BottomNav navigation={navigation} />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF8E1' },
-  header: {
-    backgroundColor: '#FFECB3',
-    height: 60,
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    elevation: 4
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center'
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2
-  },
-  icono: {
-    marginRight: 15
-  },
-  texto: {
-    fontSize: 16,
-    flex: 1,
-    flexWrap: 'wrap',
-    color: '#444'
-  }
-});
