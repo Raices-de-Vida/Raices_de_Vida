@@ -20,22 +20,22 @@ router.post('/',
 
 // Obtener alertas de un caso específico (Cualquier rol autenticado)
 router.get('/caso/:caso_id', 
-  authenticate, 
-  authorize(['ONG', 'Voluntario', 'Líder Comunitario']), 
+  //authenticate, 
+  //authorize(['ONG', 'Voluntario', 'Líder Comunitario']), 
   alertaController.getAlertasByCasoId
 );
 
 // Actualizar alerta (ONG y Administradores)
 router.put('/:alerta_id', 
-  authenticate, 
-  authorize(['ONG', 'Administrador']), 
+  //authenticate, 
+  //authorize(['ONG', 'Administrador']), 
   alertaController.updateAlerta
 );
 
 // Eliminar alerta (Solo Administradores y ONG)
 router.delete('/:alerta_id', 
-  authenticate, 
-  authorize(['ONG', 'Administrador']), 
+  //authenticate, 
+  //authorize(['ONG', 'Administrador']), 
   alertaController.deleteAlerta
 );
 
