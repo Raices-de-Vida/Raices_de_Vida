@@ -45,12 +45,20 @@
  */
 // src/controllers/authController.js
 // src/controllers/authController.js
+// Backend/src/controllers/authController.js
 const User = require('../models/User');
 
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ where: { email } });
+    
+    // Validar que los campos requeridos estén presentes
+    if (!email || !password || email.trim() === '' || password.trim() === '') {
+      return res.status(400).json({ error: 'Email y contraseña son requeridos' });
+    }
+
+    const user = await User.findOne({ where: { email: email.trim() } });
+    
     if (!user || !(await user.validPassword(password))) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
@@ -83,10 +91,27 @@ exports.register = async (req, res) => {
       id_referencia
     } = req.body;
 
+    // Validar campos requeridos
+    if (!nombre || !apellido || !email || !password) {
+      return res.status(400).json({ error: 'Nombre, apellido, email y contraseña son requeridos' });
+    }
+
+    // Validar formato de email básico
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Formato de email inválido' });
+    }
+
+    // Verificar si el usuario ya existe
+    const existingUser = await User.findOne({ where: { email: email.trim() } });
+    if (existingUser) {
+      return res.status(409).json({ error: 'El email ya está registrado' });
+    }
+
     const newUser = await User.create({
-      nombre,
-      apellido,
-      email,
+      nombre: nombre.trim(),
+      apellido: apellido.trim(),
+      email: email.trim(),
       password,
       rol,
       tipo_referencia,
