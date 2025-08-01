@@ -1,4 +1,4 @@
-// Backend/src/tests/alertasRealRoutes.test.js
+// Backend/src/tests/alertasRoutes.test.js
 const request = require('supertest');
 const { Sequelize, DataTypes } = require('sequelize');
 
@@ -14,7 +14,7 @@ jest.mock('../config/database', () => {
 // Importar la instancia mockeada
 const testSequelize = require('../config/database');
 
-// Definir modelos simplificados para testing (basados en tus modelos reales)
+// Definir modelos simplificados para testing 
 const mockUser = testSequelize.define('Usuarios', {
   id_usuario: {
     type: DataTypes.INTEGER,
@@ -164,7 +164,7 @@ jest.mock('../models/CasoCritico', () => mockCasoCritico);
 jest.mock('../models/Alerta', () => mockAlerta);
 const User = mockUser;
 
-// Controlador simplificado basado en tu código real
+// Controlador 
 const alertaController = {
   getAllAlertas: async (req, res) => {
     try {
@@ -193,7 +193,7 @@ const alertaController = {
         });
       }
 
-      // Verificar que el caso crítico exista
+      // Verificar que el caso critico exista
       const caso = await mockCasoCritico.findByPk(caso_id);
       if (!caso) {
         return res.status(404).json({ error: 'El caso crítico no existe' });
@@ -284,7 +284,7 @@ const app = express();
 app.use(express.json());
 app.use(cors({ origin: '*', credentials: true }));
 
-// Configurar rutas manualmente (simulando tus rutas reales)
+// Configurar rutas manualmente 
 app.get('/api/alertas', alertaController.getAllAlertas);
 app.post('/api/alertas', alertaController.createAlerta);
 app.put('/api/alertas/:alerta_id', alertaController.updateAlerta);
