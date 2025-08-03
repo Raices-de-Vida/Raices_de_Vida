@@ -31,14 +31,29 @@ describe('Validación de Entrada', () => {
         }
 
         // Detectar posibles XSS
-        const xssPatterns = [/<script/i, /javascript:/i, /on\w+=/i, /<iframe/i];
-        if (xssPatterns.some(pattern => pattern.test(nombre) || pattern.test(descripcion || ''))) {
+        const xssPatterns = [/<script/i, /javascript:/i, /on\w+=/i, /<iframe/i, /alert\(/i, /document\./i, /window\./i];
+        const hasXSS = xssPatterns.some(pattern => 
+          pattern.test(nombre) || 
+          pattern.test(descripcion || '') ||
+          pattern.test(telefono || '') ||
+          pattern.test(ubicacion || '')
+        );
+
+        if (hasXSS) {
           return res.status(400).json({ error: 'Contenido no permitido' });
         }
 
         // Detectar path traversal
-        const pathTraversalPatterns = [/\.\./i, /\/etc\//i, /\/windows\//i];
-        if (pathTraversalPatterns.some(pattern => pattern.test(ubicacion || ''))) {
+        const pathTraversalPatterns = [/\.\./i, /\/etc\//i, /\/windows\//i, /\.\.\//, /\.\.\\/, /\/\.\.\//,
+          /%2e%2e%2f/i, /%2e%2e%5c/i, /\.\.%2f/i, /\.\.%5c/i, /passwd/i, /hosts/i, /system32/i];
+        const hasPathTraversal = pathTraversalPatterns.some(pattern => 
+          pattern.test(nombre) ||
+          pattern.test(descripcion || '') ||
+          pattern.test(telefono || '') ||
+          pattern.test(ubicacion || '')
+        );
+
+        if (hasPathTraversal) {
           return res.status(400).json({ error: 'Ruta no válida' });
         }
 

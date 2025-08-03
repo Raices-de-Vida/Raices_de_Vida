@@ -16,10 +16,14 @@
         "test:security:module1": "jest src/tests/security/auth.security.test.js src/tests/security/input.validation.test.js --verbose",
         "test:security:module2": "jest src/tests/security/communication.security.test.js src/tests/security/ratelimit.security.test.js --verbose",
         "test:security:module3": "jest src/tests/security/authorization.security.test.js src/tests/security/session.security.test.js --verbose",
+        "test:security:module4": "jest src/tests/security/threatdetection.security.test.js src/tests/security/incidentresponse.security.test.js --verbose",
+        "test:security:module4:coverage": "jest src/tests/security/threatdetection.security.test.js src/tests/security/incidentresponse.security.test.js --coverage --verbose",
         "test:security:communication": "jest src/tests/security/communication.security.test.js --verbose",
         "test:security:ratelimit": "jest src/tests/security/ratelimit.security.test.js --verbose",
         "test:security:authorization": "jest src/tests/security/authorization.security.test.js --verbose",
-        "test:security:sessions": "jest src/tests/security/session.security.test.js --verbose"
+        "test:security:sessions": "jest src/tests/security/session.security.test.js --verbose",
+        "test:security:threat-detection": "jest src/tests/security/threatdetection.security.test.js --verbose",
+        "test:security:incident-response": "jest src/tests/security/incidentresponse.security.test.js --verbose"
     },
     "jest": {
         "testEnvironment": "node",
