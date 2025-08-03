@@ -14,6 +14,12 @@
 - **Comando:** `npm run test:security:module2`
 - **Manual:** Ver `manual-module2.md`
 
+### Módulo 3: Gestión de Usuarios
+- **Pruebas:** 45 automáticas + 6 manuales
+- **Cobertura:** Autorización, sesiones, auditoría
+- **Comando:** `npm run test:security:module3`
+- **Manual:** Ver `manual-module3.md`
+
 ## Comandos principales
 
 ```bash
@@ -23,6 +29,7 @@ npm run test:security
 # Módulos específicos
 npm run test:security:module1
 npm run test:security:module2
+npm run test:security:module3
 
 # Modo watch (automático al guardar)
 npm run test:security:watch
@@ -30,4 +37,6 @@ npm run test:security:watch
 # Tests específicos
 npm run test:security:communication
 npm run test:security:ratelimit
+npm run test:security:authorization
+npm run test:security:sessions
 ```
