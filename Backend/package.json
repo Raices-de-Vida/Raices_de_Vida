@@ -8,7 +8,22 @@
         "dev": "NODE_ENV=development node -r dotenv/config src/index.js dotenv_config_path=.env.local",
         "test": "jest",
         "test:watch": "jest --watch",
-        "test:coverage": "jest --coverage"
+        "test:coverage": "jest --coverage",
+        "test:security": "jest src/tests/security --verbose",
+        "test:security:watch": "jest src/tests/security --watch --verbose",
+        "test:security:auto": "jest src/tests/security/auth.security.test.js src/tests/security/input.validation.test.js --verbose",
+        "test:security:manual": "echo === PRUEBAS MANUALES DE SEGURIDAD === && echo Para ejecutar pruebas manuales, revisa el archivo src/tests/security/manual.security.guide.md",
+        "test:security:module1": "jest src/tests/security/auth.security.test.js src/tests/security/input.validation.test.js --verbose",
+        "test:security:module2": "jest src/tests/security/communication.security.test.js src/tests/security/ratelimit.security.test.js --verbose",
+        "test:security:module3": "jest src/tests/security/authorization.security.test.js src/tests/security/session.security.test.js --verbose",
+        "test:security:module4": "jest src/tests/security/threatdetection.security.test.js src/tests/security/incidentresponse.security.test.js --verbose",
+        "test:security:module4:coverage": "jest src/tests/security/threatdetection.security.test.js src/tests/security/incidentresponse.security.test.js --coverage --verbose",
+        "test:security:communication": "jest src/tests/security/communication.security.test.js --verbose",
+        "test:security:ratelimit": "jest src/tests/security/ratelimit.security.test.js --verbose",
+        "test:security:authorization": "jest src/tests/security/authorization.security.test.js --verbose",
+        "test:security:sessions": "jest src/tests/security/session.security.test.js --verbose",
+        "test:security:threat-detection": "jest src/tests/security/threatdetection.security.test.js --verbose",
+        "test:security:incident-response": "jest src/tests/security/incidentresponse.security.test.js --verbose"
     },
     "jest": {
         "testEnvironment": "node",
@@ -16,11 +31,11 @@
             "<rootDir>/src/tests/setup.js"
         ],
         "testMatch": [
-            "<rootDir>/src/tests//*.test.js",
-            "<rootDir>/src//*.test.js"
+            "<rootDir>/src/tests/**/*.test.js",
+            "<rootDir>/src/**/*.test.js"
         ],
         "collectCoverageFrom": [
-            "src//*.js",
+            "src/**/*.js",
             "!src/tests/",
             "!src/index.js"
         ]
@@ -40,6 +55,7 @@
         "jest": "^30.0.4",
         "nodemon": "^3.0.2",
         "sqlite3": "^5.1.7",
-        "supertest": "^7.1.3"
+        "supertest": "^7.1.3",
+        "express-rate-limit": "^7.1.5"
     }
 }
