@@ -14,12 +14,22 @@ import RecomendacionesScreen from '../screens/RecomendacionesScreen';
 import SubirInfografiaScreen from '../screens/SubirInfografiaScreen';
 import ImportacionDatosScreen from '../screens/ImportacionDatosScreen'; // Nueva pantalla
 import MapaDepartamentos from '../screens/MapaDepartamentos'; // Para navegación desde el botón
+import AlertasDepartamento from '../screens/AlertasDepartamento'; // Pantalla de alertas por departamento
+import DatosAyudaScreen from '../screens/DatosAyudaScreen'; // Pantalla de datos de ayuda
 
 const Stack = createNativeStackNavigator();
 
 export default function OngStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator 
+      screenOptions={{ headerShown: false }}
+      // TEMPORAL: Cambia 'Home' por la pantalla que quieras ver primero
+      initialRouteName="MapaDepartamentos"
+      // initialRouteName="MapaDepartamentos"
+      // initialRouteName="Configuracion"  
+      // initialRouteName="Graficas"
+      // initialRouteName="Home"
+    >
       {/* Pantallas principales */}
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Perfil" component={PerfilScreen} />
@@ -37,8 +47,10 @@ export default function OngStack() {
       {/* Nueva sección de importación */}
       <Stack.Screen name="ImportacionDatos" component={ImportacionDatosScreen} />
       <Stack.Screen name="MapaDepartamentos" component={MapaDepartamentos} />
+      <Stack.Screen name="AlertasDepartamento" component={AlertasDepartamento} />
 
       {/* Sección de ayuda */}
+      <Stack.Screen name="DatosAyuda" component={DatosAyudaScreen} />
       <Stack.Screen name="Recomendaciones" component={RecomendacionesScreen} />
       <Stack.Screen name="Importancia" component={ImportanciaScreen} />
       <Stack.Screen name="SubirInfografia" component={SubirInfografiaScreen} />

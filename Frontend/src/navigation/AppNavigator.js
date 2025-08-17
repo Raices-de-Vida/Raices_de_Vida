@@ -16,6 +16,18 @@ function RootNavigator() {
 
   if (loading) return null;
 
+  // TEMPORAL: Para ver pantallas sin login, descomenta la línea siguiente y comenta el return normal
+  return (
+    <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={isDarkMode ? '#121212' : '#FFFFFF'}
+      />
+      <OngStack />
+    </NavigationContainer>
+  );
+
+  /*
   return (
     <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
       <StatusBar
@@ -31,6 +43,7 @@ function RootNavigator() {
       }
     </NavigationContainer>
   );
+  */
 }
 
 export default function AppNavigator() {
