@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
-import { StatusBar } from 'react-native';
+import { StatusBar, View, Text } from 'react-native';
 
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { OfflineProvider } from '../context/OfflineContext';
@@ -14,9 +14,22 @@ function RootNavigator() {
   const { role, loading } = useContext(AuthContext);
   const { isDarkMode } = useTheme();
 
-  if (loading) return null;
+  // Agregar un componente de carga para debug
+  if (loading) {
+    return (
+      <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
+        <StatusBar
+          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+          backgroundColor={isDarkMode ? '#121212' : '#FFFFFF'}
+        />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text>Cargando...</Text>
+        </View>
+      </NavigationContainer>
+    );
+  }
 
-  // TEMPORAL: Para ver pantallas sin login, descomenta la línea siguiente y comenta el return normal
+  // CONFIGURACIÓN TEMPORAL: Iniciando directamente en el mapa
   return (
     <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
       <StatusBar
@@ -27,6 +40,7 @@ function RootNavigator() {
     </NavigationContainer>
   );
 
+  // CONFIGURACIÓN NORMAL (comentada temporalmente)
   /*
   return (
     <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
@@ -48,12 +62,8 @@ function RootNavigator() {
 
 export default function AppNavigator() {
   return (
-    <ThemeProvider>
-      <OfflineProvider>
-        <AuthProvider>
-          <RootNavigator />
-        </AuthProvider>
-      </OfflineProvider>
-    </ThemeProvider>
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
   );
 }
