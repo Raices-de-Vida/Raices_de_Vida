@@ -87,8 +87,6 @@ export default function LoginScreen({ navigation }) {
           signIn(normalizeRole(userData.rol));
           return;
         }
-        Alert.alert('Error', 'Necesitas conexión para el primer inicio.');
-        return;
       } catch {
         Alert.alert('Error', 'No se puede iniciar en modo offline');
         return;

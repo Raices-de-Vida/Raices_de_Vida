@@ -28,10 +28,6 @@ function RootNavigator() {
       </NavigationContainer>
     );
   }
-
-
-
-  // CONFIGURACIÓN NORMAL (comentada temporalmente)
   
   return (
     <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
@@ -48,7 +44,6 @@ function RootNavigator() {
       }
     </NavigationContainer>
   );
-  
 }
 
 export default function AppNavigator() {
