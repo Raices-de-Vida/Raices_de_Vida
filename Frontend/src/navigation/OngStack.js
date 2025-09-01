@@ -24,7 +24,7 @@ export default function OngStack() {
     <Stack.Navigator 
       screenOptions={{ headerShown: false }}
       // CONFIGURACIÓN: Iniciando en MapaDepartamentos
-      initialRouteName="MapaDepartamentos"
+      initialRouteName="Home"
     >
       {/* Pantallas principales */}
       <Stack.Screen name="Home" component={HomeScreen} />

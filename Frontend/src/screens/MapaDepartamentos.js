@@ -1,7 +1,8 @@
+// src/screens/MapaDepartamentos.js
 import React, { useEffect, useRef, useState } from 'react'
-import { 
-  View, Image, TouchableOpacity, StyleSheet, Text, ScrollView, 
-  useWindowDimensions, Animated, Platform, StatusBar, Dimensions 
+import {
+  View, Image, TouchableOpacity, StyleSheet, Text, ScrollView,
+  useWindowDimensions, Animated, Platform, StatusBar, Dimensions
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
@@ -15,8 +16,7 @@ export default function MapaDepartamentos() {
   const { isDarkMode, toggleDarkMode } = useTheme()
   const theme = getTheme(isDarkMode)
   const { width, height } = useWindowDimensions()
-  const screenDimensions = Dimensions.get('window')
-  
+
   const isLargeScreen = width > 768
   const isTablet = width >= 600 && width < 1024
   const isSmallScreen = width < 360
@@ -24,7 +24,7 @@ export default function MapaDepartamentos() {
   const fadeAnim = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(50)).current
   const [selectedDepartment, setSelectedDepartment] = useState(null)
-  
+
   const [resumenNacional, setResumenNacional] = useState({
     alertasActivas: 0,
     totalDepartamentos: 22,
@@ -65,16 +65,8 @@ export default function MapaDepartamentos() {
 
   const setupAnimations = () => {
     Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 500, useNativeDriver: true }),
     ]).start()
   }
 
@@ -87,17 +79,11 @@ export default function MapaDepartamentos() {
       const [resumenResponse, departamentosResponse] = await Promise.allSettled([
         fetch(`${baseUrl}/api/alertas/resumen-nacional`, {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         }),
         fetch(`${baseUrl}/api/departamentos/estadisticas`, {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         })
       ])
 
@@ -105,21 +91,17 @@ export default function MapaDepartamentos() {
         const resumenData = await resumenResponse.value.json()
         setResumenNacional({
           alertasActivas: resumenData.alertasActivas || 0,
-          totalDepartamentos: 22, //QUEMADO
+          totalDepartamentos: 22,
           casosCriticos: resumenData.casosCriticos || 0
         })
       }
 
       let departamentosConDatos = departamentosGuatemala.map(dept => ({
-        ...dept,
-        alertas: 0,
-        poblacion: '0 hab.',
-        status: 'bajo'
+        ...dept, alertas: 0, poblacion: '0 hab.', status: 'bajo'
       }))
 
       if (departamentosResponse.status === 'fulfilled' && departamentosResponse.value.ok) {
         const deptData = await departamentosResponse.value.json()
-        
         departamentosConDatos = departamentosGuatemala.map(dept => {
           const backendData = deptData.find(d => d.nombre === dept.nombre)
           return {
@@ -132,14 +114,10 @@ export default function MapaDepartamentos() {
       }
 
       setDepartamentosData(departamentosConDatos)
-
     } catch (error) {
       console.log('Error cargando datos:', error)
       setDepartamentosData(departamentosGuatemala.map(dept => ({
-        ...dept,
-        alertas: 0,
-        poblacion: '0 hab.',
-        status: 'bajo'
+        ...dept, alertas: 0, poblacion: '0 hab.', status: 'bajo'
       })))
     } finally {
       setIsLoading(false)
@@ -147,7 +125,6 @@ export default function MapaDepartamentos() {
   }
 
   const irADepartamento = (departamento) => {
-    // Animación de selección
     setSelectedDepartment(departamento.nombre)
     setTimeout(() => {
       navigation.navigate('AlertasDepartamento', { departamento: departamento.nombre })
@@ -163,7 +140,6 @@ export default function MapaDepartamentos() {
       default: return theme.primaryButton
     }
   }
-
   const getStatusText = (status) => {
     switch (status) {
       case 'crítico': return 'Crítico'
@@ -178,147 +154,92 @@ export default function MapaDepartamentos() {
 
   return (
     <View style={styles.container}>
-      <StatusBar 
+      <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
-        backgroundColor={theme.background}
+        backgroundColor={isDarkMode ? theme.inputBackground : '#FFF7DA'}
       />
-      
-      {/* Header moderno con logo (sin flecha de regreso) */}
-      <View style={styles.modernHeader}>
-        <View style={styles.headerContent}>
-          {/* Logo adaptativo */}
-          <View style={styles.logoContainer}>
-            <Image 
-              source={isDarkMode 
-                ? require('../styles/logos/LogoDARK.png')
-                : require('../styles/logos/LogoBRIGHT.png')
-              }
-              style={styles.logo}
-              resizeMode="contain"
-            />
+
+      {/* App-bar tipo tarjeta como Home/Gráficas */}
+      <View style={[styles.topBar, { backgroundColor: isDarkMode ? theme.inputBackground : '#FFF7DA' }]}>
+        <View style={styles.headerLeft}>
+          <Image
+            source={isDarkMode ? require('../styles/logos/LogoDARK.png') : require('../styles/logos/LogoBRIGHT.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <View>
+            <Text style={[styles.topTitle, { color: theme.text }]}>Departamentos</Text>
+            <Text style={[styles.topSubtitle, { color: isDarkMode ? theme.secondaryText : '#6698CC' }]}>
+              Mapa interactivo de Guatemala
+            </Text>
           </View>
-          
-          <View style={styles.headerTitleSection}>
-            <Text style={styles.modernHeaderTitle}>Departamentos</Text>
-            <Text style={styles.modernHeaderSubtitle}>Mapa interactivo de Guatemala</Text>
-          </View>
-          
-          <TouchableOpacity 
-            style={styles.modernThemeToggle}
-            onPress={toggleDarkMode}
-            activeOpacity={0.7}
-          >
-            <Ionicons 
-              name={isDarkMode ? "sunny-outline" : "moon-outline"} 
-              size={24} 
-              color={theme.text} 
-            />
-          </TouchableOpacity>
         </View>
+
+        <TouchableOpacity style={styles.toggleButton} onPress={toggleDarkMode} activeOpacity={0.7}>
+          <Ionicons name={isDarkMode ? "sunny-outline" : "moon-outline"} size={22} color={theme.text} />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Estadísticas generales */}
-        <Animated.View 
-          style={[
-            styles.statsCard,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
-          ]}
-        >
+        {/* Estadísticas */}
+        <Animated.View style={[styles.statsCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <Text style={styles.statsTitle}>
-            <Ionicons name="analytics" size={20} color={theme.primaryButton} /> 
-            {' '}Resumen Nacional
+            <Ionicons name="analytics" size={20} color={theme.primaryButton} /> Resumen Nacional
           </Text>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {isLoading ? '...' : resumenNacional.alertasActivas}
-              </Text>
+              <Text style={styles.statNumber}>{isLoading ? '...' : resumenNacional.alertasActivas}</Text>
               <Text style={styles.statLabel}>Alertas Activas</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {resumenNacional.totalDepartamentos}
-              </Text>
+              <Text style={styles.statNumber}>{resumenNacional.totalDepartamentos}</Text>
               <Text style={styles.statLabel}>Departamentos</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {isLoading ? '...' : resumenNacional.casosCriticos}
-              </Text>
+              <Text style={styles.statNumber}>{isLoading ? '...' : resumenNacional.casosCriticos}</Text>
               <Text style={styles.statLabel}>Casos Críticos</Text>
             </View>
           </View>
         </Animated.View>
 
-        {/* Mapa interactivo */}
-        <Animated.View 
-          style={[
-            styles.mapCard,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
-          ]}
-        >
+        {/* Mapa */}
+        <Animated.View style={[styles.mapCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <Text style={styles.sectionTitle}>
-            <Ionicons name="map" size={20} color={theme.primaryButton} /> 
-            {' '}Mapa Interactivo
+            <Ionicons name="map" size={20} color={theme.primaryButton} /> Mapa Interactivo
           </Text>
-          <Text style={styles.sectionSubtitle}>
-            Toca cualquier departamento para ver sus alertas
-          </Text>
-          
+          <Text style={styles.sectionSubtitle}>Toca cualquier departamento para ver sus alertas</Text>
+
           <View style={styles.mapContainer}>
             <View style={styles.mapImageContainer}>
               <Image source={require('../../assets/mapaGuatemala.png')} style={styles.mapa} />
-              
-              {/* Botones interactivos por departamento - posicionados absolutamente sobre el mapa */}
               {departamentosData.map((dept) => {
                 const mapWidth = Math.min(width * 0.9, 380)
                 const mapHeight = Math.min(mapWidth * 1.2, 450)
-                
                 const scaledLeft = (dept.left / 160) * mapWidth
                 const scaledTop = (dept.top / 200) * mapHeight
-                
+
                 return (
-                  <View
-                    key={dept.id}
-                    style={[
-                      styles.departamento, 
-                      { 
-                        left: scaledLeft - 16,
-                        top: scaledTop - 16,
-                      }
-                    ]}
-                  >
+                  <View key={dept.id} style={[styles.departamento, { left: scaledLeft - 16, top: scaledTop - 16 }]}>
                     <TouchableOpacity
                       style={[
                         styles.departamentoButton,
                         {
-                          backgroundColor: selectedDepartment === dept.nombre 
-                            ? getStatusColor(dept.status) 
-                            : getStatusColor(dept.status),
+                          backgroundColor: getStatusColor(dept.status),
                           opacity: selectedDepartment === dept.nombre ? 1 : 0.85,
-                          transform: selectedDepartment === dept.nombre 
-                            ? [{ scale: 1.3 }] 
-                            : [{ scale: 1 }]
+                          transform: selectedDepartment === dept.nombre ? [{ scale: 1.3 }] : [{ scale: 1 }]
                         }
                       ]}
                       onPress={() => irADepartamento(dept)}
                       activeOpacity={0.7}
                     >
-                      <View style={[styles.alertBadge, { 
-                        backgroundColor: dept.alertas > 0 ? 'rgba(255, 255, 255, 0.95)' : 'rgba(200, 200, 200, 0.8)'
+                      <View style={[styles.alertBadge, {
+                        backgroundColor: dept.alertas > 0 ? 'rgba(255,255,255,0.95)' : 'rgba(200,200,200,0.8)'
                       }]}>
-                        <Text style={[styles.alertCount, { 
+                        <Text style={[styles.alertCount, {
                           color: dept.alertas > 0 ? '#333' : '#666',
                           fontWeight: dept.alertas > 0 ? 'bold' : '500'
                         }]}>
@@ -333,31 +254,20 @@ export default function MapaDepartamentos() {
           </View>
         </Animated.View>
 
-        {/* Lista de departamentos */}
-        <Animated.View 
-          style={[
-            styles.listCard,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
-          ]}
-        >
+        {/* Lista */}
+        <Animated.View style={[styles.listCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <Text style={styles.sectionTitle}>
-            <Ionicons name="list" size={20} color={theme.primaryButton} /> 
-            {' '}Departamentos Monitoreados
+            <Ionicons name="list" size={20} color={theme.primaryButton} /> Departamentos Monitoreados
           </Text>
-          
+
           {departamentosData.map((dept, index) => (
             <TouchableOpacity
               key={dept.id}
               style={[
                 styles.departmentItem,
-                { 
+                {
                   borderBottomWidth: index === departamentosData.length - 1 ? 0 : 1,
-                  backgroundColor: selectedDepartment === dept.nombre 
-                    ? theme.optionSelected 
-                    : 'transparent'
+                  backgroundColor: selectedDepartment === dept.nombre ? theme.optionSelected : 'transparent'
                 }
               ]}
               onPress={() => irADepartamento(dept)}
@@ -375,7 +285,7 @@ export default function MapaDepartamentos() {
                     <Ionicons name="people" size={14} color={theme.secondaryText} /> {dept.poblacion}
                   </Text>
                   <Text style={styles.departmentDetail}>
-                    <Ionicons name="warning" size={14} color={getStatusColor(dept.status)} /> 
+                    <Ionicons name="warning" size={14} color={getStatusColor(dept.status)} />
                     {isLoading ? ' ... alertas' : ` ${dept.alertas} alertas`}
                   </Text>
                 </View>
@@ -393,79 +303,49 @@ export default function MapaDepartamentos() {
 
 const getResponsiveStyles = (theme, screenInfo, isDarkMode) => {
   const { width, height, isLargeScreen, isTablet, isSmallScreen } = screenInfo
-  
+
   const fontScale = isSmallScreen ? 0.9 : isLargeScreen ? 1.1 : 1
   const paddingScale = isSmallScreen ? 0.8 : isLargeScreen ? 1.2 : 1
   const spacingScale = isSmallScreen ? 0.8 : isLargeScreen ? 1.1 : 1
-  
+
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.background,
+      // Fondo amarillo para igualar Home/Gráficas
+      backgroundColor: isDarkMode ? theme.background : '#F2D88F',
     },
-    modernHeader: {
-      backgroundColor: theme.background,
-      paddingTop: Platform.OS === 'ios' ? 50 : 35,
-      paddingBottom: 15,
-      paddingHorizontal: 20 * paddingScale,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.borderColor,
-      position: 'relative',
-      zIndex: 1000, 
-    },
-    logoContainer: {
-      marginRight: 8,
-    },
-    logo: {
-      width: 42,
-      height: 42,
-      borderRadius: 10,
-      backgroundColor: 'transparent',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 2,
-      elevation: 2,
-    },
-    headerTitleSection: {
-      flex: 1,
-      paddingLeft: 8,
-      alignItems: 'flex-start',
-    },
-    modernHeaderTitle: {
-      fontSize: 22 * fontScale,
-      fontWeight: '700',
-      color: theme.text,
-      letterSpacing: -0.5,
-    },
-    modernHeaderSubtitle: {
-      fontSize: 13 * fontScale,
-      color: theme.secondaryText,
-      marginTop: 1,
-      fontWeight: '500',
-    },
-    modernThemeToggle: {
-      padding: 6,
-      borderRadius: 10,
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-      overflow: 'hidden',
-      minWidth: 36,
-      minHeight: 36,
-      alignItems: 'center',
-      justifyContent: 'center',
-      alignSelf: 'flex-start',
-      marginTop: -4,
-    },
-    headerContent: {
+
+    /* App-bar tipo tarjeta */
+    topBar: {
+      height: 72,
+      marginHorizontal: 16,
+      marginTop: 12,
+      marginBottom: 8,
+      paddingHorizontal: 12,
+      borderWidth: 1,
+      borderColor: theme.borderColor || '#F1E7C6',
+      borderRadius: 16,
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'flex-start',
+      justifyContent: 'space-between',
+      shadowColor: '#000',
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 3,
     },
+    headerLeft: { flexDirection: 'row', alignItems: 'center' },
+    logo: { width: 36, height: 36, marginRight: 10, borderRadius: 8 },
+    topTitle: { fontSize: 20 * fontScale, fontWeight: '800' },
+    topSubtitle: { marginTop: 2, fontSize: 12 * fontScale, fontWeight: '700' },
+    toggleButton: { padding: 6, borderRadius: 10 },
+
     scrollContent: {
       paddingHorizontal: 20 * paddingScale,
       paddingVertical: 20 * spacingScale,
       paddingBottom: 120 * spacingScale,
     },
+
     statsCard: {
       backgroundColor: theme.cardBackground,
       borderRadius: 24,
@@ -484,30 +364,13 @@ const getResponsiveStyles = (theme, screenInfo, isDarkMode) => {
       fontWeight: 'bold',
       color: theme.primaryButton,
       marginBottom: 24 * spacingScale,
-      textAlign: 'left',
       letterSpacing: 0.3,
     },
-    statsRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      alignItems: 'center',
-    },
-    statItem: {
-      alignItems: 'center',
-      flex: 1,
-    },
-    statNumber: {
-      fontSize: 32 * fontScale,
-      fontWeight: '700',
-      color: theme.primaryButton,
-      marginBottom: 8,
-    },
-    statLabel: {
-      fontSize: 14 * fontScale,
-      color: theme.secondaryText,
-      textAlign: 'center',
-      fontWeight: '500',
-    },
+    statsRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
+    statItem: { alignItems: 'center', flex: 1 },
+    statNumber: { fontSize: 32 * fontScale, fontWeight: '700', color: theme.primaryButton, marginBottom: 8 },
+    statLabel: { fontSize: 14 * fontScale, color: theme.secondaryText, textAlign: 'center', fontWeight: '500' },
+
     mapCard: {
       backgroundColor: theme.cardBackground,
       borderRadius: 24,
@@ -534,21 +397,10 @@ const getResponsiveStyles = (theme, screenInfo, isDarkMode) => {
       borderWidth: 1,
       borderColor: theme.cardBorder || 'rgba(0, 0, 0, 0.05)',
     },
-    sectionTitle: {
-      fontSize: 19 * fontScale,
-      fontWeight: 'bold',
-      color: theme.primaryButton,
-      marginBottom: 12 * spacingScale,
-      textAlign: 'left',
-      letterSpacing: 0.3,
-    },
-    sectionSubtitle: {
-      fontSize: 15 * fontScale,
-      color: theme.secondaryText,
-      marginBottom: 24,
-      fontStyle: 'italic',
-      lineHeight: 22,
-    },
+
+    sectionTitle: { fontSize: 19 * fontScale, fontWeight: 'bold', color: theme.primaryButton, marginBottom: 12 * spacingScale, letterSpacing: 0.3 },
+    sectionSubtitle: { fontSize: 15 * fontScale, color: theme.secondaryText, marginBottom: 24, fontStyle: 'italic', lineHeight: 22 },
+
     mapContainer: {
       alignItems: 'center',
       justifyContent: 'center',
@@ -562,98 +414,27 @@ const getResponsiveStyles = (theme, screenInfo, isDarkMode) => {
       shadowOpacity: isDarkMode ? 0.3 : 0.15,
       shadowRadius: 8,
     },
-    mapImageContainer: {
-      position: 'relative',
-      width: Math.min(width * 0.9, 380),
-      height: Math.min(Math.min(width * 0.9, 380) * 1.2, 450),
-    },
-    mapa: {
-      width: '100%',
-      height: '100%',
-      resizeMode: 'contain',
-      borderRadius: 12,
-    },
-    departamento: {
-      position: 'absolute',
-      width: 32,
-      height: 32,
-      zIndex: 1000,
-    },
+    mapImageContainer: { position: 'relative', width: Math.min(width * 0.9, 380), height: Math.min(Math.min(width * 0.9, 380) * 1.2, 450) },
+    mapa: { width: '100%', height: '100%', resizeMode: 'contain', borderRadius: 12 },
+
+    departamento: { position: 'absolute', width: 32, height: 32, zIndex: 1000 },
     departamentoButton: {
-      width: '100%',
-      height: '100%',
-      borderRadius: 16,
-      alignItems: 'center',
-      justifyContent: 'center',
-      elevation: 6,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.4,
-      shadowRadius: 5,
-      borderWidth: 2,
-      borderColor: '#FFFFFF',
+      width: '100%', height: '100%', borderRadius: 16, alignItems: 'center', justifyContent: 'center',
+      elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.4, shadowRadius: 5, borderWidth: 2, borderColor: '#FFFFFF',
     },
     alertBadge: {
-      borderRadius: 10,
-      paddingHorizontal: 6,
-      paddingVertical: 3,
-      minWidth: 24,
-      minHeight: 18,
-      alignItems: 'center',
-      justifyContent: 'center',
-      // Sombra para el badge
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
-      shadowRadius: 2,
+      borderRadius: 10, paddingHorizontal: 6, paddingVertical: 3, minWidth: 24, minHeight: 18, alignItems: 'center', justifyContent: 'center',
+      elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 2,
     },
-    alertCount: {
-      fontSize: 11,
-      fontWeight: 'bold',
-      textAlign: 'center',
-    },
-    departmentItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 20,
-      paddingHorizontal: 4,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.dividerColor,
-    },
-    departmentInfo: {
-      flex: 1,
-    },
-    departmentHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: 8,
-    },
-    departmentName: {
-      fontSize: 17 * fontScale,
-      fontWeight: '600',
-      color: theme.text,
-      flex: 1,
-    },
-    statusBadge: {
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    statusText: {
-      fontSize: 12 * fontScale,
-      fontWeight: '600',
-      color: '#FFFFFF',
-    },
-    departmentStats: {
-      flexDirection: 'row',
-      gap: 20,
-    },
-    departmentDetail: {
-      fontSize: 14 * fontScale,
-      color: theme.secondaryText,
-      fontWeight: '500',
-    },
+    alertCount: { fontSize: 11, fontWeight: 'bold', textAlign: 'center' },
+
+    departmentItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 20, paddingHorizontal: 4, borderBottomWidth: 1, borderBottomColor: theme.dividerColor },
+    departmentInfo: { flex: 1 },
+    departmentHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+    departmentName: { fontSize: 17 * fontScale, fontWeight: '600', color: theme.text, flex: 1 },
+    statusBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
+    statusText: { fontSize: 12 * fontScale, fontWeight: '600', color: '#FFFFFF' },
+    departmentStats: { flexDirection: 'row', gap: 20 },
+    departmentDetail: { fontSize: 14 * fontScale, color: theme.secondaryText, fontWeight: '500' },
   })
 }
