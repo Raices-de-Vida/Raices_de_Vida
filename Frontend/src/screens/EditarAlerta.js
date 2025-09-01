@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import ThemeToggle from '../components/ThemeToggle';
+import BottomNav from '../components/BottomNav';
 
 export default function EditarAlerta({ navigation, route }) {
   const { alerta } = route.params;

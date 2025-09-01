@@ -1,9 +1,13 @@
+// src/screens/ConfiguracionScreen.js
 import React, { useState, useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Image } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import { AuthContext } from '../context/AuthContext';
+import ThemeToggle from '../components/ThemeToggle';
+
+const PALETTE = { butter: '#F2D88F', cream: '#FFF7DA', sea: '#6698CC' };
 
 export default function ConfiguracionScreen({ navigation }) {
   const [mostrarIdiomas, setMostrarIdiomas] = useState(false);
@@ -11,166 +15,197 @@ export default function ConfiguracionScreen({ navigation }) {
   const [idiomaSeleccionado, setIdiomaSeleccionado] = useState(null);
   const [regionSeleccionada, setRegionSeleccionada] = useState(null);
 
-  const { isDarkMode, toggleDarkMode } = useTheme();
+  const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
 
   const { signOut } = useContext(AuthContext);
 
   const cerrarSesion = async () => {
     try {
-      await signOut(); // Esto hará que role = null y redirija a Login automáticamente
-    } catch (error) {
+      await signOut();
+    } catch {
       Alert.alert('Error', 'No se pudo cerrar sesión.');
     }
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
-      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={[styles.header, { backgroundColor: theme.header }]}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={theme.text} />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Configuración</Text>
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? theme.background : PALETTE.butter }}>
+      {/* Top bar tipo píldora */}
+      <View
+        style={[
+          styles.topBar,
+          {
+            backgroundColor: isDarkMode ? theme.inputBackground : PALETTE.cream,
+            borderColor: theme.border || '#EADFBF',
+          },
+        ]}
+      >
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 10 }}>
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
+        </TouchableOpacity>
+
+        <View style={styles.titleRow}>
+          <Image
+            source={
+              isDarkMode
+                ? require('../styles/logos/LogoDARK.png')
+                : require('../styles/logos/LogoBRIGHT.png')
+            }
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <View>
+            <Text style={[styles.topTitle, { color: theme.text }]}>Configuración</Text>
+            <Text style={[styles.topSubtitle, { color: PALETTE.sea }]}>Preferencias y seguridad</Text>
+          </View>
         </View>
 
+        <ThemeToggle />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.container}>
         {/* Idioma */}
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.sectionHeader} onPress={() => setMostrarIdiomas(!mostrarIdiomas)}>
-            <Ionicons name="language-outline" size={20} color="green" />
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>Idioma</Text>
-            <Ionicons
-              name={mostrarIdiomas ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color={theme.secondaryText}
-              style={{ marginLeft: 'auto' }}
-            />
-          </TouchableOpacity>
-          {mostrarIdiomas && (
-            <View style={[styles.optionGroup, { backgroundColor: theme.inputBackground }]}>
-              {['Español', 'English', 'Kaqchikel'].map((idioma) => (
-                <TouchableOpacity key={idioma} onPress={() => setIdiomaSeleccionado(idioma)}>
-                  <Text style={[
-                    styles.option,
+        <TouchableOpacity
+          style={[styles.optionButton, { backgroundColor: theme.cardBackground }]}
+          onPress={() => setMostrarIdiomas(!mostrarIdiomas)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="language-outline" size={22} color="green" />
+          <Text style={[styles.optionText, { color: theme.text }]}>Idioma</Text>
+          <Ionicons
+            name={mostrarIdiomas ? 'chevron-up' : 'chevron-forward'}
+            size={20}
+            color={theme.secondaryText}
+            style={{ marginLeft: 'auto' }}
+          />
+        </TouchableOpacity>
+        {mostrarIdiomas && (
+          <View style={[styles.dropdown, { backgroundColor: theme.inputBackground }]}>
+            {['Español', 'English', 'Kaqchikel'].map((idioma) => (
+              <TouchableOpacity key={idioma} onPress={() => setIdiomaSeleccionado(idioma)}>
+                <Text
+                  style={[
+                    styles.dropdownText,
                     {
                       color: idiomaSeleccionado === idioma ? 'green' : theme.text,
-                      fontWeight: idiomaSeleccionado === idioma ? 'bold' : 'normal'
-                    }
-                  ]}>{idioma}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
+                      fontWeight: idiomaSeleccionado === idioma ? 'bold' : 'normal',
+                    },
+                  ]}
+                >
+                  {idioma}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Región */}
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.sectionHeader} onPress={() => setMostrarRegiones(!mostrarRegiones)}>
-            <Ionicons name="location-outline" size={20} color="green" />
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>Región</Text>
-            <Ionicons
-              name={mostrarRegiones ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color={theme.secondaryText}
-              style={{ marginLeft: 'auto' }}
-            />
-          </TouchableOpacity>
-          {mostrarRegiones && (
-            <View style={[styles.optionGroup, { backgroundColor: theme.inputBackground }]}>
-              {['Norte', 'Sur', 'Occidente'].map((region) => (
-                <TouchableOpacity key={region} onPress={() => setRegionSeleccionada(region)}>
-                  <Text style={[
-                    styles.option,
+        <TouchableOpacity
+          style={[styles.optionButton, { backgroundColor: theme.cardBackground }]}
+          onPress={() => setMostrarRegiones(!mostrarRegiones)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="location-outline" size={22} color="green" />
+          <Text style={[styles.optionText, { color: theme.text }]}>Región</Text>
+          <Ionicons
+            name={mostrarRegiones ? 'chevron-up' : 'chevron-forward'}
+            size={20}
+            color={theme.secondaryText}
+            style={{ marginLeft: 'auto' }}
+          />
+        </TouchableOpacity>
+        {mostrarRegiones && (
+          <View style={[styles.dropdown, { backgroundColor: theme.inputBackground }]}>
+            {['Norte', 'Sur', 'Occidente'].map((region) => (
+              <TouchableOpacity key={region} onPress={() => setRegionSeleccionada(region)}>
+                <Text
+                  style={[
+                    styles.dropdownText,
                     {
                       color: regionSeleccionada === region ? 'green' : theme.text,
-                      fontWeight: regionSeleccionada === region ? 'bold' : 'normal'
-                    }
-                  ]}>{region}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
+                      fontWeight: regionSeleccionada === region ? 'bold' : 'normal',
+                    },
+                  ]}
+                >
+                  {region}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Organizaciones */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="people-outline" size={20} color="green" />
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>Organizaciones</Text>
-          </View>
-        </View>
-
-        {/* Tema oscuro */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <MaterialIcons name="dark-mode" size={20} color="green" />
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>Tema oscuro</Text>
-            <Switch
-              value={isDarkMode}
-              onValueChange={toggleDarkMode}
-              style={{ marginLeft: 'auto' }}
-            />
-          </View>
-        </View>
+        <TouchableOpacity
+          style={[styles.optionButton, { backgroundColor: theme.cardBackground }]}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="people-outline" size={22} color="green" />
+          <Text style={[styles.optionText, { color: theme.text }]}>Organizaciones</Text>
+        </TouchableOpacity>
 
         {/* Cambiar contraseña */}
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.sectionHeader} onPress={() => navigation.navigate('CambiarContrasena')}>
-            <Ionicons name="lock-closed-outline" size={20} color="green" />
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>Cambiar contraseña</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={[styles.optionButton, { backgroundColor: theme.cardBackground }]}
+          onPress={() => navigation.navigate('CambiarContrasena')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="lock-closed-outline" size={22} color="green" />
+          <Text style={[styles.optionText, { color: theme.text }]}>Cambiar contraseña</Text>
+        </TouchableOpacity>
 
         {/* Cerrar sesión */}
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.sectionHeader} onPress={cerrarSesion}>
-            <MaterialIcons name="logout" size={20} color="green" />
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>Cerrar sesión</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={[styles.optionButton, { backgroundColor: theme.cardBackground }]}
+          onPress={cerrarSesion}
+          activeOpacity={0.8}
+        >
+          <MaterialIcons name="logout" size={22} color="green" />
+          <Text style={[styles.optionText, { color: theme.text }]}>Cerrar sesión</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    paddingBottom: 100,
-  },
-  header: {
-    height: 80,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 20,
-  },
-  backButton: { padding: 4 },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  section: {
-    marginBottom: 25,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  // Top bar
+  topBar: {
+    height: 72,
+    marginHorizontal: 16,
+    marginTop: 12,
     marginBottom: 8,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderRadius: 16,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
   },
-  sectionTitle: {
-    fontWeight: 'bold',
-    fontSize: 16,
+  titleRow: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  logo: { width: 34, height: 34, marginRight: 10, borderRadius: 8 },
+  topTitle: { fontSize: 20, fontWeight: '800', lineHeight: 22 },
+  topSubtitle: { marginTop: 4, fontSize: 12, fontWeight: '700' },
+
+  // Contenido
+  container: { padding: 20, paddingBottom: 120 },
+  optionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
-  optionGroup: {
-    borderRadius: 8,
-    padding: 10,
-    gap: 10,
-  },
-  option: {
-    fontSize: 16,
-  },
+  optionText: { fontSize: 16, fontWeight: '600', marginLeft: 10 },
+  dropdown: { borderRadius: 12, padding: 12, marginBottom: 12 },
+  dropdownText: { fontSize: 15, marginVertical: 6 },
 });

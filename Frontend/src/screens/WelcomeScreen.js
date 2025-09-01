@@ -18,7 +18,6 @@ export default function WelcomeScreen({ navigation }) {
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
 
-  // Colores: en claro usamos la paleta; en oscuro respetamos tu theme
   const bg        = isDarkMode ? theme.background    : PALETTE.butter;
   const titleCol  = isDarkMode ? theme.text          : PALETTE.blush;
   const subCol    = isDarkMode ? theme.secondaryText : PALETTE.sea;
