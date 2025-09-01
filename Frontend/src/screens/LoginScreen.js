@@ -87,6 +87,8 @@ export default function LoginScreen({ navigation }) {
           signIn(normalizeRole(userData.rol));
           return;
         }
+        Alert.alert('Error', 'Necesitas conexión para el primer inicio.');
+        return;
       } catch {
         Alert.alert('Error', 'No se puede iniciar en modo offline');
         return;
@@ -250,4 +252,6 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontWeight: '800', fontSize: 16, textAlign: 'center', letterSpacing: 0.3 },
 
   link: { marginTop: 14, textDecorationLine: 'underline', fontSize: 14, textAlign: 'center', fontWeight: '600' },
+
 });
+

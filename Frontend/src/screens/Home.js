@@ -57,6 +57,7 @@ export default function Home({ navigation, route }) {
   const fetchAlertas = async () => {
     setLoading(true);
     try {
+
       // 🚫 Nada de backend: usamos exclusivamente los MOCKS
       let alertasData = MOCK_ALERTS;
 
@@ -73,19 +74,21 @@ export default function Home({ navigation, route }) {
         prioridad: a.prioridad || 'Alta',
         pendingSync: true,
       }));
-
       const todas = [...alertasData, ...localAlertas];
       setAlertas(todas.filter((a) => (activo ? a.estado !== 'Cerrada' : a.estado === 'Cerrada')));
     } finally {
       setLoading(false);
     }
+
   };
 
   useEffect(() => { fetchAlertas(); }, [activo, isConnected]);
   useEffect(() => { if (route.params?.refresh) fetchAlertas(); }, [route.params?.refresh]);
 
   const renderAlertItem = (a) => (
+
     <TouchableOpacity key={a.alerta_id} style={styles.card(theme, isDarkMode)}>
+
       <AntDesign name="exclamationcircle" size={28} color={PALETTE.blush} style={{ marginRight: 10 }} />
       <View style={{ flex: 1 }}>
         <Text style={[styles.alertName, { color: theme.text }]}>
@@ -95,6 +98,8 @@ export default function Home({ navigation, route }) {
         <Text style={[styles.alertComunidad, { color: theme.secondaryText }]}>
           {a.comunidad}{a.edad ? ` • ${a.edad} años` : ''}
         </Text>
+        <Text style={[styles.alertDesc, { color: theme.secondaryText }]}>{a.descripcion}</Text>
+        <Text style={[styles.alertComunidad, { color: theme.secondaryText }]}>{a.comunidad}{a.edad ? ` • ${a.edad} años` : ''}</Text>
       </View>
       <Text
         style={[
@@ -131,6 +136,7 @@ export default function Home({ navigation, route }) {
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
+
         {loading ? (
           <ActivityIndicator size="large" color={PALETTE.tangerine} style={{ marginVertical: 20 }} />
         ) : alertas.length === 0 ? (
@@ -140,7 +146,6 @@ export default function Home({ navigation, route }) {
         ) : (
           <>
             {alertas.map(renderAlertItem)}
-
             {/* Botón "Ver más" moderno */}
             <View style={styles.verMasContainer}>
               <TouchableOpacity
@@ -160,6 +165,8 @@ export default function Home({ navigation, route }) {
     </View>
   );
 }
+
+const RADIUS = 16;
 
 const styles = StyleSheet.create({
   container: { padding: 20, flexGrow: 1, paddingBottom: 100 },
@@ -209,6 +216,7 @@ const styles = StyleSheet.create({
   alertDesc: { fontSize: 14, marginVertical: 4 },
   alertComunidad: { fontSize: 12 },
   alertStatus: { fontSize: 12, fontWeight: '800', padding: 5 },
+
   pendingBadge: { fontSize: 12, fontStyle: 'italic', color: PALETTE.tangerine },
 
   /* ===== Botón "Ver más" ===== */
