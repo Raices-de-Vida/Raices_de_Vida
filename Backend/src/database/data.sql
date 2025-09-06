@@ -244,3 +244,4 @@ JOIN ONGs o ON d.id_ong = o.id_ong
 GROUP BY o.nombre_ong
 ORDER BY total_donaciones DESC;
 
+
