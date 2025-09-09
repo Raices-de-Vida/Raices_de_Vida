@@ -6,6 +6,12 @@ const Familia = require('./Familia');
 const Nino = require('./Nino');
 const CasoCritico = require('./CasoCritico');
 const Alerta = require('./Alerta');
+const Paciente = require('./Paciente');
+const Consulta = require('./Consulta');
+const Signos = require('./SignosVitalesHistorial');
+const CirugiaPaciente = require('./CirugiaPaciente');
+const HistorialMedico = require('./HistorialMedico');
+const AlertaMedica = require('./AlertaMedica');
 
 // Relación Usuario a ONG/Voluntario
 User.belongsTo(Ong, {
@@ -70,3 +76,20 @@ module.exports = {
     console.log('Asociaciones de modelos configuradas');
   }
 };
+
+Paciente.hasMany(Consulta, { foreignKey: 'id_paciente', as: 'consultas' });
+Consulta.belongsTo(Paciente, { foreignKey: 'id_paciente', as: 'paciente' });
+
+Paciente.hasMany(Signos, { foreignKey: 'id_paciente', as: 'signos' });
+Signos.belongsTo(Paciente, { foreignKey: 'id_paciente', as: 'paciente' });
+
+Paciente.hasMany(CirugiaPaciente, { foreignKey: 'id_paciente', as: 'cirugias' });
+CirugiaPaciente.belongsTo(Paciente, { foreignKey: 'id_paciente', as: 'paciente' });
+
+Paciente.hasMany(HistorialMedico, { foreignKey: 'id_paciente', as: 'historial' });
+HistorialMedico.belongsTo(Paciente, { foreignKey: 'id_paciente', as: 'paciente' });
+
+Paciente.hasMany(AlertaMedica, { foreignKey: 'id_paciente', as: 'alertasMedicas' });
+AlertaMedica.belongsTo(Paciente, { foreignKey: 'id_paciente', as: 'paciente' });
+
+AlertaMedica.belongsTo(Alerta, { foreignKey: 'id_alerta', as: 'alerta' });
