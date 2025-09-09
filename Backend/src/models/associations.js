@@ -6,6 +6,7 @@ const Familia = require('./Familia');
 const Nino = require('./Nino');
 const CasoCritico = require('./CasoCritico');
 const Alerta = require('./Alerta');
+
 const Paciente = require('./Paciente');
 const Consulta = require('./Consulta');
 const Signos = require('./SignosVitalesHistorial');
@@ -13,26 +14,28 @@ const CirugiaPaciente = require('./CirugiaPaciente');
 const HistorialMedico = require('./HistorialMedico');
 const AlertaMedica = require('./AlertaMedica');
 
-// Relación Usuario a ONG/Voluntario
 User.belongsTo(Ong, {
   foreignKey: 'id_referencia',
   constraints: false,
-  scope: {
-    tipo_referencia: 'ONG'
-  },
+  scope: { tipo_referencia: 'ONG' },
   as: 'ong'
 });
 
 User.belongsTo(Voluntario, {
   foreignKey: 'id_referencia',
   constraints: false,
-  scope: {
-    tipo_referencia: 'Voluntario'
-  },
+  scope: { tipo_referencia: 'Voluntario' },
   as: 'voluntario'
 });
 
-// Relaciones principales
+User.belongsTo(Comunidad, {
+  foreignKey: 'id_referencia',
+  constraints: false,
+  scope: { tipo_referencia: 'Comunidad' },
+  as: 'comunidad'
+});
+
+/* Relaciones principales */
 Ong.belongsTo(Comunidad, { foreignKey: 'id_comunidad' });
 Comunidad.hasMany(Ong, { foreignKey: 'id_comunidad' });
 
@@ -48,35 +51,14 @@ Familia.hasMany(CasoCritico, { foreignKey: 'id_familia' });
 CasoCritico.belongsTo(Nino, { foreignKey: 'id_nino' });
 Nino.hasMany(CasoCritico, { foreignKey: 'id_nino' });
 
-// associations.js
-Alerta.belongsTo(CasoCritico, { 
-  foreignKey: 'caso_id',
-  as: 'caso' // Alias usado en la consulta
-});
+/* Alertas */
+Alerta.belongsTo(CasoCritico, { foreignKey: 'caso_id', as: 'caso' });
+CasoCritico.hasMany(Alerta, { foreignKey: 'caso_id', as: 'alertas' });
 
-CasoCritico.hasMany(Alerta, { 
-  foreignKey: 'caso_id',
-  as: 'alertas'
-});
+Alerta.belongsTo(User, { foreignKey: 'usuario_id', targetKey: 'id_usuario', as: 'usuario' });
+User.hasMany(Alerta, { foreignKey: 'usuario_id', sourceKey: 'id_usuario', as: 'alertas_generadas' });
 
-Alerta.belongsTo(User, { 
-  foreignKey: 'id_usuario',
-  targetKey: 'id_usuario', // Asegúrate de que coincida con la PK de Usuarios
-  as: 'usuario' 
-});
-
-User.hasMany(Alerta, { 
-  foreignKey: 'id_usuario',
-  sourceKey: 'id_usuario', // Debe coincidir con la PK de Usuarios
-  as: 'alertas_generadas' 
-});
-
-module.exports = {
-  setupAssociations: () => {
-    console.log('Asociaciones de modelos configuradas');
-  }
-};
-
+/* Paciente y sus módulos */
 Paciente.hasMany(Consulta, { foreignKey: 'id_paciente', as: 'consultas' });
 Consulta.belongsTo(Paciente, { foreignKey: 'id_paciente', as: 'paciente' });
 
@@ -93,3 +75,10 @@ Paciente.hasMany(AlertaMedica, { foreignKey: 'id_paciente', as: 'alertasMedicas'
 AlertaMedica.belongsTo(Paciente, { foreignKey: 'id_paciente', as: 'paciente' });
 
 AlertaMedica.belongsTo(Alerta, { foreignKey: 'id_alerta', as: 'alerta' });
+
+Paciente.belongsTo(Familia,   { foreignKey: 'id_familia',   as: 'familia' });
+Paciente.belongsTo(Comunidad, { foreignKey: 'id_comunidad', as: 'comunidad' });
+Paciente.belongsTo(User,      { foreignKey: 'usuario_registro', as: 'registradoPor' });
+
+Signos.belongsTo(User, { foreignKey: 'usuario_registro', as: 'tomadoPor' });
+
