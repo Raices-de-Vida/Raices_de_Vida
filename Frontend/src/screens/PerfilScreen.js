@@ -1,4 +1,3 @@
-// src/screens/PerfilScreen.js
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -185,6 +184,26 @@ export default function PerfilScreen({ navigation }) {
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
           </TouchableOpacity>
+
+          {/* NUEVA tarjeta: Registrar paciente */}
+          <TouchableOpacity
+            style={[
+              styles.infoCard,
+              {
+                backgroundColor: theme.cardBackground,
+                borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)',
+              },
+            ]}
+            onPress={() => navigation.navigate('PacienteForm')}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="person-add-outline" size={26} color={theme.text} style={styles.infoIcon} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.infoTitle, { color: theme.text }]}>Registrar nuevo paciente</Text>
+              <Text style={[styles.infoSubtitle, { color: theme.secondaryText }]}>Formulario de alta</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -196,7 +215,6 @@ export default function PerfilScreen({ navigation }) {
 const RADIUS = 16;
 
 const styles = StyleSheet.create({
-  /* ===== Top Bar ===== */
   topBar: {
     height: 72,
     marginHorizontal: 16,
@@ -223,7 +241,6 @@ const styles = StyleSheet.create({
   topSubtitle: { marginTop: 2, fontSize: 12, fontWeight: '700' },
   toggleButton: { padding: 6, borderRadius: 10 },
 
-  /* ===== Contenido ===== */
   pagePadding: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 110, alignItems: 'center' },
 
   avatarWrapper: {

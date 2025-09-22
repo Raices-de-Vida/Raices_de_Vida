@@ -1,10 +1,8 @@
-// src/screens/Home.js
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert, Image
 } from 'react-native';
 import { Ionicons, AntDesign } from '@expo/vector-icons';
-// ❌ Nada de backend aquí
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
@@ -58,10 +56,8 @@ export default function Home({ navigation, route }) {
     setLoading(true);
     try {
 
-      // 🚫 Nada de backend: usamos exclusivamente los MOCKS
       let alertasData = MOCK_ALERTS;
 
-      // Mantener también las alertas locales pendientes (si existieran)
       const pendingAlerts = (await OfflineStorage.getPendingAlerts?.()) || [];
       const localAlertas = pendingAlerts.map((a) => ({
         alerta_id: a.tempId,
@@ -74,21 +70,19 @@ export default function Home({ navigation, route }) {
         prioridad: a.prioridad || 'Alta',
         pendingSync: true,
       }));
+
       const todas = [...alertasData, ...localAlertas];
       setAlertas(todas.filter((a) => (activo ? a.estado !== 'Cerrada' : a.estado === 'Cerrada')));
     } finally {
       setLoading(false);
     }
-
   };
 
   useEffect(() => { fetchAlertas(); }, [activo, isConnected]);
   useEffect(() => { if (route.params?.refresh) fetchAlertas(); }, [route.params?.refresh]);
 
   const renderAlertItem = (a) => (
-
     <TouchableOpacity key={a.alerta_id} style={styles.card(theme, isDarkMode)}>
-
       <AntDesign name="exclamationcircle" size={28} color={PALETTE.blush} style={{ marginRight: 10 }} />
       <View style={{ flex: 1 }}>
         <Text style={[styles.alertName, { color: theme.text }]}>
@@ -98,8 +92,6 @@ export default function Home({ navigation, route }) {
         <Text style={[styles.alertComunidad, { color: theme.secondaryText }]}>
           {a.comunidad}{a.edad ? ` • ${a.edad} años` : ''}
         </Text>
-        <Text style={[styles.alertDesc, { color: theme.secondaryText }]}>{a.descripcion}</Text>
-        <Text style={[styles.alertComunidad, { color: theme.secondaryText }]}>{a.comunidad}{a.edad ? ` • ${a.edad} años` : ''}</Text>
       </View>
       <Text
         style={[
@@ -136,7 +128,6 @@ export default function Home({ navigation, route }) {
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
-
         {loading ? (
           <ActivityIndicator size="large" color={PALETTE.tangerine} style={{ marginVertical: 20 }} />
         ) : alertas.length === 0 ? (
@@ -161,6 +152,16 @@ export default function Home({ navigation, route }) {
         )}
       </ScrollView>
 
+      {/* === FAB: Nuevo Paciente === */}
+      <TouchableOpacity
+        style={styles.fab}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate('PacienteForm')}
+      >
+        <Ionicons name="person-add-outline" size={22} color="#fff" />
+        <Text style={styles.fabText}>Nuevo paciente</Text>
+      </TouchableOpacity>
+
       <BottomNav navigation={navigation} />
     </View>
   );
@@ -171,7 +172,6 @@ const RADIUS = 16;
 const styles = StyleSheet.create({
   container: { padding: 20, flexGrow: 1, paddingBottom: 100 },
 
-  /* ===== Header ===== */
   topBar: {
     height: 72,
     marginHorizontal: 16,
@@ -195,7 +195,6 @@ const styles = StyleSheet.create({
   topSubtitle: { marginTop: 4, fontSize: 12, fontWeight: '700' },
   toggleButton: { padding: 6, borderRadius: 10 },
 
-  /* ===== Card estilo gráficas ===== */
   card: (theme, isDarkMode) => ({
     backgroundColor: theme.cardBackground || (isDarkMode ? '#1E1E1E' : '#fff'),
     borderRadius: 12,
@@ -209,7 +208,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     borderWidth: 1,
-    borderColor: '#EAD8A6', // borde suave (no negro)
+    borderColor: '#EAD8A6',
   }),
 
   alertName: { fontSize: 16, fontWeight: '800' },
@@ -219,7 +218,6 @@ const styles = StyleSheet.create({
 
   pendingBadge: { fontSize: 12, fontStyle: 'italic', color: PALETTE.tangerine },
 
-  /* ===== Botón "Ver más" ===== */
   verMasContainer: {
     alignItems: 'center',
     marginTop: 6,
@@ -247,4 +245,24 @@ const styles = StyleSheet.create({
   },
 
   noAlertsText: { textAlign: 'center', marginTop: 20, fontSize: 16 },
+
+  fab: {
+    position: 'absolute',
+    right: 18,
+    bottom: 88,           
+    backgroundColor: PALETTE.tangerine,
+    paddingHorizontal: 16,
+    height: 48,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  fabText: { color: '#fff', fontWeight: '800', fontSize: 14 },
 });

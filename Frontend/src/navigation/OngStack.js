@@ -12,21 +12,21 @@ import DatosUsuarioScreen from '../screens/DatosUsuarioScreen';
 import ImportanciaScreen from '../screens/ImportanciaScreen';
 import RecomendacionesScreen from '../screens/RecomendacionesScreen';
 import SubirInfografiaScreen from '../screens/SubirInfografiaScreen';
-import ImportacionDatosScreen from '../screens/ImportacionDatosScreen'; // Nueva pantalla
-import MapaDepartamentos from '../screens/MapaDepartamentos'; // Para navegación desde el botón
-import AlertasDepartamento from '../screens/AlertasDepartamento'; // Pantalla de alertas por departamento
-import DatosAyudaScreen from '../screens/DatosAyudaScreen'; // Pantalla de datos de ayuda
+import ImportacionDatosScreen from '../screens/ImportacionDatosScreen';
+import MapaDepartamentos from '../screens/MapaDepartamentos';
+import AlertasDepartamento from '../screens/AlertasDepartamento';
+import DatosAyudaScreen from '../screens/DatosAyudaScreen';
+
+// NUEVAS
+import PacienteFormScreen from '../screens/PacienteFormScreen';
+import RegistrarSignosScreen from '../screens/RegistrarSignosScreen';
 
 const Stack = createNativeStackNavigator();
 
 export default function OngStack() {
   return (
-    <Stack.Navigator 
-      screenOptions={{ headerShown: false }}
-      // CONFIGURACIÓN: Iniciando en MapaDepartamentos
-      initialRouteName="Home"
-    >
-      {/* Pantallas principales */}
+    <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Home">
+      {/* Principales */}
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Perfil" component={PerfilScreen} />
 
@@ -35,21 +35,23 @@ export default function OngStack() {
       <Stack.Screen name="EditarAlerta" component={EditarAlerta} />
       <Stack.Screen name="Graficas" component={PantallaGraficas} />
 
-      {/* Configuración y perfil */}
+      {/* Configuración */}
       <Stack.Screen name="Configuracion" component={ConfiguracionScreen} />
       <Stack.Screen name="CambiarContrasena" component={CambiarContrasena} />
       <Stack.Screen name="DatosUsuario" component={DatosUsuarioScreen} />
 
-      {/* Nueva sección de importación */}
+      {/* Otras secciones */}
       <Stack.Screen name="ImportacionDatos" component={ImportacionDatosScreen} />
       <Stack.Screen name="MapaDepartamentos" component={MapaDepartamentos} />
       <Stack.Screen name="AlertasDepartamento" component={AlertasDepartamento} />
-
-      {/* Sección de ayuda */}
       <Stack.Screen name="DatosAyuda" component={DatosAyudaScreen} />
       <Stack.Screen name="Recomendaciones" component={RecomendacionesScreen} />
       <Stack.Screen name="Importancia" component={ImportanciaScreen} />
       <Stack.Screen name="SubirInfografia" component={SubirInfografiaScreen} />
+
+      {/* Pacientes */}
+      <Stack.Screen name="PacienteForm" component={PacienteFormScreen} />
+      <Stack.Screen name="RegistrarSignos" component={RegistrarSignosScreen} />
     </Stack.Navigator>
   );
 }
