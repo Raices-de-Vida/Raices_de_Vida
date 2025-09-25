@@ -5,6 +5,8 @@ import HomeScreen from '../screens/Home';
 import PerfilScreen from '../screens/PerfilScreen';
 import RegisterAlertas from '../screens/RegisterAlertas';
 import EditarAlerta from '../screens/EditarAlerta';
+import SeleccionPacienteAlertas from '../screens/SeleccionPacienteAlertas';
+import GestionAlertasPaciente from '../screens/GestionAlertasPaciente';
 import ConfiguracionScreen from '../screens/ConfiguracionScreen';
 import CambiarContrasena from '../screens/cambiarContrasenaScreen';
 import PantallaGraficas from '../screens/Graficas';
@@ -16,10 +18,9 @@ import ImportacionDatosScreen from '../screens/ImportacionDatosScreen';
 import MapaDepartamentos from '../screens/MapaDepartamentos';
 import AlertasDepartamento from '../screens/AlertasDepartamento';
 import DatosAyudaScreen from '../screens/DatosAyudaScreen';
-
-// NUEVAS
 import PacienteFormScreen from '../screens/PacienteFormScreen';
 import RegistrarSignosScreen from '../screens/RegistrarSignosScreen';
+import DetallePacienteScreen from '../screens/DetallePacienteScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -33,6 +34,8 @@ export default function OngStack() {
       {/* Funcionalidades */}
       <Stack.Screen name="RegisterAlertas" component={RegisterAlertas} />
       <Stack.Screen name="EditarAlerta" component={EditarAlerta} />
+  <Stack.Screen name="SeleccionPacienteAlertas" component={SeleccionPacienteAlertas} />
+  <Stack.Screen name="GestionAlertasPaciente" component={GestionAlertasPaciente} />
       <Stack.Screen name="Graficas" component={PantallaGraficas} />
 
       {/* Configuración */}
@@ -52,6 +55,7 @@ export default function OngStack() {
       {/* Pacientes */}
       <Stack.Screen name="PacienteForm" component={PacienteFormScreen} />
       <Stack.Screen name="RegistrarSignos" component={RegistrarSignosScreen} />
+      <Stack.Screen name="DetallePaciente" component={DetallePacienteScreen} />
     </Stack.Navigator>
   );
 }

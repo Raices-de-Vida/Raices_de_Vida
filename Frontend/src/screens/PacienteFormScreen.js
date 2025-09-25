@@ -26,7 +26,6 @@ const toFloatOrNull = (v) => {
   return Number.isFinite(num) ? num : null;
 };
 
-// Fecha helpers 
 const isoToDMY = (iso) => {
   if (!iso) return '';
   const [y, m, d] = iso.split('-');
@@ -149,6 +148,8 @@ export default function PacienteFormScreen({ navigation }) {
     if (!idioma || !nombre || !genero) return false;
     if (!fechaONedadOK) return false;
     if (!telefonoValido) return false;
+    if (!comunidad_pueblo.trim()) return false;
+    if (!peso || !estatura) return false;
     if (presion_sis !== '' && presion_dia !== '' && Number(presion_sis) <= Number(presion_dia)) return false;
     if (Object.values(errors).some(Boolean)) return false;
     return true;
@@ -221,6 +222,9 @@ export default function PacienteFormScreen({ navigation }) {
       const resp = await createPaciente(payload, token);
       const id = resp?.id_paciente ?? resp?.paciente?.id_paciente;
       if (!id) throw new Error('No se recibió id_paciente.');
+      try {
+        await fetch(`http://localhost:3001/api/alertas/auto-evaluar/${id}`, { method: 'POST' });
+      } catch (_) { /* no-op visual; el backend puede no estar disponible offline */ }
       showSuccess('Paciente guardado');
       setTimeout(() => navigation.navigate('RegistrarSignos', { id_paciente: id }), 900);
     } catch (e) {
@@ -228,7 +232,6 @@ export default function PacienteFormScreen({ navigation }) {
     }
   };
 
-  // Rango handlers
   const onSis = (t) => {
     const v = onlyDigits(t);
     setPresionSis(v);
@@ -451,10 +454,11 @@ export default function PacienteFormScreen({ navigation }) {
                 {(!telefonoValido && telefono!=='') && <Text style={styles.errText}>Debe tener exactamente 8 dígitos.</Text>}
               </Field>
 
-              <Field label="Comunidad / Pueblo">
-                <TextInput value={comunidad_pueblo} onChangeText={setComunidad}
-                  style={[styles.input]} placeholder="San Pedro La Laguna" placeholderTextColor="#A2A7AE" />
-              </Field>
+              <Field label="Comunidad / Pueblo *">
+                  <TextInput value={comunidad_pueblo} onChangeText={setComunidad}
+                    style={[styles.input, !comunidad_pueblo.trim() && styles.err]} placeholder="San Pedro La Laguna" placeholderTextColor="#A2A7AE" />
+                  {!comunidad_pueblo.trim() && <Text style={styles.errText}>Campo requerido</Text>}
+                </Field>
             </Card>
 
             {/* Signos (snapshot) */}

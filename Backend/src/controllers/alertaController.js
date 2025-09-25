@@ -1,27 +1,28 @@
 const Alerta = require('../models/Alerta');
 const CasoCritico = require('../models/CasoCritico');
+const Paciente = require('../models/Paciente');
+const AlertaMedica = require('../models/AlertaMedica');
 
-// alertaController.js (getAllAlertas) - CORREGIDO
 exports.getAllAlertas = async (req, res) => {
   try {
     const alertas = await Alerta.findAll({
       include: [{
         model: CasoCritico,
         attributes: ['id_caso', 'descripcion', 'nivel_urgencia'],
-        as: 'caso' // Este alias debe coincidir con el definido en associations.js
+        as: 'caso'
       }]
     });
     res.json(alertas);
   } catch (error) {
-    console.error('Error al obtener alertas:', error); // Log detallado
+    console.error('Error al obtener alertas:', error);
     res.status(500).json({ error: 'Error al obtener las alertas' });
   }
 };
 
-// Crear una nueva alerta (con validación de caso_id)
+//crear una nueva alerta
 exports.createAlerta = async (req, res) => {
   try {
-    // Verificar que el caso crítico exista
+    //verificar que el caso crítico exista
     const caso = await CasoCritico.findByPk(req.body.caso_id);
     if (!caso) {
       return res.status(404).json({ error: 'El caso crítico no existe' });
@@ -34,12 +35,12 @@ exports.createAlerta = async (req, res) => {
   }
 };
 
-// Obtener alertas por ID de caso crítico
+//obtener alertas por ID de caso crítico
 exports.getAlertasByCasoId = async (req, res) => {
   try {
     const alertas = await Alerta.findAll({
       where: { caso_id: req.params.caso_id },
-      order: [['fecha_alerta', 'DESC']] // Ordenar por fecha más reciente
+      order: [['fecha_alerta', 'DESC']] //ordenar por fecha más reciente
     });
     res.json(alertas);
   } catch (error) {
@@ -47,7 +48,7 @@ exports.getAlertasByCasoId = async (req, res) => {
   }
 };
 
-// Actualizar una alerta (ej: cambiar estado)
+//update una alerta (ej: cambiar estado)
 exports.updateAlerta = async (req, res) => {
   try {
     const alerta = await Alerta.findByPk(req.params.alerta_id);
@@ -55,7 +56,7 @@ exports.updateAlerta = async (req, res) => {
       return res.status(404).json({ error: 'Alerta no encontrada' });
     }
 
-    // Actualizar solo campos permitidos
+    //update solo campos permitidos
     const camposPermitidos = ['estado', 'respuesta', 'prioridad', 'observaciones'];
     camposPermitidos.forEach(campo => {
       if (req.body[campo] !== undefined) {
@@ -82,5 +83,59 @@ exports.deleteAlerta = async (req, res) => {
     res.status(204).send(); // 204 No Content
   } catch (error) {
     res.status(500).json({ error: 'Error al eliminar la alerta' });
+  }
+};
+
+// Auto-evaluar paciente y generar flags (alertas médicas) básicas por fuera de rango
+exports.autoEvaluarPaciente = async (req, res) => {
+  try {
+    const { id_paciente } = req.params;
+    const paciente = await Paciente.findByPk(id_paciente);
+    if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado' });
+
+    const flags = [];
+    const edad = paciente.edad || 0;
+    const peso = Number(paciente.peso || 0);
+    const est = Number(paciente.estatura || 0);
+    const imc = est > 0 ? peso / Math.pow(est / 100, 2) : null; // estatura en cm
+
+    // Reglas simples: peso muy bajo para cualquier edad o IMC muy bajo
+    if (peso > 0 && edad > 0) {
+      if (edad < 5 && peso < 12) flags.push({ tipo: 'Bajo peso infantil', prioridad: 'Alta' });
+      if (edad >= 5 && edad < 12 && peso < 20) flags.push({ tipo: 'Bajo peso escolar', prioridad: 'Media' });
+      if (edad >= 12 && peso < 40) flags.push({ tipo: 'Bajo peso adolescente/adulto', prioridad: 'Media' });
+    }
+    if (imc && imc < 16.5) flags.push({ tipo: 'IMC severamente bajo', prioridad: 'Crítica' });
+    if (imc && imc < 18.5) flags.push({ tipo: 'IMC bajo', prioridad: 'Alta' });
+
+    // Signos vitales críticos
+    const sist = Number(paciente.presion_arterial_sistolica || 0);
+    const diast = Number(paciente.presion_arterial_diastolica || 0);
+    const sat = Number(paciente.saturacion_oxigeno || 0);
+    const glu = Number(paciente.glucosa || 0);
+    const temp = Number(paciente.temperatura || 0);
+
+    if (sat && sat < 90) flags.push({ tipo: 'Hipoxemia', prioridad: 'Crítica' });
+    if (temp && temp > 39.5) flags.push({ tipo: 'Hipertermia', prioridad: 'Alta' });
+    if (sist && sist > 180 || diast && diast > 120) flags.push({ tipo: 'Crisis hipertensiva', prioridad: 'Crítica' });
+    if (glu && glu > 300) flags.push({ tipo: 'Hiperglucemia severa', prioridad: 'Crítica' });
+
+    // Crear alertas médicas por cada flag
+    const creadas = [];
+    for (const f of flags) {
+      const row = await AlertaMedica.create({
+        id_paciente: paciente.id_paciente,
+        tipo_alerta_medica: f.tipo === 'IMC severamente bajo' || f.tipo === 'IMC bajo' ? 'Deshidratación Severa' : 'Signos Vitales Críticos',
+        descripcion_medica: f.tipo,
+        prioridad_medica: f.prioridad,
+        estado_alerta: 'Pendiente'
+      });
+      creadas.push(row);
+    }
+
+    return res.json({ mensaje: `Evaluadas ${flags.length} condiciones`, flags: creadas });
+  } catch (error) {
+    console.error('autoEvaluarPaciente error:', error);
+    res.status(500).json({ error: 'Error en auto-evaluación' });
   }
 };

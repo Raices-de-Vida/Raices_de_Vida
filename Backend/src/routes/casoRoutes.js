@@ -46,7 +46,8 @@ const router = express.Router();
 const casoController = require('../controllers/casoController');
 const { authenticate, authorize } = require('../middlewares/authMiddleware');
 
-router.get('/', authenticate, authorize(['ONG', 'Líder Comunitario']), casoController.getAllCasos);
+//router.get('/', authenticate, authorize(['ONG', 'Líder Comunitario']), casoController.getAllCasos);
+router.get('/', casoController.getAllCasos);
 //router.post('/', authenticate, authorize(['Líder Comunitario']), casoController.createCaso); //Tener en cuenta que esta es la version correcta
 router.post('/', casoController.createCaso); // Versión corregida sin autenticación y autorización
 

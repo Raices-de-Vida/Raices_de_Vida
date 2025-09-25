@@ -1,4 +1,3 @@
-// Backend/src/controllers/pacienteController.js
 const { Op } = require('sequelize');
 const Paciente = require('../models/Paciente');
 const Consulta = require('../models/Consulta');
@@ -19,11 +18,14 @@ exports.createPaciente = async (req, res) => {
 
 exports.getPacientes = async (req, res) => {
   try {
-    const { q, estado, comunidad, limit = 50, offset = 0 } = req.query;
+    const { q, estado, comunidad, limit = 50, offset = 0, minEdad, maxEdad, genero, minIMC, maxIMC } = req.query;
 
     const where = {};
     if (estado) where.estado_paciente = estado;
     if (comunidad) where.comunidad_pueblo = comunidad;
+    if (genero) where.genero = genero;
+    if (minEdad) where.edad = { ...(where.edad || {}), [Op.gte]: Number(minEdad) };
+    if (maxEdad) where.edad = { ...(where.edad || {}), [Op.lte]: Number(maxEdad) };
     if (q) {
       where[Op.or] = [
         { nombre: { [Op.iLike]: `%${q}%` } },
@@ -32,12 +34,22 @@ exports.getPacientes = async (req, res) => {
       ];
     }
 
+    //filter por IMC usando snapshot (peso y estatura en Pacientes)
+    const havingIMC = [];
+    const replacements = {};
+    if (minIMC) { havingIMC.push(`(peso / POWER(estatura/100.0, 2)) >= :minIMC`); replacements.minIMC = Number(minIMC); }
+    if (maxIMC) { havingIMC.push(`(peso / POWER(estatura/100.0, 2)) <= :maxIMC`); replacements.maxIMC = Number(maxIMC); }
+
     const pacientes = await Paciente.findAll({
       where,
       order: [['nombre', 'ASC']],
       limit: Number(limit),
-      offset: Number(offset)
-    });
+      offset: Number(offset),
+      ...(havingIMC.length > 0
+        ? { where: { ...where, peso: { [Op.ne]: null }, estatura: { [Op.ne]: null } },
+            having: Paciente.sequelize.literal(havingIMC.join(' AND ')),
+            group: ['Pacientes.id_paciente'] } : {})
+    }, { replacements });
 
     res.json(pacientes);
   } catch (err) {
@@ -48,7 +60,7 @@ exports.getPacientes = async (req, res) => {
 
 exports.getPacienteById = async (req, res) => {
   try {
-    const paciente = await Paciente.findByPk(req.params.id, {
+    let paciente = await Paciente.findByPk(req.params.id, {
       include: [
         { model: Consulta, as: 'consultas', order: [['fecha', 'DESC']] },
         { model: Signos, as: 'signos', order: [['fecha_toma', 'DESC']] },
@@ -58,6 +70,12 @@ exports.getPacienteById = async (req, res) => {
       ]
     });
     if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado' });
+    paciente = paciente.toJSON();
+    if (paciente.peso && paciente.estatura) {
+      const imc = Number(paciente.peso) / Math.pow(Number(paciente.estatura)/100,2);
+      paciente.imc = Number(imc.toFixed(2));
+      paciente.imc_categoria = classifyIMC(imc);
+    }
     res.json(paciente);
   } catch (err) {
     console.error('Error getPacienteById:', err);
@@ -77,6 +95,64 @@ exports.updatePaciente = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
+exports.updatePacienteBasic = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { peso_kg, altura_cm, manualSeverity } = req.body || {};
+    const paciente = await Paciente.findByPk(id);
+    if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado' });
+
+    const updates = {};
+    if (peso_kg !== undefined) updates.peso = peso_kg === null ? null : Number(peso_kg);
+    if (altura_cm !== undefined) updates.estatura = altura_cm === null ? null : Number(altura_cm);
+    let imc = null;
+    if (updates.peso && updates.estatura) {
+      const estM = Number(updates.estatura) / 100;
+      if (estM > 0) imc = Number(updates.peso) / (estM * estM);
+    }
+
+    if (Object.keys(updates).length > 0) {
+      updates.fecha_ultima_actualizacion = new Date();
+      await paciente.update(updates);
+    }
+
+    let createdAlert = null;
+    if (manualSeverity) {
+      const map = { 'Baja':'Baja','Media':'Media','Alta':'Alta','Crítica':'Crítica' };
+      if (!map[manualSeverity]) {
+        return res.status(400).json({ error: 'manualSeverity inválido' });
+      }
+      createdAlert = await AlertaMedica.create({
+        id_paciente: id,
+        tipo_alerta_medica: 'Otro',
+        descripcion_medica: `Override manual de severidad (${manualSeverity})`,
+        prioridad_medica: manualSeverity,
+        estado_alerta: 'Pendiente'
+      });
+    }
+
+    let out = paciente.toJSON();
+    if (out.peso && out.estatura) {
+      const bmiCalc = Number(out.peso) / Math.pow(Number(out.estatura)/100,2);
+      out.imc = Number(bmiCalc.toFixed(2));
+      out.imc_categoria = classifyIMC(bmiCalc);
+    }
+    res.json({ ok: true, paciente: out, imc: out.imc || null, imc_categoria: out.imc_categoria || null, manualAlert: createdAlert });
+  } catch (err) {
+    console.error('Error updatePacienteBasic:', err);
+    res.status(400).json({ error: err.message });
+  }
+};
+
+function classifyIMC(imc) {
+  if (imc < 18.5) return 'Bajo';
+  if (imc < 25) return 'Normal';
+  if (imc < 30) return 'Sobrepeso';
+  if (imc < 35) return 'Obesidad I';
+  if (imc < 40) return 'Obesidad II';
+  return 'Obesidad III';
+}
 
 exports.deletePaciente = async (req, res) => {
   try {
@@ -169,5 +245,91 @@ exports.getAlertasMedicas = async (req, res) => {
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener alertas médicas' });
+  }
+};
+
+// GET /flags-summary?ids=1,2,3  -> { summaries: [{ id_paciente, maxPrioridad }] }
+exports.getFlagsSummary = async (req, res) => {
+  try {
+    const idsParam = String(req.query.ids || '').trim();
+    if (!idsParam) return res.json({ summaries: [] });
+    const ids = idsParam.split(',').map((s) => parseInt(s, 10)).filter(Boolean);
+    if (ids.length === 0) return res.json({ summaries: [] });
+
+    const rows = await AlertaMedica.findAll({
+      where: { id_paciente: { [Op.in]: ids }, estado_alerta: { [Op.ne]: 'Cerrada' } },
+      attributes: ['id_paciente', 'prioridad_medica']
+    });
+
+    const weight = { 'Crítica': 4, 'Alta': 3, 'Media': 2, 'Baja': 1 };
+    const best = new Map();
+    for (const r of rows) {
+      const w = weight[r.prioridad_medica] || 0;
+      const prev = best.get(r.id_paciente) || { w: 0, prioridad: null };
+      if (w > prev.w) best.set(r.id_paciente, { w, prioridad: r.prioridad_medica });
+    }
+    const summaries = ids.map((id) => ({ id_paciente: id, maxPrioridad: best.get(id)?.prioridad || null }));
+    res.json({ summaries });
+  } catch (err) {
+    console.error('Error getFlagsSummary:', err);
+    res.status(500).json({ error: 'Error al obtener resumen de flags' });
+  }
+};
+
+exports.setManualFlag = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nivel, descripcion } = req.body || {};
+    const existe = await Paciente.findByPk(id);
+    if (!existe) return res.status(404).json({ error: 'Paciente no encontrado' });
+
+    const map = {
+      verde: 'Baja',
+      amarillo: 'Media',
+      naranja: 'Alta',
+      rojo: 'Crítica'
+    };
+
+    if (!nivel) return res.status(400).json({ error: 'nivel requerido' });
+
+    if (nivel.toLowerCase() === 'celeste') {
+      const closed = await AlertaMedica.update(
+        { estado_alerta: 'Cerrada', fecha_atencion: new Date() },
+        { where: { id_paciente: id, estado_alerta: { [Op.ne]: 'Cerrada' } } }
+      );
+      return res.json({ mensaje: 'Flags cerrados', result: closed });
+    }
+
+    const prioridad = map[nivel.toLowerCase()];
+    if (!prioridad) return res.status(400).json({ error: 'nivel inválido' });
+
+    const row = await AlertaMedica.create({
+      id_paciente: id,
+      tipo_alerta_medica: 'Otro',
+      descripcion_medica: descripcion || `Flag manual: ${nivel}`,
+      prioridad_medica: prioridad,
+      estado_alerta: 'Pendiente'
+    });
+    return res.status(201).json(row);
+  } catch (err) {
+    console.error('Error setManualFlag:', err);
+    res.status(400).json({ error: err.message });
+  }
+};
+
+// POST /:id/alertas-medicas/cerrar  (cierra todas las alertas abiertas para el paciente)
+exports.closeAllFlags = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existe = await Paciente.findByPk(id);
+    if (!existe) return res.status(404).json({ error: 'Paciente no encontrado' });
+    const result = await AlertaMedica.update(
+      { estado_alerta: 'Cerrada', fecha_atencion: new Date() },
+      { where: { id_paciente: id, estado_alerta: { [Op.ne]: 'Cerrada' } } }
+    );
+    res.json({ mensaje: 'Todas las alertas cerradas', result });
+  } catch (err) {
+    console.error('Error closeAllFlags:', err);
+    res.status(500).json({ error: 'Error al cerrar alertas' });
   }
 };

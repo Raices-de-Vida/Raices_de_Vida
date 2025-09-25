@@ -29,12 +29,10 @@ class SyncService {
     };
   }
 
-  //Notificar sobre el estado de sincronización
   notifySyncStatus(status, data) {
     this.syncListeners.forEach(listener => listener(status, data));
   }
 
-  //Sincronizar todas las alertas pendientes
   async syncPendingData() {
     if (this.isSyncing) return;
     
@@ -55,32 +53,34 @@ class SyncService {
       }
       
       const pendingAlerts = await OfflineStorage.getPendingAlerts();
-      if (pendingAlerts.length === 0) {
+      const pendingFlags = await OfflineStorage.getPendingFlags();
+      const pendingPatientUpdates = await OfflineStorage.getPendingPatientUpdates();
+      if (pendingAlerts.length === 0 && pendingFlags.length === 0 && pendingPatientUpdates.length === 0) {
         this.notifySyncStatus('complete', { syncedCount: 0 });
         return;
       }
-      
-      //Sincronizar cada alerta
+
       let syncedCount = 0;
       let failedCount = 0;
-      
+
+      //sincronizar cada alerta
       for (const alert of pendingAlerts) {
-        //Omitir alertas con demasiados intentos fallidos
+        //omitir alertas con demasiados intentos fallidos
         if (alert.syncAttempts && alert.syncAttempts >= this.maxRetries) {
           failedCount++;
           continue;
         }
         
         try {
-          //Eliminar propiedades específicas de offline
+          //eliminar propiedades específicas de offline
           const { tempId, pendingSync, createdAt, syncAttempts, syncError, ...alertData } = alert;
           
-          //Enviar al servidor
+          //enviar al servidor
           await axios.post('http://localhost:3001/api/alertas', alertData, {
             headers: { Authorization: `Bearer ${token}` }
           });
           
-          //Eliminar de pendientes tras éxito
+          //eliminar de pendientes tras éxito
           await OfflineStorage.removePendingAlert(tempId);
           syncedCount++;
           
@@ -98,10 +98,54 @@ class SyncService {
         }
       }
       
-      this.notifySyncStatus('complete', { 
-        syncedCount, 
+      for (const flag of pendingFlags) {
+        if (flag.syncAttempts && flag.syncAttempts >= this.maxRetries) {
+          failedCount++;
+          continue;
+        }
+        try {
+          const { tempId, pendingSync, createdAt, syncAttempts, syncError, lastAttempt, ...flagData } = flag;
+          await axios.post(`http://localhost:3001/api/pacientes/${flagData.id_paciente}/alertas-medicas/manual`, { nivel: flagData.nivel }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          await OfflineStorage.removePendingFlag(tempId);
+          syncedCount++;
+        } catch (error) {
+          console.error('Error al sincronizar flag:', error);
+          const attempts = (flag.syncAttempts || 0) + 1;
+          await OfflineStorage.updatePendingFlag(flag.tempId, {
+            syncAttempts: attempts,
+            syncError: error.message || 'Error de sincronización',
+            lastAttempt: new Date().toISOString()
+          });
+          failedCount++;
+        }
+      }
+
+      for (const upd of pendingPatientUpdates) {
+        if (upd.syncAttempts && upd.syncAttempts >= this.maxRetries) { failedCount++; continue; }
+        try {
+          const { tempId, pendingSync, createdAt, syncAttempts, syncError, lastAttempt, ...payload } = upd; // payload: { id_paciente, peso_kg, altura_cm, manualSeverity }
+          await axios.put(`http://localhost:3001/api/pacientes/${payload.id_paciente}/update-basic`, payload, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          await OfflineStorage.removePendingPatientUpdate(tempId);
+          syncedCount++;
+        } catch (error) {
+          const attempts = (upd.syncAttempts || 0) + 1;
+            await OfflineStorage.updatePendingPatientUpdate(upd.tempId, {
+              syncAttempts: attempts,
+              syncError: error.message || 'Error de sincronización',
+              lastAttempt: new Date().toISOString()
+            });
+          failedCount++;
+        }
+      }
+
+      this.notifySyncStatus('complete', {
+        syncedCount,
         failedCount,
-        totalCount: pendingAlerts.length 
+        totalCount: pendingAlerts.length + pendingFlags.length + pendingPatientUpdates.length
       });
     } catch (error) {
       this.notifySyncStatus('error', { message: error.message });
@@ -110,21 +154,21 @@ class SyncService {
     }
   }
   
-  //Reintentar específicamente las alertas fallidas
   async retryFailedAlerts() {
     const isConnected = await ConnectivityService.getConnectionStatus();
     if (isConnected && !this.isSyncing) {
       const alerts = await OfflineStorage.getPendingAlerts();
+      const flags = await OfflineStorage.getPendingFlags();
       const failedAlerts = alerts.filter(alert => alert.syncAttempts && alert.syncAttempts < this.maxRetries);
-      
-      if (failedAlerts.length > 0) {
-        console.log(`Reintentando ${failedAlerts.length} alertas fallidas...`);
+      const failedFlags = flags.filter(flag => flag.syncAttempts && flag.syncAttempts < this.maxRetries);
+
+      if (failedAlerts.length > 0 || failedFlags.length > 0) {
+        console.log(`Reintentando ${failedAlerts.length} alertas y ${failedFlags.length} flags fallidos...`);
         this.syncPendingData();
       }
     }
   }
   
-  //Forzar reintento de una alerta específica
   async retryAlert(tempId) {
     const alert = await OfflineStorage.getPendingAlert(tempId);
     if (alert) {
@@ -133,6 +177,15 @@ class SyncService {
         syncError: null
       });
       
+      return this.syncPendingData();
+    }
+    return false;
+  }
+
+  async retryFlag(tempId) {
+    const flag = await OfflineStorage.getPendingFlag(tempId);
+    if (flag) {
+      await OfflineStorage.updatePendingFlag(tempId, { syncAttempts: 0, syncError: null });
       return this.syncPendingData();
     }
     return false;

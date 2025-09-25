@@ -39,5 +39,12 @@ router.delete('/:alerta_id',
   alertaController.deleteAlerta
 );
 
+// Auto-evaluar y generar flags de alertas médicas para un paciente
+router.post('/auto-evaluar/:id_paciente',
+  //authenticate,
+  //authorize(['ONG']),
+  alertaController.autoEvaluarPaciente
+);
+
 
 module.exports = router;

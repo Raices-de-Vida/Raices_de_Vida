@@ -1,4 +1,3 @@
-// src/components/BottomNav.js
 import React, { useContext } from 'react';
 import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons, Entypo, AntDesign, FontAwesome } from '@expo/vector-icons';
@@ -18,7 +17,7 @@ export default function BottomNav({ navigation }) {
       style={[
         styles.bottomNav,
         Platform.select({
-          web: styles.fixedWeb, // 👇 siempre pegado abajo en web
+          web: styles.fixedWeb,
           default: styles.absoluteNative,
         }),
         {
@@ -44,11 +43,11 @@ export default function BottomNav({ navigation }) {
         <Ionicons name="search-outline" size={26} color={theme.text} />
       </TouchableOpacity>
 
-      {/* ➕ Agregar Alerta (botón flotante central) */}
+      {/* ➕ Gestionar Alertas (botón flotante central) */}
       <TouchableOpacity
         style={[styles.addButton, { backgroundColor: theme.addButton || '#F08C21' }]}
-        onPress={() => navigation.navigate('RegisterAlertas')}
-        accessibilityLabel="Agregar alerta"
+        onPress={() => navigation.navigate('SeleccionPacienteAlertas')}
+        accessibilityLabel="Gestionar alertas"
       >
         <Entypo name="plus" size={28} color="white" />
       </TouchableOpacity>
@@ -84,14 +83,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
 
-    // sombra suave
+    //sombra suave
     shadowOpacity: 0.12,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 4 },
     elevation: 6,
   },
 
-  // 👇 Nativo: absoluto al final
+  //nativo: absoluto al final
   absoluteNative: {
     position: 'absolute',
     left: 0,
@@ -99,7 +98,7 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
 
-  // 👇 Web: fijo al viewport (lo que te fallaba)
+  //web: fijo al viewport (lo que te fallaba)
   fixedWeb: {
     position: 'fixed',
     left: 0,
@@ -113,7 +112,6 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    // efecto “flotante”
     marginTop: -24,
     shadowOpacity: 0.18,
     shadowRadius: 12,
