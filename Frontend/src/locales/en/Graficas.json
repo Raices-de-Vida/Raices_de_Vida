@@ -1,0 +1,12 @@
+{
+  "top": {
+    "title": "Charts",
+    "subtitle": "Indicators and reports"
+  },
+  "cards": {
+    "byDept": "Reported cases by department",
+    "monthlyTrend": "Monthly trend of reported cases",
+    "ageGender": "Distribution by age range and gender",
+    "weightVsAge": "Weight vs. age of children in reported cases"
+  }
+}

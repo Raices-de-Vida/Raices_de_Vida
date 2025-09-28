@@ -1,0 +1,23 @@
+{
+  "title": "¡Bienvenido de nuevo!",
+  "placeholders": {
+    "email": "Correo electrónico",
+    "password": "Contraseña"
+  },
+  "ui": {
+    "rememberMe": "Recordarme",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "signIn": "Ingresar",
+    "noAccount": "¿No tienes cuenta? Regístrate",
+    "offline": "Sin conexión"
+  },
+  "alerts": {
+    "fillAll": "Por favor llena todos los campos",
+    "offlineSignedIn": "Has iniciado sesión en modo offline",
+    "needOnlineFirst": "Necesitas conexión para el primer inicio.",
+    "cannotOffline": "No se puede iniciar en modo offline",
+    "missingRole": "El servidor no devolvió el rol del usuario.",
+    "loginErrorTitle": "Error al iniciar sesión",
+    "enableForgotPassword": "Habilita la pantalla \"ForgotPassword\" para continuar."
+  }
+}

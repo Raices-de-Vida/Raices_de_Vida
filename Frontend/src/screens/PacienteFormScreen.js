@@ -8,13 +8,11 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { createPaciente } from '../services/pacientes';
+import { useTranslation } from 'react-i18next';
 
-const C = {
-  bg: '#FFF7DA', card: '#FFFFFF', border: '#E9E2C6',
-  text: '#1B1B1B', subtext: '#687076', primary: '#F08C21',
-  accent: '#6698CC',
-};
+const C = { bg:'#FFF7DA', card:'#FFFFFF', border:'#E9E2C6', text:'#1B1B1B', subtext:'#687076', primary:'#F08C21', accent:'#6698CC' };
 
+// Los valores que envías al backend se mantienen en ES; las etiquetas se traducen con i18n.
 const ESTADOS = ['Activo', 'Inactivo', 'Derivado', 'Fallecido'];
 const METODOS = ['Ninguno', 'Pastillas', 'Inyección', 'DIU', 'Condón', 'Natural', 'Otro'];
 
@@ -26,11 +24,7 @@ const toFloatOrNull = (v) => {
   return Number.isFinite(num) ? num : null;
 };
 
-const isoToDMY = (iso) => {
-  if (!iso) return '';
-  const [y, m, d] = iso.split('-');
-  return `${d}/${m}/${y}`;
-};
+const isoToDMY = (iso) => { if (!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; };
 const dmyToISO = (dmy) => {
   const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dmy);
   if (!m) return null;
@@ -41,14 +35,11 @@ const dmyToISO = (dmy) => {
   const dt = new Date(yyyy, mm - 1, dd);
   return Number.isNaN(dt.getTime()) ? null : `${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
 };
-const parseISODate = (iso) => {
-  if (!iso) return new Date();
-  const [y, m, d] = iso.split('-').map((x) => parseInt(x, 10));
-  const dt = new Date(y, m - 1, d);
-  return Number.isNaN(dt.getTime()) ? new Date() : dt;
-};
+const parseISODate = (iso) => { if (!iso) return new Date(); const [y,m,d]=iso.split('-').map((x)=>parseInt(x,10)); const dt = new Date(y, m-1, d); return Number.isNaN(dt.getTime()) ? new Date() : dt; };
 
 export default function PacienteFormScreen({ navigation }) {
+  const { t } = useTranslation('PacienteForm');
+
   // Animación
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(10)).current;
@@ -69,26 +60,25 @@ export default function PacienteFormScreen({ navigation }) {
     });
   };
 
-  // DatePicker móvil
+  // DatePicker
   const [showDatePicker, setShowDatePicker] = useState(null); // 'reg' | 'nac' | 'signos' | 'ultMen' | 'ultAct'
 
-  //  General 
+  // General
   const [fecha_registro, setFechaRegistro] = useState('');
-  const [idioma, setIdioma] = useState('Español');
+  const [idioma, setIdioma] = useState('Español'); // valor guardado en ES
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
-  const [telefono, setTelefono] = useState(''); // 8 dígitos
+  const [telefono, setTelefono] = useState('');
   const [comunidad_pueblo, setComunidad] = useState('');
   const [genero, setGenero] = useState('F'); // 'M' | 'F'
   const [modoEdad, setModoEdad] = useState(false);
   const [fecha_nacimiento, setFechaNac] = useState('');
-  const [edad, setEdad] = useState(''); // máx 2 dígitos
+  const [edad, setEdad] = useState('');
 
-  // touched para errores limpios
   const [touchedEdad, setTouchedEdad] = useState(false);
   const [touchedNac, setTouchedNac] = useState(false);
 
-  //  Signos snapshot
+  // Signos
   const [presion_sis, setPresionSis] = useState('');
   const [presion_dia, setPresionDia] = useState('');
   const [frecuencia_cardiaca, setFC] = useState('');
@@ -99,11 +89,11 @@ export default function PacienteFormScreen({ navigation }) {
   const [temperatura, setTemp] = useState('');
   const [fecha_signos_vitales, setFechaSignos] = useState('');
 
-  //  Alergias
+  // Alergias
   const [tieneAlergias, setTieneAlergias] = useState(false);
   const [alergias, setAlergias] = useState('');
 
-  //  Hábitos actuales/pasados
+  // Hábitos
   const [tabaco_actual, setTabacoA] = useState(false);
   const [tabaco_actual_cantidad, setTabacoACant] = useState('');
   const [alcohol_actual, setAlcoholA] = useState(false);
@@ -118,7 +108,7 @@ export default function PacienteFormScreen({ navigation }) {
   const [drogas_pasado, setDrogasP] = useState(false);
   const [drogas_pasado_cantidad, setDrogasPCant] = useState('');
 
-  //  Salud reproductiva (F) 
+  // Salud reproductiva
   const [ultima_menstruacion, setUltM] = useState('');
   const [menopausia, setMenopausia] = useState(false);
   const [gestaciones, setGest] = useState('');
@@ -135,8 +125,8 @@ export default function PacienteFormScreen({ navigation }) {
   const [id_familia, setIdFamilia] = useState('');
   const [usuario_registro, setUsuarioRegistro] = useState('');
 
-  // Errores de rango
-  const [errors, setErrors] = useState({}); // {campo: 'mensaje'}
+  // Errores
+  const [errors, setErrors] = useState({});
   const setRangeError = (key, msg) => setErrors((e) => ({ ...e, [key]: msg || undefined }));
 
   // Validaciones clave
@@ -213,7 +203,7 @@ export default function PacienteFormScreen({ navigation }) {
     setTouchedEdad(true);
     setTouchedNac(true);
     if (!validar()) {
-      Alert.alert('Revisa el formulario', 'Verifica requeridos, fecha/edad, teléfono (8 dígitos) y rangos válidos.');
+      Alert.alert(t('errors.formTitle'), t('errors.formMsg'));
       return;
     }
     try {
@@ -221,88 +211,85 @@ export default function PacienteFormScreen({ navigation }) {
       const payload = buildPayload();
       const resp = await createPaciente(payload, token);
       const id = resp?.id_paciente ?? resp?.paciente?.id_paciente;
-      if (!id) throw new Error('No se recibió id_paciente.');
-      try {
-        await fetch(`http://localhost:3001/api/alertas/auto-evaluar/${id}`, { method: 'POST' });
-      } catch (_) { /* no-op visual; el backend puede no estar disponible offline */ }
-      showSuccess('Paciente guardado');
+      if (!id) throw new Error('No id_paciente');
+      try { await fetch(`http://localhost:3001/api/alertas/auto-evaluar/${id}`, { method: 'POST' }); } catch {}
+      showSuccess(t('toast.saved'));
       setTimeout(() => navigation.navigate('RegistrarSignos', { id_paciente: id }), 900);
     } catch (e) {
-      Alert.alert('Error', e?.message || 'No se pudo crear el paciente.');
+      Alert.alert(t('errors.errorTitle'), t('errors.createFail'));
     }
   };
 
-  const onSis = (t) => {
-    const v = onlyDigits(t);
+  const onSis = (t_) => {
+    const v = onlyDigits(t_);
     setPresionSis(v);
     if (v === '') return setRangeError('presion_sis', undefined);
     const n = parseInt(v, 10);
-    if (n < 60 || n > 250) setRangeError('presion_sis', 'Rango 60–250');
+    if (n < 60 || n > 250) setRangeError('presion_sis', t('ranges.sis'));
     else setRangeError('presion_sis', undefined);
   };
-  const onDia = (t) => {
-    const v = onlyDigits(t);
+  const onDia = (t_) => {
+    const v = onlyDigits(t_);
     setPresionDia(v);
     if (v === '') return setRangeError('presion_dia', undefined);
     const n = parseInt(v, 10);
-    if (n < 30 || n > 150) setRangeError('presion_dia', 'Rango 30–150');
+    if (n < 30 || n > 150) setRangeError('presion_dia', t('ranges.dia'));
     else setRangeError('presion_dia', undefined);
   };
-  const onFC = (t) => {
-    const v = onlyDigits(t);
+  const onFC = (t_) => {
+    const v = onlyDigits(t_);
     setFC(v);
     if (v === '') return setRangeError('fc', undefined);
     const n = parseInt(v, 10);
-    if (n < 30 || n > 220) setRangeError('fc', 'Rango 30–220');
+    if (n < 30 || n > 220) setRangeError('fc', t('ranges.hr'));
     else setRangeError('fc', undefined);
   };
-  const onSpO2 = (t) => {
-    const v = onlyDigits(t).slice(0,3);
+  const onSpO2 = (t_) => {
+    const v = onlyDigits(t_).slice(0,3);
     setSatO2(v);
     if (v === '') return setRangeError('spo2', undefined);
     const n = parseInt(v, 10);
-    if (n < 50 || n > 100) setRangeError('spo2', 'Rango 50–100');
+    if (n < 50 || n > 100) setRangeError('spo2', t('ranges.spo2'));
     else setRangeError('spo2', undefined);
   };
-  const onGluc = (t) => {
-    const v = onlyDigits(t);
+  const onGluc = (t_) => {
+    const v = onlyDigits(t_);
     setGlucosa(v);
     if (v === '') return setRangeError('glu', undefined);
     const n = parseInt(v, 10);
-    if (n < 20 || n > 600) setRangeError('glu', 'Rango 20–600');
+    if (n < 20 || n > 600) setRangeError('glu', t('ranges.glu'));
     else setRangeError('glu', undefined);
   };
-  const onTemp = (t) => {
-    const v = t.replace(/[^0-9.,]/g, '').replace(',', '.');
+  const onTemp = (t_) => {
+    const v = t_.replace(/[^0-9.,]/g, '').replace(',', '.');
     const parts = v.split('.');
     const norm = parts[0].slice(0,2) + (parts[1] ? '.' + parts[1].slice(0,1) : '');
     setTemp(norm);
     if (norm === '') return setRangeError('temp', undefined);
     const n = parseFloat(norm);
-    if (!(n >= 30 && n <= 43)) setRangeError('temp', 'Rango 30.0–43.0');
+    if (!(n >= 30 && n <= 43)) setRangeError('temp', t('ranges.temp'));
     else setRangeError('temp', undefined);
   };
-  const onPeso = (t) => {
-    const v = t.replace(/[^0-9.,]/g, '').replace(',', '.');
+  const onPeso = (t_) => {
+    const v = t_.replace(/[^0-9.,]/g, '').replace(',', '.');
     const parts = v.split('.');
     const norm = parts[0].slice(0,3) + (parts[1] ? '.' + parts[1].slice(0,1) : '');
     setPeso(norm);
     if (norm === '') return setRangeError('peso', undefined);
     const n = parseFloat(norm);
-    if (!(n >= 1 && n <= 300)) setRangeError('peso', 'Rango 1–300 kg');
+    if (!(n >= 1 && n <= 300)) setRangeError('peso', t('ranges.weight'));
     else setRangeError('peso', undefined);
   };
-  const onEst = (t) => {
-    const v = t.replace(/[^0-9.,]/g, '').replace(',', '.');
+  const onEst = (t_) => {
+    const v = t_.replace(/[^0-9.,]/g, '').replace(',', '.');
     const parts = v.split('.');
     const norm = parts[0].slice(0,3) + (parts[1] ? '.' + parts[1].slice(0,1) : '');
     setEstatura(norm);
     if (norm === '') return setRangeError('est', undefined);
     const n = parseFloat(norm);
-    if (!(n >= 30 && n <= 250)) setRangeError('est', 'Rango 30–250 cm');
+    if (!(n >= 30 && n <= 250)) setRangeError('est', t('ranges.height'));
     else setRangeError('est', undefined);
   };
-
 
   const [dateTypingReg, setDateTypingReg] = useState('');
   const [dateTypingNac, setDateTypingNac] = useState('');
@@ -323,6 +310,10 @@ export default function PacienteFormScreen({ navigation }) {
     return `${d.slice(0,2)}/${d.slice(2,4)}/${d.slice(4)}`;
   };
 
+  // helpers de etiqueta traducida
+  const labelEstado = (e) => t(`options.states.${e}`);
+  const labelMetodo = (m) => t(`options.methods.${m}`);
+
   return (
     <View style={{ flex:1, backgroundColor: C.bg }}>
       {/* Top bar */}
@@ -332,8 +323,8 @@ export default function PacienteFormScreen({ navigation }) {
             <Ionicons name="arrow-back" size={22} color={C.text} />
           </TouchableOpacity>
           <View>
-            <Text style={styles.topTitle}>Nuevo Paciente</Text>
-            <Text style={styles.topSubtitle}>Formulario de registro</Text>
+            <Text style={styles.topTitle}>{t('top.title')}</Text>
+            <Text style={styles.topSubtitle}>{t('top.subtitle')}</Text>
           </View>
         </View>
       </View>
@@ -343,12 +334,13 @@ export default function PacienteFormScreen({ navigation }) {
           <Animated.View style={{ opacity: fade, transform:[{translateY: slide}] }}>
 
             {/* Identificación */}
-            <Card title="Identificación">
-              <Field label="Fecha de registro">
+            <Card title={t('cards.id')}>
+              <Field label={t('fields.dateReg')}>
                 <MaskedDateInput
                   value={dateTypingReg}
-                  onChangeText={(t)=>{
-                    const m = maskDMY(t);
+                  placeholder={t('placeholders.ddmmyyyy')}
+                  onChangeText={(t_)=>{
+                    const m = maskDMY(t_);
                     setDateTypingReg(m);
                     if (m.length === 10) {
                       const iso = dmyToISO(m);
@@ -360,72 +352,71 @@ export default function PacienteFormScreen({ navigation }) {
                 />
               </Field>
 
-              <Field label="Idioma *">
+              <Field label={t('fields.language')}>
                 <View style={styles.pickerWrap}>
                   <Picker selectedValue={idioma} onValueChange={setIdioma}>
-                    <Picker.Item label="Español" value="Español" />
-                    <Picker.Item label="Kʼicheʼ" value="K'iche'" />
-                    <Picker.Item label="Qʼeqchiʼ" value="Q'eqchi'" />
-                    <Picker.Item label="Kaqchikel" value="Kaqchikel" />
-                    <Picker.Item label="Otro" value="Otro" />
+                    {/* sin Kaqchikel */}
+                    <Picker.Item label={t('options.languages.es')} value="Español" />
+                    <Picker.Item label={t('options.languages.kich')} value="K'iche'" />
+                    <Picker.Item label={t('options.languages.qeq')} value="Q'eqchi'" />
+                    <Picker.Item label={t('options.languages.other')} value="Otro" />
                   </Picker>
                 </View>
               </Field>
 
-              <Field label="Nombres *">
-                <TextInput value={nombre} onChangeText={setNombre}
-                  style={[styles.input, !nombre.trim() && styles.err]} placeholder="Ana" placeholderTextColor="#A2A7AE" />
-                {!nombre.trim() && <Text style={styles.errText}>Campo requerido</Text>}
+              <Field label={t('fields.firstName')}>
+                <TextInput
+                  value={nombre} onChangeText={setNombre}
+                  style={[styles.input, !nombre.trim() && styles.err]}
+                  placeholder={t('placeholders.firstName')} placeholderTextColor="#A2A7AE"
+                />
+                {!nombre.trim() && <Text style={styles.errText}>{t('errors.requiredField')}</Text>}
               </Field>
 
-              <Field label="Apellidos">
-                <TextInput value={apellido} onChangeText={setApellido}
-                  style={[styles.input]} placeholder="Pérez" placeholderTextColor="#A2A7AE" />
+              <Field label={t('fields.lastName')}>
+                <TextInput
+                  value={apellido} onChangeText={setApellido}
+                  style={styles.input}
+                  placeholder={t('placeholders.lastName')} placeholderTextColor="#A2A7AE"
+                />
               </Field>
 
-              <Field label="Género *">
+              <Field label={t('fields.gender')}>
                 <View style={styles.pickerWrap}>
                   <Picker selectedValue={genero} onValueChange={setGenero}>
-                    <Picker.Item label="Femenino" value="F" />
-                    <Picker.Item label="Masculino" value="M" />
+                    <Picker.Item label={t('options.genders.F')} value="F" />
+                    <Picker.Item label={t('options.genders.M')} value="M" />
                   </Picker>
                 </View>
               </Field>
 
-              <Text style={styles.label}>Identificación de edad</Text>
+              <Text style={styles.label}>{t('fields.useDate')} / {t('fields.useAge')}</Text>
               <View style={styles.radioRow}>
-                <Radio
-                  label="Usar fecha"
-                  checked={!modoEdad}
-                  onPress={()=>{ setModoEdad(false); setTouchedEdad(false); }}
-                />
-                <Radio
-                  label="Usar edad"
-                  checked={modoEdad}
-                  onPress={()=>{ setModoEdad(true); setTouchedNac(false); }}
-                />
+                <Radio label={t('fields.useDate')} checked={!modoEdad} onPress={()=>{ setModoEdad(false); setTouchedEdad(false); }} />
+                <Radio label={t('fields.useAge')} checked={modoEdad} onPress={()=>{ setModoEdad(true); setTouchedNac(false); }} />
               </View>
 
               {modoEdad ? (
-                <Field label="Edad (años) *">
+                <Field label={t('fields.ageYears')}>
                   <TextInput
                     value={edad}
-                    onChangeText={(t) => setEdad(onlyDigits(t).slice(0,2))}
+                    onChangeText={(t_) => setEdad(onlyDigits(t_).slice(0,2))}
                     onBlur={()=>setTouchedEdad(true)}
                     keyboardType="numeric" maxLength={2}
                     style={[styles.input, touchedEdad && !(edad !== '' && edad.length <= 2) && styles.err]}
-                    placeholder="12" placeholderTextColor="#A2A7AE"
+                    placeholder={t('placeholders.ageSample')} placeholderTextColor="#A2A7AE"
                   />
                   {touchedEdad && !(edad !== '' && edad.length <= 2) && (
-                    <Text style={styles.errText}>Ingresa 1–2 dígitos</Text>
+                    <Text style={styles.errText}>1–2</Text>
                   )}
                 </Field>
               ) : (
-                <Field label="Fecha de nacimiento *">
+                <Field label={t('fields.birthdate')}>
                   <MaskedDateInput
                     value={dateTypingNac}
-                    onChangeText={(t)=>{
-                      const m = maskDMY(t);
+                    placeholder={t('placeholders.ddmmyyyy')}
+                    onChangeText={(t_)=>{
+                      const m = maskDMY(t_);
                       setDateTypingNac(m);
                       if (m.length === 10) {
                         const iso = dmyToISO(m);
@@ -438,88 +429,84 @@ export default function PacienteFormScreen({ navigation }) {
                     onCalendarPress={()=>setShowDatePicker('nac')}
                   />
                   {touchedNac && !/^\d{4}-\d{2}-\d{2}$/.test(fecha_nacimiento || '') && (
-                    <Text style={styles.errText}>Fecha inválida</Text>
+                    <Text style={styles.errText}>{t('errors.invalidDate')}</Text>
                   )}
                 </Field>
               )}
 
-              <Field label="Teléfono (8 dígitos)">
+              <Field label={t('fields.phone')}>
                 <TextInput
                   value={telefono}
-                  onChangeText={(t)=> setTelefono(onlyDigits(t).slice(0,8))}
+                  onChangeText={(t_)=> setTelefono(onlyDigits(t_).slice(0,8))}
                   keyboardType="phone-pad" maxLength={8}
                   style={[styles.input, (!telefonoValido && telefono!=='') && styles.err]}
-                  placeholder="50212345" placeholderTextColor="#A2A7AE"
+                  placeholder={t('placeholders.phone')} placeholderTextColor="#A2A7AE"
                 />
-                {(!telefonoValido && telefono!=='') && <Text style={styles.errText}>Debe tener exactamente 8 dígitos.</Text>}
+                {(!telefonoValido && telefono!=='') && <Text style={styles.errText}>{t('errors.phone8')}</Text>}
               </Field>
 
-              <Field label="Comunidad / Pueblo *">
-                  <TextInput value={comunidad_pueblo} onChangeText={setComunidad}
-                    style={[styles.input, !comunidad_pueblo.trim() && styles.err]} placeholder="San Pedro La Laguna" placeholderTextColor="#A2A7AE" />
-                  {!comunidad_pueblo.trim() && <Text style={styles.errText}>Campo requerido</Text>}
-                </Field>
+              <Field label={t('fields.community')}>
+                <TextInput
+                  value={comunidad_pueblo} onChangeText={setComunidad}
+                  style={[styles.input, !comunidad_pueblo.trim() && styles.err]}
+                  placeholder={t('placeholders.community')} placeholderTextColor="#A2A7AE"
+                />
+                {!comunidad_pueblo.trim() && <Text style={styles.errText}>{t('errors.requiredField')}</Text>}
+              </Field>
             </Card>
 
-            {/* Signos (snapshot) */}
-            <Card title="Signos vitales (snapshot)">
+            {/* Signos */}
+            <Card title={t('cards.vitals')}>
               <FieldRow>
-                <Field label="PA Sistólica (mmHg)">
-                  <TextInput value={presion_sis} onChangeText={onSis}
-                    keyboardType="numeric" style={[styles.input, errors.presion_sis && styles.err]} maxLength={3}/>
+                <Field label={t('fields.sysBP')}>
+                  <TextInput value={presion_sis} onChangeText={onSis} keyboardType="numeric" style={[styles.input, errors.presion_sis && styles.err]} maxLength={3}/>
                   {errors.presion_sis && <Text style={styles.errText}>{errors.presion_sis}</Text>}
                 </Field>
-                <Field label="PA Diastólica (mmHg)">
-                  <TextInput value={presion_dia} onChangeText={onDia}
-                    keyboardType="numeric" style={[styles.input, errors.presion_dia && styles.err]} maxLength={3}/>
+                <Field label={t('fields.diaBP')}>
+                  <TextInput value={presion_dia} onChangeText={onDia} keyboardType="numeric" style={[styles.input, errors.presion_dia && styles.err]} maxLength={3}/>
                   {errors.presion_dia && <Text style={styles.errText}>{errors.presion_dia}</Text>}
                 </Field>
               </FieldRow>
 
               <FieldRow>
-                <Field label="Frecuencia cardiaca (lpm)">
-                  <TextInput value={frecuencia_cardiaca} onChangeText={onFC}
-                    keyboardType="numeric" style={[styles.input, errors.fc && styles.err]} maxLength={3}/>
+                <Field label={t('fields.heartRate')}>
+                  <TextInput value={frecuencia_cardiaca} onChangeText={onFC} keyboardType="numeric" style={[styles.input, errors.fc && styles.err]} maxLength={3}/>
                   {errors.fc && <Text style={styles.errText}>{errors.fc}</Text>}
                 </Field>
-                <Field label="SpO₂ (%)">
-                  <TextInput value={saturacion} onChangeText={onSpO2}
-                    keyboardType="numeric" style={[styles.input, errors.spo2 && styles.err]} maxLength={3}/>
+                <Field label={t('fields.spo2')}>
+                  <TextInput value={saturacion} onChangeText={onSpO2} keyboardType="numeric" style={[styles.input, errors.spo2 && styles.err]} maxLength={3}/>
                   {errors.spo2 && <Text style={styles.errText}>{errors.spo2}</Text>}
                 </Field>
               </FieldRow>
 
               <FieldRow>
-                <Field label="Glucosa (mg/dL)">
-                  <TextInput value={glucosa} onChangeText={onGluc}
-                    keyboardType="numeric" style={[styles.input, errors.glu && styles.err]} maxLength={3}/>
+                <Field label={t('fields.glucose')}>
+                  <TextInput value={glucosa} onChangeText={onGluc} keyboardType="numeric" style={[styles.input, errors.glu && styles.err]} maxLength={3}/>
                   {errors.glu && <Text style={styles.errText}>{errors.glu}</Text>}
                 </Field>
-                <Field label="Temperatura (°C)">
-                  <TextInput value={temperatura} onChangeText={onTemp}
-                    keyboardType="decimal-pad" style={[styles.input, errors.temp && styles.err]} maxLength={4}/>
+                <Field label={t('fields.temperature')}>
+                  <TextInput value={temperatura} onChangeText={onTemp} keyboardType="decimal-pad" style={[styles.input, errors.temp && styles.err]} maxLength={4}/>
                   {errors.temp && <Text style={styles.errText}>{errors.temp}</Text>}
                 </Field>
               </FieldRow>
 
               <FieldRow>
-                <Field label="Peso (kg)">
-                  <TextInput value={peso} onChangeText={onPeso}
-                    keyboardType="decimal-pad" style={[styles.input, errors.peso && styles.err]} maxLength={5}/>
+                <Field label={t('fields.weight')}>
+                  <TextInput value={peso} onChangeText={onPeso} keyboardType="decimal-pad" style={[styles.input, errors.peso && styles.err]} maxLength={5}/>
                   {errors.peso && <Text style={styles.errText}>{errors.peso}</Text>}
                 </Field>
-                <Field label="Estatura (cm)">
-                  <TextInput value={estatura} onChangeText={onEst}
-                    keyboardType="decimal-pad" style={[styles.input, errors.est && styles.err]} maxLength={6}/>
+                <Field label={t('fields.height')}>
+                  <TextInput value={estatura} onChangeText={onEst} keyboardType="decimal-pad" style={[styles.input, errors.est && styles.err]} maxLength={6}/>
                   {errors.est && <Text style={styles.errText}>{errors.est}</Text>}
                 </Field>
               </FieldRow>
 
-              <Field label="Fecha de signos vitales">
+              <Field label={t('fields.vitalsDate')}>
                 <MaskedDateInput
                   value={dateTypingSV}
-                  onChangeText={(t)=>{
-                    const m = maskDMY(t);
+                  placeholder={t('placeholders.ddmmyyyy')}
+                  onChangeText={(t_)=>{
+                    const m = maskDMY(t_);
                     setDateTypingSV(m);
                     if (m.length === 10) {
                       const iso = dmyToISO(m);
@@ -533,73 +520,74 @@ export default function PacienteFormScreen({ navigation }) {
             </Card>
 
             {/* Alergias */}
-            <Card title="Alergias">
-              <Toggle label="¿Tiene alergias?" value={tieneAlergias} onChange={setTieneAlergias} />
+            <Card title={t('cards.allergies')}>
+              <Toggle label={t('fields.hasAllergies')} value={tieneAlergias} onChange={setTieneAlergias} />
               {tieneAlergias && (
-                <Field label="¿Qué alergias tiene?">
+                <Field label={t('fields.whatAllergies')}>
                   <TextInput value={alergias} onChangeText={setAlergias}
-                    style={[styles.input, styles.textArea]} placeholder="Describir alergias" placeholderTextColor="#A2A7AE" multiline />
+                    style={[styles.input, styles.textArea]} placeholder={t('placeholders.allergies')} placeholderTextColor="#A2A7AE" multiline />
                 </Field>
               )}
             </Card>
 
             {/* Hábitos */}
-            <Card title="Hábitos actuales">
-              <Toggle label="Tabaco" value={tabaco_actual} onChange={setTabacoA} />
+            <Card title={t('cards.habitsCurrent')}>
+              <Toggle label={t('fields.tobacco')} value={tabaco_actual} onChange={setTabacoA} />
               {tabaco_actual && (
-                <Field label="Cantidad / Frecuencia">
+                <Field label={t('fields.qtyFreq')}>
                   <TextInput value={tabaco_actual_cantidad} onChangeText={setTabacoACant}
-                    style={[styles.input]} placeholder="p.ej., 5 cig/día" placeholderTextColor="#A2A7AE" />
+                    style={styles.input} placeholder={t('placeholders.qtyCigs')} placeholderTextColor="#A2A7AE" />
                 </Field>
               )}
-              <Toggle label="Alcohol" value={alcohol_actual} onChange={setAlcoholA} />
+              <Toggle label={t('fields.alcohol')} value={alcohol_actual} onChange={setAlcoholA} />
               {alcohol_actual && (
-                <Field label="Cantidad / Frecuencia">
+                <Field label={t('fields.qtyFreq')}>
                   <TextInput value={alcohol_actual_cantidad} onChangeText={setAlcoholACant}
-                    style={[styles.input]} placeholder="p.ej., 2 veces/sem" placeholderTextColor="#A2A7AE" />
+                    style={styles.input} placeholder={t('placeholders.qtyAlcohol')} placeholderTextColor="#A2A7AE" />
                 </Field>
               )}
-              <Toggle label="Drogas" value={drogas_actual} onChange={setDrogasA} />
+              <Toggle label={t('fields.drugs')} value={drogas_actual} onChange={setDrogasA} />
               {drogas_actual && (
-                <Field label="Tipo / Frecuencia">
+                <Field label={t('fields.drugsDetail')}>
                   <TextInput value={drogas_actual_cantidad} onChangeText={setDrogasACant}
-                    style={[styles.input]} placeholder="Detalle" placeholderTextColor="#A2A7AE" />
+                    style={styles.input} placeholder={t('placeholders.drugsDetail')} placeholderTextColor="#A2A7AE" />
                 </Field>
               )}
             </Card>
 
-            <Card title="Hábitos pasados">
-              <Toggle label="Tabaco (pasado)" value={tabaco_pasado} onChange={setTabacoP} />
+            <Card title={t('cards.habitsPast')}>
+              <Toggle label={`${t('fields.tobacco')} ${t('fields.pastSuffix')}`} value={tabaco_pasado} onChange={setTabacoP} />
               {tabaco_pasado && (
-                <Field label="Cantidad / Frecuencia (pasado)">
+                <Field label={t('fields.qtyFreqPast')}>
                   <TextInput value={tabaco_pasado_cantidad} onChangeText={setTabacoPCant}
-                    style={[styles.input]} placeholder="Detalle" placeholderTextColor="#A2A7AE" />
+                    style={styles.input} placeholder={t('placeholders.drugsDetail')} placeholderTextColor="#A2A7AE" />
                 </Field>
               )}
-              <Toggle label="Alcohol (pasado)" value={alcohol_pasado} onChange={setAlcoholP} />
+              <Toggle label={`${t('fields.alcohol')} ${t('fields.pastSuffix')}`} value={alcohol_pasado} onChange={setAlcoholP} />
               {alcohol_pasado && (
-                <Field label="Cantidad / Frecuencia (pasado)">
+                <Field label={t('fields.qtyFreqPast')}>
                   <TextInput value={alcohol_pasado_cantidad} onChangeText={setAlcoholPCant}
-                    style={[styles.input]} placeholder="Detalle" placeholderTextColor="#A2A7AE" />
+                    style={styles.input} placeholder={t('placeholders.drugsDetail')} placeholderTextColor="#A2A7AE" />
                 </Field>
               )}
-              <Toggle label="Drogas (pasado)" value={drogas_pasado} onChange={setDrogasP} />
+              <Toggle label={`${t('fields.drugs')} ${t('fields.pastSuffix')}`} value={drogas_pasado} onChange={setDrogasP} />
               {drogas_pasado && (
-                <Field label="Tipo / Frecuencia (pasado)">
+                <Field label={t('fields.drugsDetail')}>
                   <TextInput value={drogas_pasado_cantidad} onChangeText={setDrogasPCant}
-                    style={[styles.input]} placeholder="Detalle" placeholderTextColor="#A2A7AE" />
+                    style={styles.input} placeholder={t('placeholders.drugsDetail')} placeholderTextColor="#A2A7AE" />
                 </Field>
               )}
             </Card>
 
             {/* Salud reproductiva (solo F) */}
             {genero === 'F' && (
-              <Card title="Salud reproductiva">
-                <Field label="Última menstruación">
+              <Card title={t('cards.reproductive')}>
+                <Field label={t('fields.lastMenstruation')}>
                   <MaskedDateInput
                     value={dateTypingUlt}
-                    onChangeText={(t)=>{
-                      const m = maskDMY(t);
+                    placeholder={t('placeholders.ddmmyyyy')}
+                    onChangeText={(t_)=>{
+                      const m = maskDMY(t_);
                       setDateTypingUlt(m);
                       if (m.length === 10) {
                         const iso = dmyToISO(m);
@@ -611,36 +599,32 @@ export default function PacienteFormScreen({ navigation }) {
                   />
                 </Field>
 
-                <Toggle label="Menopausia" value={menopausia} onChange={setMenopausia} />
+                <Toggle label={t('fields.menopause')} value={menopausia} onChange={setMenopausia} />
 
                 <FieldRow>
-                  <Field label="Gestaciones">
-                    <TextInput value={gestaciones} onChangeText={(t)=>setGest(onlyDigits(t))}
-                      keyboardType="numeric" style={[styles.input]} maxLength={3}/>
+                  <Field label={t('fields.pregnancies')}>
+                    <TextInput value={gestaciones} onChangeText={(t_)=>setGest(onlyDigits(t_))} keyboardType="numeric" style={styles.input} maxLength={3}/>
                   </Field>
-                  <Field label="Partos">
-                    <TextInput value={partos} onChangeText={(t)=>setPartos(onlyDigits(t))}
-                      keyboardType="numeric" style={[styles.input]} maxLength={3}/>
+                  <Field label={t('fields.births')}>
+                    <TextInput value={partos} onChangeText={(t_)=>setPartos(onlyDigits(t_))} keyboardType="numeric" style={styles.input} maxLength={3}/>
                   </Field>
                 </FieldRow>
 
                 <FieldRow>
-                  <Field label="Abortos espontáneos">
-                    <TextInput value={abortos_espontaneos} onChangeText={(t)=>setAEsp(onlyDigits(t))}
-                      keyboardType="numeric" style={[styles.input]} maxLength={3}/>
+                  <Field label={t('fields.spontaneousAbortions')}>
+                    <TextInput value={abortos_espontaneos} onChangeText={(t_)=>setAEsp(onlyDigits(t_))} keyboardType="numeric" style={styles.input} maxLength={3}/>
                   </Field>
-                  <Field label="Abortos inducidos">
-                    <TextInput value={abortos_inducidos} onChangeText={(t)=>setAInd(onlyDigits(t))}
-                      keyboardType="numeric" style={[styles.input]} maxLength={3}/>
+                  <Field label={t('fields.inducedAbortions')}>
+                    <TextInput value={abortos_inducidos} onChangeText={(t_)=>setAInd(onlyDigits(t_))} keyboardType="numeric" style={styles.input} maxLength={3}/>
                   </Field>
                 </FieldRow>
 
-                <Toggle label="¿Usa anticonceptivos?" value={usa_anticonceptivos} onChange={setUsaAnti} />
+                <Toggle label={t('fields.useContraceptives')} value={usa_anticonceptivos} onChange={setUsaAnti} />
                 {usa_anticonceptivos && (
-                  <Field label="Método anticonceptivo">
+                  <Field label={t('fields.method')}>
                     <View style={styles.pickerWrap}>
                       <Picker selectedValue={metodo_anticonceptivo} onValueChange={setMetodo}>
-                        {METODOS.map(m => <Picker.Item key={m} label={m} value={m} />)}
+                        {METODOS.map(m => <Picker.Item key={m} label={labelMetodo(m)} value={m} />)}
                       </Picker>
                     </View>
                   </Field>
@@ -649,20 +633,21 @@ export default function PacienteFormScreen({ navigation }) {
             )}
 
             {/* Estado / Relaciones */}
-            <Card title="Estado y relaciones">
-              <Field label="Estado del paciente">
+            <Card title={t('cards.stateRelations')}>
+              <Field label={t('fields.patientState')}>
                 <View style={styles.pickerWrap}>
                   <Picker selectedValue={estado_paciente} onValueChange={setEstado}>
-                    {ESTADOS.map(e => <Picker.Item key={e} label={e} value={e} />)}
+                    {ESTADOS.map(e => <Picker.Item key={e} label={labelEstado(e)} value={e} />)}
                   </Picker>
                 </View>
               </Field>
 
-              <Field label="Fecha última actualización">
+              <Field label={t('fields.lastUpdate')}>
                 <MaskedDateInput
                   value={dateTypingUA}
-                  onChangeText={(t)=>{
-                    const m = maskDMY(t);
+                  placeholder={t('placeholders.ddmmyyyy')}
+                  onChangeText={(t_)=>{
+                    const m = maskDMY(t_);
                     setDateTypingUA(m);
                     if (m.length === 10) {
                       const iso = dmyToISO(m);
@@ -674,37 +659,35 @@ export default function PacienteFormScreen({ navigation }) {
                 />
               </Field>
 
-              <Field label="Observaciones generales">
+              <Field label={t('fields.notes')}>
                 <TextInput value={observaciones_generales} onChangeText={setObs}
-                  style={[styles.input, styles.textArea]} placeholder="Notas generales"
+                  style={[styles.input, styles.textArea]} placeholder={t('placeholders.notes')}
                   placeholderTextColor="#A2A7AE" multiline />
               </Field>
 
               <FieldRow>
-                <Field label="ID comunidad">
-                  <TextInput value={id_comunidad} onChangeText={(t)=>setIdComunidad(onlyDigits(t))}
-                    keyboardType="numeric" style={[styles.input]} placeholder="(opcional)" placeholderTextColor="#A2A7AE" />
+                <Field label={t('fields.communityId')}>
+                  <TextInput value={id_comunidad} onChangeText={(t_)=>setIdComunidad(onlyDigits(t_))}
+                    keyboardType="numeric" style={styles.input} placeholder={t('placeholders.optional')} placeholderTextColor="#A2A7AE" />
                 </Field>
-                <Field label="ID familia">
-                  <TextInput value={id_familia} onChangeText={(t)=>setIdFamilia(onlyDigits(t))}
-                    keyboardType="numeric" style={[styles.input]} placeholder="(opcional)" placeholderTextColor="#A2A7AE" />
+                <Field label={t('fields.familyId')}>
+                  <TextInput value={id_familia} onChangeText={(t_)=>setIdFamilia(onlyDigits(t_))}
+                    keyboardType="numeric" style={styles.input} placeholder={t('placeholders.optional')} placeholderTextColor="#A2A7AE" />
                 </Field>
               </FieldRow>
 
-              <Field label="Usuario de registro (ID)">
-                <TextInput value={usuario_registro} onChangeText={(t)=>setUsuarioRegistro(onlyDigits(t))}
-                  keyboardType="numeric" style={[styles.input]} placeholder="(opcional)" placeholderTextColor="#A2A7AE" />
+              <Field label={t('fields.userId')}>
+                <TextInput value={usuario_registro} onChangeText={(t_)=>setUsuarioRegistro(onlyDigits(t_))}
+                  keyboardType="numeric" style={styles.input} placeholder={t('placeholders.optional')} placeholderTextColor="#A2A7AE" />
               </Field>
             </Card>
 
-            <Text style={styles.hint}>
-              * Requeridos: Idioma, Nombres, Género y <Text style={{fontWeight:'700'}}>Edad</Text> o <Text style={{fontWeight:'700'}}>Fecha de nacimiento</Text>.
-            </Text>
+            <Text style={styles.hint}>{t('hint')}</Text>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* DateTimePicker móvil (opcional) */}
+      {/* DateTimePicker */}
       {Platform.OS !== 'web' && showDatePicker && (
         <DateTimePicker
           value={
@@ -738,11 +721,11 @@ export default function PacienteFormScreen({ navigation }) {
       <View style={styles.footer}>
         <TouchableOpacity style={styles.secBtn} onPress={() => navigation.goBack()} activeOpacity={0.9}>
           <Ionicons name="close-outline" size={18} color={C.text} />
-          <Text style={styles.secTxt}>Cancelar</Text>
+          <Text style={styles.secTxt}>{t('footer.cancel')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.primBtn} onPress={handleSubmit} activeOpacity={0.9}>
           <Ionicons name="save-outline" size={18} color="#fff" />
-          <Text style={styles.primTxt}>Guardar paciente</Text>
+          <Text style={styles.primTxt}>{t('footer.save')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -791,14 +774,12 @@ function Toggle({ label, value, onChange }) {
 function Radio({ label, checked, onPress }) {
   return (
     <TouchableOpacity onPress={onPress} style={styles.radioBtn} activeOpacity={0.85}>
-      <View style={[styles.radioOuter, checked && { borderColor: C.accent }]}>
-        {checked ? <View style={styles.radioInner}/> : null}
-      </View>
+      <View style={[styles.radioOuter, checked && { borderColor: C.accent }]}>{checked ? <View style={styles.radioInner}/> : null}</View>
       <Text style={styles.radioTxt}>{label}</Text>
     </TouchableOpacity>
   );
 }
-function MaskedDateInput({ value, onChangeText, onCalendarPress, onBlur, error }) {
+function MaskedDateInput({ value, onChangeText, onCalendarPress, onBlur, error, placeholder }) {
   return (
     <View>
       <View style={[styles.input, error && styles.err, {flexDirection:'row', alignItems:'center', justifyContent:'space-between'}]}>
@@ -806,7 +787,7 @@ function MaskedDateInput({ value, onChangeText, onCalendarPress, onBlur, error }
           value={value}
           onChangeText={onChangeText}
           onBlur={onBlur}
-          placeholder="DD/MM/AAAA"
+          placeholder={placeholder || 'DD/MM/AAAA'}
           placeholderTextColor="#A2A7AE"
           keyboardType={Platform.OS === 'web' ? 'default' : 'number-pad'}
           maxLength={10}
@@ -822,19 +803,13 @@ function MaskedDateInput({ value, onChangeText, onCalendarPress, onBlur, error }
 
 const R = 20;
 const styles = StyleSheet.create({
-  topBar: {
-    height:72, marginHorizontal:16, marginTop:12, marginBottom:8, paddingHorizontal:12,
-    borderWidth:1, borderRadius:16, flexDirection:'row', alignItems:'center', justifyContent:'space-between',
-    backgroundColor:'#FFF', borderColor:C.border,
-    shadowOpacity:0.08, shadowRadius:12, shadowOffset:{width:0,height:6}, elevation:2,
-  },
+  topBar:{ height:72, marginHorizontal:16, marginTop:12, marginBottom:8, paddingHorizontal:12, borderWidth:1, borderRadius:16, flexDirection:'row', alignItems:'center', justifyContent:'space-between', backgroundColor:'#FFF', borderColor:C.border, shadowOpacity:0.08, shadowRadius:12, shadowOffset:{width:0,height:6}, elevation:2 },
   topLeft:{ flexDirection:'row', alignItems:'center', gap:8 },
   iconBtn:{ padding:6, marginRight:6, borderRadius:10 },
   topTitle:{ fontSize:20, fontWeight:'800', color:C.text },
   topSubtitle:{ fontSize:12, color:C.accent, marginTop:2, fontWeight:'600' },
 
-  card:{ backgroundColor:C.card, borderColor:C.border, borderWidth:1, borderRadius:R, marginBottom:14,
-    shadowColor:'#000', shadowOpacity:0.05, shadowRadius:10, shadowOffset:{width:0,height:4}, elevation:1 },
+  card:{ backgroundColor:C.card, borderColor:C.border, borderWidth:1, borderRadius:R, marginBottom:14, shadowColor:'#000', shadowOpacity:0.05, shadowRadius:10, shadowOffset:{width:0,height:4}, elevation:1 },
   cardHeader:{ paddingHorizontal:14, paddingTop:12, paddingBottom:8 },
   cardTitle:{ fontSize:16, fontWeight:'800', color:C.text },
   cardBody:{ paddingHorizontal:14, paddingBottom:14 },
@@ -861,19 +836,12 @@ const styles = StyleSheet.create({
 
   hint:{ textAlign:'center', fontSize:12, color:C.subtext, marginTop:6, marginBottom:8 },
 
-  footer:{ position:'absolute', left:0, right:0, bottom:0, paddingHorizontal:16, paddingTop:10, paddingBottom:14,
-    backgroundColor:'#FFFFFFE6', borderTopWidth:1, borderTopColor:C.border, flexDirection:'row', gap:10,
-    shadowColor:'#000', shadowOpacity:0.12, shadowRadius:10, shadowOffset:{width:0, height:-2}, elevation:10 },
+  footer:{ position:'absolute', left:0, right:0, bottom:0, paddingHorizontal:16, paddingTop:10, paddingBottom:14, backgroundColor:'#FFFFFFE6', borderTopWidth:1, borderTopColor:C.border, flexDirection:'row', gap:10, shadowColor:'#000', shadowOpacity:0.12, shadowRadius:10, shadowOffset:{width:0, height:-2}, elevation:10 },
   primBtn:{ flex:1, height:50, borderRadius:14, backgroundColor:C.primary, alignItems:'center', justifyContent:'center', flexDirection:'row', gap:8 },
   primTxt:{ color:'#fff', fontWeight:'800', fontSize:15 },
   secBtn:{ height:50, paddingHorizontal:16, borderRadius:14, backgroundColor:'#fff', alignItems:'center', justifyContent:'center', flexDirection:'row', gap:6, borderWidth:1, borderColor:C.border },
   secTxt:{ color:C.text, fontWeight:'800', fontSize:14 },
 
-  toast:{
-    position:'absolute', bottom:80, alignSelf:'center',
-    backgroundColor:'#2E7D32', paddingHorizontal:14, paddingVertical:10,
-    borderRadius:12, flexDirection:'row', alignItems:'center', gap:8,
-    shadowOpacity:0.15, shadowRadius:8, shadowOffset:{width:0,height:2}, elevation:4,
-  },
-  toastTxt:{ color:'#fff', fontWeight:'800' },
+  toast:{ position:'absolute', bottom:80, alignSelf:'center', backgroundColor:'#2E7D32', paddingHorizontal:14, paddingVertical:10, borderRadius:12, flexDirection:'row', alignItems:'center', gap:8, shadowOpacity:0.15, shadowRadius:8, shadowOffset:{width:0,height:2}, elevation:4 },
+  toastTxt:{ color:'#fff', fontWeight:'800' }
 });

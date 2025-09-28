@@ -1,0 +1,15 @@
+{
+  "top": {
+    "title": "Datos de usuario",
+    "subtitle": "Tu información personal"
+  },
+  "loading": "Cargando datos...",
+  "labels": {
+    "dpi": "DPI",
+    "phone": "Teléfono"
+  },
+  "fallbacks": {
+    "nameUnavailable": "Nombre no disponible",
+    "notAvailable": "---"
+  }
+}

@@ -1,4 +1,3 @@
-// src/screens/RegisterScreen.js
 import axios from 'axios';
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
@@ -8,17 +7,13 @@ import ThemeToggle from '../components/ThemeToggle';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 
-const PALETTE = {
-  tangerine: '#F08C21',
-  blush:     '#E36888',
-  butter:    '#F2D88F',
-  sea:       '#6698CC',
-  cream:     '#FFF7DA',
-};
+const PALETTE = { tangerine: '#F08C21', blush: '#E36888', butter: '#F2D88F', sea: '#6698CC', cream: '#FFF7DA' };
 
 export default function RegisterScreen({ navigation }) {
   const { signIn } = useContext(AuthContext);
+  const { t } = useTranslation('Register');
 
   // NUEVO: nombre y apellido separados
   const [firstName, setFirstName] = useState('');
@@ -32,6 +27,8 @@ export default function RegisterScreen({ navigation }) {
   const [submitted,        setSubmitted]        = useState(false);
   const [tipoUsuario,      setTipoUsuario]      = useState('');
   const [mostrarOpciones,  setMostrarOpciones]  = useState(false);
+
+  // Valores que se mandan al backend (no cambiar):
   const opcionesTipo = ['ONG', 'Voluntario', 'Lider Comunitario'];
 
   const { isDarkMode } = useTheme();
@@ -40,33 +37,30 @@ export default function RegisterScreen({ navigation }) {
 
   const normalizeRole = (rol) => (rol === 'ONG' ? 'Ong' : rol === 'Voluntario' ? 'Volunteer' : rol);
 
-  // helpers para restringir a dígitos y tope de longitud
+  // helpers
   const onlyDigits = (s) => s.replace(/\D/g, '');
-  const onChangeDpi   = (t) => setDpi( onlyDigits(t).slice(0, 13) );
-  const onChangePhone = (t) => setPhone( onlyDigits(t).slice(0, 8) );
+  const onChangeDpi   = (tval) => setDpi( onlyDigits(tval).slice(0, 13) );
+  const onChangePhone = (tval) => setPhone( onlyDigits(tval).slice(0, 8) );
+
+  // Etiqueta traducida para UI, conservando valor subyacente
+  const roleLabel = (val) => {
+    if (val === 'ONG') return t('roles.ONG');
+    if (val === 'Voluntario') return t('roles.Voluntario');
+    if (val === 'Lider Comunitario') return t('roles.LiderComunitario');
+    return val;
+  };
 
   const handleRegister = async () => {
     setSubmitted(true);
 
-    // Validaciones de campos requeridos
     if (!(firstName.trim() && lastName.trim() && phone.trim() && dpi.trim() &&
           (email.trim() || dpi.trim()) && password.trim() && confirmPassword.trim() && tipoUsuario)) {
-      alert('Por favor llena todos los campos'); return;
+      alert(t('alerts.fillAll')); return;
     }
 
-    // Validaciones de formato
-    if (dpi.length !== 13) {
-      alert('El DPI debe tener exactamente 13 dígitos.');
-      return;
-    }
-    if (phone.length !== 8) {
-      alert('El teléfono debe tener 8 dígitos.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      alert('Las contraseñas no coinciden');
-      return;
-    }
+    if (dpi.length !== 13) { alert(t('alerts.dpiLen')); return; }
+    if (phone.length !== 8) { alert(t('alerts.phoneLen')); return; }
+    if (password !== confirmPassword) { alert(t('alerts.pwdMismatch')); return; }
 
     try {
       const { data: user } = await axios.post('http://localhost:3001/api/auth/register', {
@@ -87,7 +81,7 @@ export default function RegisterScreen({ navigation }) {
       signIn(normalizeRole(user.rol));
     } catch (error) {
       console.error('Error en el registro:', error);
-      const msg = error.response?.data?.error || 'Error al registrar usuario';
+      const msg = error.response?.data?.error || t('alerts.registerError');
       alert(msg);
     }
   };
@@ -109,9 +103,9 @@ export default function RegisterScreen({ navigation }) {
       <View style={[styles.blob, styles.blobBR, { backgroundColor: titleCol, opacity: 0.18 }]} />
 
       <View style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}>
-        <Text style={[styles.title, { color: titleCol }]}>Crear cuenta</Text>
+        <Text style={[styles.title, { color: titleCol }]}>{t('title')}</Text>
 
-        {/* Nombres en dos columnas (responsivo: se apilan si no cabe) */}
+        {/* Nombres en dos columnas */}
         <View style={styles.rowWrap}>
           <TextInput
             style={[
@@ -119,7 +113,7 @@ export default function RegisterScreen({ navigation }) {
               { borderColor: border, backgroundColor: '#FFFFFF', color: theme.text },
               isEmpty(firstName) && styles.errorInput
             ]}
-            placeholder="Nombre"
+            placeholder={t('placeholders.firstName')}
             value={firstName}
             onChangeText={setFirstName}
             placeholderTextColor={theme.placeholder || '#98A2B3'}
@@ -131,7 +125,7 @@ export default function RegisterScreen({ navigation }) {
               isEmpty(lastName) && styles.errorInput,
               { marginRight: 0 }
             ]}
-            placeholder="Apellido"
+            placeholder={t('placeholders.lastName')}
             value={lastName}
             onChangeText={setLastName}
             placeholderTextColor={theme.placeholder || '#98A2B3'}
@@ -144,7 +138,7 @@ export default function RegisterScreen({ navigation }) {
             { borderColor: border, backgroundColor: '#FFFFFF', color: theme.text },
             isEmpty(phone) && styles.errorInput
           ]}
-          placeholder="Teléfono (8 dígitos)"
+          placeholder={t('placeholders.phone')}
           value={phone}
           onChangeText={onChangePhone}
           keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
@@ -158,7 +152,7 @@ export default function RegisterScreen({ navigation }) {
             { borderColor: border, backgroundColor: '#FFFFFF', color: theme.text },
             isEmpty(dpi) && styles.errorInput
           ]}
-          placeholder="DPI (13 dígitos)"
+          placeholder={t('placeholders.dpi')}
           value={dpi}
           onChangeText={onChangeDpi}
           keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
@@ -166,7 +160,7 @@ export default function RegisterScreen({ navigation }) {
           maxLength={13}
         />
 
-        <Text style={styles.optional}>O ingresa tu correo electrónico</Text>
+        <Text style={styles.optional}>{t('optionalEmail')}</Text>
 
         <TextInput
           style={[
@@ -174,7 +168,7 @@ export default function RegisterScreen({ navigation }) {
             { borderColor: border, backgroundColor: '#FFFFFF', color: theme.text },
             isEmpty(email) && styles.errorInput
           ]}
-          placeholder="Correo electrónico"
+          placeholder={t('placeholders.email')}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -188,7 +182,7 @@ export default function RegisterScreen({ navigation }) {
             { borderColor: border, backgroundColor: '#FFFFFF', color: theme.text },
             isEmpty(password) && styles.errorInput
           ]}
-          placeholder="Contraseña"
+          placeholder={t('placeholders.password')}
           secureTextEntry
           value={password}
           onChangeText={setPassword}
@@ -201,7 +195,7 @@ export default function RegisterScreen({ navigation }) {
             { borderColor: border, backgroundColor: '#FFFFFF', color: theme.text },
             isEmpty(confirmPassword) && styles.errorInput
           ]}
-          placeholder="Confirmar contraseña"
+          placeholder={t('placeholders.confirmPassword')}
           secureTextEntry
           value={confirmPassword}
           onChangeText={setConfirmPassword}
@@ -209,16 +203,21 @@ export default function RegisterScreen({ navigation }) {
         />
 
         <View style={{ width: '100%', marginBottom: 14 }}>
-          <Text style={styles.selectLabel}>Tipo de usuario</Text>
+          <Text style={styles.selectLabel}>{t('labels.userType')}</Text>
 
           <TouchableOpacity
             style={[styles.input, styles.select, { borderColor: border, backgroundColor: '#FFFFFF' }]}
             onPress={() => setMostrarOpciones(!mostrarOpciones)}
           >
             <Text style={{ color: tipoUsuario ? theme.text : (theme.placeholder || '#98A2B3') }}>
-              {tipoUsuario || 'Selecciona un tipo'}
+              {tipoUsuario ? roleLabel(tipoUsuario) : t('placeholders.selectType')}
             </Text>
-            <Ionicons name={mostrarOpciones ? 'chevron-up' : 'chevron-down'} size={20} color={theme.text} style={{ position: 'absolute', right: 16 }} />
+            <Ionicons
+              name={mostrarOpciones ? 'chevron-up' : 'chevron-down'}
+              size={20}
+              color={theme.text}
+              style={{ position: 'absolute', right: 16 }}
+            />
           </TouchableOpacity>
 
           {mostrarOpciones && (
@@ -229,7 +228,7 @@ export default function RegisterScreen({ navigation }) {
                   onPress={() => { setTipoUsuario(opcion); setMostrarOpciones(false); }}
                   style={styles.dropdownItem}
                 >
-                  <Text style={{ color: theme.text }}>{opcion}</Text>
+                  <Text style={{ color: theme.text }}>{roleLabel(opcion)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -237,15 +236,15 @@ export default function RegisterScreen({ navigation }) {
         </View>
 
         <TouchableOpacity style={[styles.button, { backgroundColor: btnPrim }]} onPress={handleRegister}>
-          <Text style={styles.buttonText}>Registrarme</Text>
+          <Text style={styles.buttonText}>{t('buttons.register')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-          <Text style={[styles.link, { color: linkCol }]}>¿Ya tienes cuenta? Inicia sesión</Text>
+          <Text style={[styles.link, { color: linkCol }]}>{t('links.haveAccount')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('Terms')}>
-          <Text style={[styles.termsLink, { color: linkCol }]}>Términos y condiciones</Text>
+          <Text style={[styles.link, { color: linkCol, marginTop: 6 }]}>{t('links.terms')}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -268,26 +267,13 @@ const styles = StyleSheet.create({
   title: { fontSize: 26, marginBottom: 10, fontWeight: '800', textAlign: 'center' },
   optional: { fontSize: 12, marginBottom: 6, alignSelf: 'flex-start', marginLeft: 6, color: '#667085' },
 
-  // inputs
   input: { width: '100%', paddingVertical: 14, paddingHorizontal: 16, marginBottom: 14, borderRadius: RADIUS, borderWidth: 1, fontSize: 15 },
   errorInput: { borderColor: '#E57373' },
 
-  // fila nombres
-  rowWrap: {
-    width: '100%',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 14,
-  },
+  rowWrap: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', marginBottom: 14 },
   inputHalf: {
-    flexGrow: 1,
-    flexBasis: '48%',
-    marginRight: '4%',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: RADIUS,
-    borderWidth: 1,
-    fontSize: 15,
+    flexGrow: 1, flexBasis: '48%', marginRight: '4%',
+    paddingVertical: 14, paddingHorizontal: 16, borderRadius: RADIUS, borderWidth: 1, fontSize: 15,
   },
 
   selectLabel: { marginBottom: 8, fontWeight: '700' },

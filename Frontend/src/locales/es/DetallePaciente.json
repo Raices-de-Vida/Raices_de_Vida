@@ -1,0 +1,178 @@
+{
+  "top": { "subtitle": "Ficha de paciente" },
+  "tabs": {
+    "summary": "Resumen",
+    "clinical": "Clínico",
+    "consult1": "Consulta 1",
+    "consult2": "Consulta 2"
+  },
+  "sections": {
+    "ident": "Identificación",
+    "clin": "Datos clínicos",
+    "repro": "Reproductivo",
+    "habits": "Hábitos",
+    "allergies": "Alergias",
+    "obs": "Observaciones"
+  },
+  "fields": {
+    "name": "Nombre",
+    "age": "Edad",
+    "gender": "Género",
+    "town": "Comunidad",
+    "status": "Estado",
+    "weight": "Peso (kg)",
+    "height": "Altura (cm)",
+    "bmi": "IMC",
+    "vitals": "Signos vitales",
+    "reproHistory": "Historia reproductiva",
+    "habits": "Hábitos",
+    "allergies": "Alergias",
+    "notes": "Notas"
+  },
+  "units": { "years": "años" },
+  "severity": {
+    "low": "Baja",
+    "medium": "Media",
+    "high": "Alta",
+    "critical": "Crítica",
+    "unknown": "—"
+  },
+  "bmi": {
+    "underweight": "Bajo",
+    "normal": "Normal",
+    "overweight": "Sobrepeso",
+    "obesity1": "Obesidad I",
+    "obesity2": "Obesidad II",
+    "obesity3": "Obesidad III"
+  },
+  "buttons": { "save": "Guardar" },
+  "badges": { "manual": "Manual", "simulated": "SIMULADO" },
+  "alerts": {
+    "saved": { "title": "Guardado", "updated": "Cambios actualizados" },
+    "offline": { "title": "Offline", "queued": "Cambios en cola para sincronizar." }
+  },
+  "errors": { "notFound": "Paciente no encontrado" },
+  "common": { "other": "Otro", "specify": "Especificar", "freeText": "Texto libre" },
+  "placeholders": { "townDemo": "Comunidad Demo", "langEs": "Español" },
+
+  "c1": {
+    "title": "PÁGINA DE CONSULTA (Resumen Clínico)",
+    "basic": "Datos básicos",
+    "date": "Fecha",
+    "patientName": "Nombre del paciente",
+    "town": "Pueblo/Comunidad",
+    "consultType": {
+      "title": "Tipo de consulta",
+      "diabetes": "Diabetes",
+      "htn": "Hipertensión",
+      "respiratory": "Respiratorio"
+    },
+    "cc": "Motivo de consulta",
+    "language": "Idioma",
+    "phone": "Teléfono",
+    "dobAge": "FN/Edad",
+    "gender": "Género",
+
+    "vitals": {
+      "title": "Signos vitales",
+      "subtitle": "Vitals",
+      "bp": "PA",
+      "hr": "FC",
+      "spo2": "SpO₂",
+      "bs": "Glucosa",
+      "weight": "Peso",
+      "height": "Altura",
+      "temp": "Temp"
+    },
+
+    "fast": {
+      "title": "Condición / Ayuno",
+      "takenMed": "¿Tomó medicación?",
+      "fasting": "¿Ayunas?"
+    },
+
+    "all": {
+      "title": "Alergias y Suplementos",
+      "subtitle": "Alergias",
+      "nka": "Sin alergias conocidas (NKA)",
+      "listPlaceholder": "listar",
+      "vit": "Sobres Vitamina #",
+      "alb": "Tabletas Albendazol #"
+    },
+
+    "hab": {
+      "titleSuffix": "Hábitos",
+      "current": "ACTUAL",
+      "past": "PASADO",
+      "tobacco": "Tabaco",
+      "alcohol": "Alcohol",
+      "drugs": "Drogas"
+    },
+
+    "repro": {
+      "title": "Reproductivo",
+      "lmp": "FUM",
+      "menopause": "Menopausia",
+      "obstetric": "Obstétrico",
+      "controlQ": "¿Anticoncepción?",
+      "methodQ": "¿Método?"
+    },
+
+    "hpi": "Historia de la enfermedad actual",
+    "pmh": { "title": "Antecedentes médicos", "medDx": "Dx médicos", "surgery": "Cirugías", "meds": "Medicamentos" },
+    "pe": { "title": "Examen físico", "heart": "Corazón", "lungs": "Pulmones", "abdomen": "Abdomen", "gyn": "Ginecología" },
+    "impression": "Impresión",
+    "plan": "Recomendación/Plan",
+    "rxNote": "Las recetas se adjuntarán a esta página",
+
+    "further": { "title": "Referencias", "genSurg": "Cirugía general", "gyn": "Ginecología" },
+    "provider": "Proveedor",
+    "interpreter": "Intérprete",
+    "reverseNote": "NOTAS DE CONSULTA QUIRÚRGICA AL REVERSO"
+  },
+
+  "c2": {
+    "title": "PÁGINA DE CONSULTA (Quirúrgica)",
+    "general": "Datos generales",
+    "date": "Fecha",
+    "hpi": "Historia de la enfermedad actual",
+    "exam": "Examen físico",
+    "examSub": "EXAMEN FÍSICO (apropiado a la queja principal)",
+    "assessment": "Evaluación",
+    "impression": "Impresión",
+    "plan": "Recomendación/Plan",
+    "medsrx": "Medicamentos/Receta",
+    "refs": "Referencias",
+    "furtherTitle": "Referencias adicionales",
+    "surgeon": "Cirujano"
+  },
+
+  "seed": {
+    "c1": {
+      "chiefComplaint": "Dolor abdominal intermitente de 2 semanas",
+      "allergy": "Penicilina",
+      "hpi": "Episodios de dolor tipo cólico tras comidas grasas, sin vómitos.",
+      "medDx": "Asma leve",
+      "surgery": "Apendicectomía (2022)",
+      "meds": "Salbutamol PRN",
+      "pe": {
+        "heart": "Ritmo regular, sin soplos",
+        "lungs": "Murmullo vesicular, leve sibilancia",
+        "abd": "Blando, dolor en hipocondrio derecho",
+        "gyn": "Sin datos relevantes"
+      },
+      "impression": "Posible disfunción biliar / colelitiasis a descartar",
+      "plan": "US abdominal, dieta baja en grasa, control en 1 mes.",
+      "provider": "Dra. Martínez"
+    },
+    "c2": {
+      "hpi": "Candidata a evaluación quirúrgica electiva según evolución.",
+      "pe": "Abdomen blando, sin defensa, Murphy negativo.",
+      "impression": "Dolor abdominal inespecífico probable origen biliar",
+      "plan": "Manejo conservador y US. Reevaluar.",
+      "medsrx": "Paracetamol 500 mg VO cada 8h PRN",
+      "otherRef": "Nutrición",
+      "surgeon": "Dr. López"
+    }
+  }
+}

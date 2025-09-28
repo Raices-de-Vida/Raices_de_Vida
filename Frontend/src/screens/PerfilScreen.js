@@ -13,6 +13,7 @@ import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import { Ionicons } from '@expo/vector-icons';
 import OfflineStorage from '../services/OfflineStorage';
+import { useTranslation } from 'react-i18next';
 
 const PALETTE = {
   butter: '#F2D88F',
@@ -26,14 +27,13 @@ export default function PerfilScreen({ navigation }) {
   const [role, setRole] = useState('');
   const { isDarkMode, toggleDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { t } = useTranslation('Perfil');
 
   useEffect(() => {
     const cargarDatos = async () => {
-      // Foto de perfil
       const uriGuardado = await AsyncStorage.getItem('fotoPerfil');
       if (uriGuardado) setFotoPerfil(uriGuardado);
 
-      // Datos desde OfflineStorage (login)
       let firstName = '';
       let userRole = '';
       try {
@@ -42,7 +42,6 @@ export default function PerfilScreen({ navigation }) {
         if (userData?.rol) userRole = userData.rol;
       } catch {}
 
-      // Fallback desde AsyncStorage (register)
       if (!firstName) {
         const nombreRegistro = await AsyncStorage.getItem('nombre');
         if (nombreRegistro) firstName = nombreRegistro.split(' ')[0];
@@ -62,7 +61,7 @@ export default function PerfilScreen({ navigation }) {
   const seleccionarFoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      alert('Se necesita permiso para acceder a la galería');
+      alert(t('gallery.permission'));
       return;
     }
 
@@ -109,9 +108,9 @@ export default function PerfilScreen({ navigation }) {
           />
 
           <View>
-            <Text style={[styles.topTitle, { color: theme.text }]}>Perfil</Text>
+            <Text style={[styles.topTitle, { color: theme.text }]}>{t('top.title')}</Text>
             <Text style={[styles.topSubtitle, { color: isDarkMode ? theme.secondaryText : PALETTE.sea }]}>
-              Tu información personal
+              {t('top.subtitle')}
             </Text>
           </View>
         </View>
@@ -137,31 +136,28 @@ export default function PerfilScreen({ navigation }) {
         {fotoPerfil && (
           <TouchableOpacity onPress={eliminarFoto} style={styles.deletePhotoBtn} activeOpacity={0.8}>
             <Ionicons name="trash-outline" size={18} color="#fff" />
-            <Text style={styles.deletePhotoTxt}>Eliminar foto</Text>
+            <Text style={styles.deletePhotoTxt}>{t('buttons.deletePhoto')}</Text>
           </TouchableOpacity>
         )}
 
         {/* Nombre y Rol */}
-        <Text style={[styles.nameText, { color: theme.text }]}>{name || 'Nombre'}</Text>
-        <Text style={[styles.roleText, { color: theme.secondaryText }]}>{role || 'Rol de usuario'}</Text>
+        <Text style={[styles.nameText, { color: theme.text }]}>{name || t('placeholders.name')}</Text>
+        <Text style={[styles.roleText, { color: theme.secondaryText }]}>{role || t('placeholders.role')}</Text>
 
         {/* Tarjetas de opciones */}
         <View style={styles.cardsBlock}>
           <TouchableOpacity
             style={[
               styles.infoCard,
-              {
-                backgroundColor: theme.cardBackground,
-                borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)',
-              },
+              { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)' }
             ]}
             onPress={() => navigation.navigate('DatosUsuario')}
             activeOpacity={0.85}
           >
             <Ionicons name="information-circle-outline" size={26} color={theme.text} style={styles.infoIcon} />
             <View style={{ flex: 1 }}>
-              <Text style={[styles.infoTitle, { color: theme.text }]}>Datos de usuario</Text>
-              <Text style={[styles.infoSubtitle, { color: theme.secondaryText }]}>Información del perfil</Text>
+              <Text style={[styles.infoTitle, { color: theme.text }]}>{t('cards.userData.title')}</Text>
+              <Text style={[styles.infoSubtitle, { color: theme.secondaryText }]}>{t('cards.userData.subtitle')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
           </TouchableOpacity>
@@ -169,18 +165,15 @@ export default function PerfilScreen({ navigation }) {
           <TouchableOpacity
             style={[
               styles.infoCard,
-              {
-                backgroundColor: theme.cardBackground,
-                borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)',
-              },
+              { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)' }
             ]}
             onPress={() => navigation.navigate('Configuracion')}
             activeOpacity={0.85}
           >
             <Ionicons name="settings-outline" size={26} color={theme.text} style={styles.infoIcon} />
             <View style={{ flex: 1 }}>
-              <Text style={[styles.infoTitle, { color: theme.text }]}>Configuración</Text>
-              <Text style={[styles.infoSubtitle, { color: theme.secondaryText }]}>Ajustes de la app</Text>
+              <Text style={[styles.infoTitle, { color: theme.text }]}>{t('cards.settings.title')}</Text>
+              <Text style={[styles.infoSubtitle, { color: theme.secondaryText }]}>{t('cards.settings.subtitle')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
           </TouchableOpacity>
@@ -189,18 +182,15 @@ export default function PerfilScreen({ navigation }) {
           <TouchableOpacity
             style={[
               styles.infoCard,
-              {
-                backgroundColor: theme.cardBackground,
-                borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)',
-              },
+              { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)' }
             ]}
             onPress={() => navigation.navigate('PacienteForm')}
             activeOpacity={0.85}
           >
             <Ionicons name="person-add-outline" size={26} color={theme.text} style={styles.infoIcon} />
             <View style={{ flex: 1 }}>
-              <Text style={[styles.infoTitle, { color: theme.text }]}>Registrar nuevo paciente</Text>
-              <Text style={[styles.infoSubtitle, { color: theme.secondaryText }]}>Formulario de alta</Text>
+              <Text style={[styles.infoTitle, { color: theme.text }]}>{t('cards.register.title')}</Text>
+              <Text style={[styles.infoSubtitle, { color: theme.secondaryText }]}>{t('cards.register.subtitle')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
           </TouchableOpacity>
@@ -226,7 +216,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -236,7 +225,6 @@ const styles = StyleSheet.create({
   leftGroup: { flexDirection: 'row', alignItems: 'center' },
   backButton: { padding: 8, borderRadius: 10, marginRight: 6 },
   logo: { width: 36, height: 36, marginRight: 10, borderRadius: 8 },
-
   topTitle: { fontSize: 20, fontWeight: '800', lineHeight: 22 },
   topSubtitle: { marginTop: 2, fontSize: 12, fontWeight: '700' },
   toggleButton: { padding: 6, borderRadius: 10 },
@@ -261,11 +249,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'transparent',
   },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
+  avatarImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+
   deletePhotoBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -294,7 +279,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     gap: 12,
-
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,

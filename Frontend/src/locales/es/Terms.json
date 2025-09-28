@@ -1,0 +1,44 @@
+{
+  "title": "Términos y Condiciones de Uso",
+  "lastUpdated": "Última actualización: 08 de abril de 2025",
+  "acceptLabel": "Acepto los términos y condiciones",
+  "continue": "Continuar",
+  "sections": {
+    "s1": {
+      "title": "1. Aceptación de los Términos",
+      "body": "Al registrarte o utilizar la aplicación, aceptas cumplir con estos Términos y Condiciones. Si no estás de acuerdo con alguna parte, no deberás usar la aplicación."
+    },
+    "s2": {
+      "title": "2. Definiciones",
+      "body": "Usuario: Cualquier persona que utilice la aplicación, ya sea como ONG, líder comunitario, voluntario o visitante.\nCaso de desnutrición: Reporte generado por usuarios sobre una persona afectada por desnutrición.\nNosotros: El equipo desarrollador de la aplicación Raíces de Vida."
+    },
+    "s3": {
+      "title": "3. Uso de la Aplicación",
+      "body": "Solo se puede registrar información real, verificable y sin fines comerciales.\nNo está permitido el uso de la app para difundir información falsa, violenta o discriminatoria.\nEl contenido subido debe respetar la privacidad y dignidad de las personas afectadas."
+    },
+    "s4": {
+      "title": "4. Responsabilidad del Usuario",
+      "body": "Los usuarios son responsables de la veracidad de los datos ingresados.\nEl uso indebido puede llevar a la suspensión o eliminación de la cuenta."
+    },
+    "s5": {
+      "title": "5. Privacidad y Protección de Datos",
+      "body": "La app almacena datos personales solo para fines de contacto y coordinación de ayuda.\nLos datos serán anonimizados para proteger la identidad.\nNo se compartirá información personal sin consentimiento."
+    },
+    "s6": {
+      "title": "6. Notificaciones",
+      "body": "La app puede enviar notificaciones sobre nuevos casos, campañas o ayuda.\nPuedes desactivarlas desde la configuración de tu dispositivo."
+    },
+    "s7": {
+      "title": "7. Propiedad Intelectual",
+      "body": "Todos los contenidos de la app son propiedad del equipo desarrollador o licenciados para su uso."
+    },
+    "s8": {
+      "title": "8. Modificaciones",
+      "body": "Podemos modificar estos términos en cualquier momento y notificaremos los cambios relevantes."
+    },
+    "s9": {
+      "title": "9. Soporte y Contacto",
+      "body": "Para consultas o reportes técnicos, escríbenos al correo de soporte."
+    }
+  }
+}

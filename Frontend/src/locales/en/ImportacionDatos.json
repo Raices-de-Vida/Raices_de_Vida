@@ -1,0 +1,20 @@
+{
+  "top": {
+    "title": "Data import",
+    "subtitle": "Manage Excel files and more"
+  },
+  "cards": {
+    "importExcel": {
+      "title": "Import from Excel",
+      "subtitle": "Import data from .xlsx file"
+    },
+    "exportExcel": {
+      "title": "Export to Excel",
+      "subtitle": "Save data to an Excel file"
+    },
+    "mapGt": {
+      "title": "Guatemala map",
+      "subtitle": "Browse departments"
+    }
+  }
+}

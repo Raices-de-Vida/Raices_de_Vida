@@ -1,0 +1,30 @@
+{
+  "top": {
+    "title": "Perfil",
+    "subtitle": "Tu información personal"
+  },
+  "gallery": {
+    "permission": "Se necesita permiso para acceder a la galería"
+  },
+  "buttons": {
+    "deletePhoto": "Eliminar foto"
+  },
+  "placeholders": {
+    "name": "Nombre",
+    "role": "Rol de usuario"
+  },
+  "cards": {
+    "userData": {
+      "title": "Datos de usuario",
+      "subtitle": "Información del perfil"
+    },
+    "settings": {
+      "title": "Configuración",
+      "subtitle": "Ajustes de la app"
+    },
+    "register": {
+      "title": "Registrar nuevo paciente",
+      "subtitle": "Formulario de alta"
+    }
+  }
+}

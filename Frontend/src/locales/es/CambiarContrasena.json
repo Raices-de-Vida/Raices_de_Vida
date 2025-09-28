@@ -1,0 +1,29 @@
+{
+  "top": {
+    "title": "Cambiar contraseña"
+  },
+  "fields": {
+    "current": "Contraseña actual",
+    "new": "Nueva contraseña",
+    "confirm": "Confirmar nueva contraseña"
+  },
+  "placeholders": {
+    "current": "Ingresa tu contraseña actual",
+    "new": "Ingresa tu nueva contraseña",
+    "confirm": "Confirma la nueva contraseña"
+  },
+  "buttons": {
+    "save": "Guardar cambios"
+  },
+  "alerts": {
+    "error": {
+      "title": "Error",
+      "required": "Todos los campos son obligatorios.",
+      "mismatch": "La nueva contraseña no coincide."
+    },
+    "success": {
+      "title": "Éxito",
+      "message": "Contraseña actualizada correctamente."
+    }
+  }
+}

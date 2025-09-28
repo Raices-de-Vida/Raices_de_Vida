@@ -5,16 +5,17 @@ import { Ionicons } from '@expo/vector-icons';
 import BottomNav from '../components/BottomNav';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
+import { useTranslation } from 'react-i18next';
 
 const PALETTE = { butter: '#F2D88F', cream: '#FFF7DA', blush: '#E36888', sea: '#6698CC' };
 
 export default function ImportacionDatosScreen({ navigation }) {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { t } = useTranslation('ImportacionDatos');
 
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? theme.background : PALETTE.butter }}>
-      
       {/* ===== Top bar ===== */}
       <View
         style={[
@@ -36,20 +37,14 @@ export default function ImportacionDatosScreen({ navigation }) {
             resizeMode="contain"
           />
           <View>
-            <Text style={[styles.topTitle, { color: theme.text }]}>Importación de datos</Text>
-            <Text style={[styles.topSubtitle, { color: PALETTE.sea }]}>
-              Gestiona archivos Excel y más
-            </Text>
+            <Text style={[styles.topTitle, { color: theme.text }]}>{t('top.title')}</Text>
+            <Text style={[styles.topSubtitle, { color: PALETTE.sea }]}>{t('top.subtitle')}</Text>
           </View>
         </View>
 
         {/* Botón de modo oscuro/luz arriba */}
         <TouchableOpacity style={styles.themeToggle} onPress={toggleDarkMode}>
-          <Ionicons 
-            name={isDarkMode ? "sunny-outline" : "moon-outline"} 
-            size={22} 
-            color={theme.text} 
-          />
+          <Ionicons name={isDarkMode ? 'sunny-outline' : 'moon-outline'} size={22} color={theme.text} />
         </TouchableOpacity>
       </View>
 
@@ -65,9 +60,9 @@ export default function ImportacionDatosScreen({ navigation }) {
             <Ionicons name="cloud-upload-outline" size={22} color={PALETTE.sea} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>Cargar desde Excel</Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>{t('cards.importExcel.title')}</Text>
             <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>
-              Importa datos desde archivo .xlsx
+              {t('cards.importExcel.subtitle')}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
@@ -83,9 +78,9 @@ export default function ImportacionDatosScreen({ navigation }) {
             <Ionicons name="download-outline" size={22} color={PALETTE.blush} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>Exportar a Excel</Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>{t('cards.exportExcel.title')}</Text>
             <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>
-              Guarda los datos en un Excel
+              {t('cards.exportExcel.subtitle')}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
@@ -101,9 +96,9 @@ export default function ImportacionDatosScreen({ navigation }) {
             <Ionicons name="map-outline" size={22} color="#2E7D32" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>Mapa de Guatemala</Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>{t('cards.mapGt.title')}</Text>
             <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>
-              Visualiza los departamentos
+              {t('cards.mapGt.subtitle')}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
@@ -127,7 +122,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start', // 👈 alineación arriba
+    alignItems: 'flex-start',
     shadowOpacity: 0.08,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
@@ -137,11 +132,7 @@ const styles = StyleSheet.create({
   logo: { width: 34, height: 34, marginRight: 10, borderRadius: 8 },
   topTitle: { fontSize: 20, fontWeight: '800', lineHeight: 22 },
   topSubtitle: { marginTop: 4, fontSize: 12, fontWeight: '700' },
-  themeToggle: {
-    marginTop: 8, // 👈 lo sube un poquito
-    padding: 6,
-    borderRadius: 10,
-  },
+  themeToggle: { marginTop: 8, padding: 6, borderRadius: 10 },
 
   /* Contenido */
   content: { flex: 1, padding: 20, paddingBottom: 120 },

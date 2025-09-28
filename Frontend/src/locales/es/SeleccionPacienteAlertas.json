@@ -1,0 +1,40 @@
+{
+  "top": {
+    "title": "Buscar y gestionar",
+    "subtitle": "Incidentes y seguimiento de casos"
+  },
+  "search": {
+    "placeholder": "Buscar por nombre o comunidad"
+  },
+  "filters": {
+    "minAge": "Edad min",
+    "maxAge": "Edad max",
+    "minBMI": "IMC min",
+    "maxBMI": "IMC max",
+    "community": "Comunidad",
+    "apply": "Filtrar",
+    "clear": "Limpiar"
+  },
+  "empty": "Sin pacientes",
+  "placeholders": {
+    "noCommunity": "Sin comunidad"
+  },
+  "units": { "years": "años" },
+  "bmi": {
+    "short": "IMC",
+    "categories": {
+      "low": "Bajo",
+      "normal": "Normal",
+      "overweight": "Sobrepeso",
+      "obesity1": "Obesidad I",
+      "obesity2": "Obesidad II",
+      "obesity3": "Obesidad III"
+    }
+  },
+  "flags": {
+    "critical": "Crítica",
+    "high": "Alta",
+    "medium": "Media",
+    "low": "Baja"
+  }
+}

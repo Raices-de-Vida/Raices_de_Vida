@@ -3,12 +3,15 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image 
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
+import { useTranslation } from 'react-i18next';
 
 const PALETTE = { tangerine: '#F08C21', blush: '#E36888', butter: '#F2D88F', sea: '#6698CC', cream: '#FFF7DA' };
 
 export default function SeleccionPacienteAlertas({ navigation, route }) {
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { t } = useTranslation('SeleccionPacienteAlertas');
+
   const [q, setQ] = useState('');
   const [items, setItems] = useState([]);
   const [minEdad, setMinEdad] = useState('');
@@ -93,20 +96,32 @@ export default function SeleccionPacienteAlertas({ navigation, route }) {
     return unsubscribe;
   }, [navigation, q, minEdad, maxEdad, minIMC, maxIMC, comunidadTxt]);
 
+  const worstLabelUI = (worst) => {
+    if (!worst) return null;
+    const map = {
+      'Crítica': t('flags.critical'),
+      'Alta': t('flags.high'),
+      'Media': t('flags.medium'),
+      'Baja': t('flags.low')
+    };
+    return map[worst] || worst;
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? theme.background : PALETTE.butter }}>
-      <View style={styles.headerOuter}> 
+      <View style={styles.headerOuter}>
         {/* Title Card */}
-  <View style={[styles.titleCard,{backgroundColor:isDarkMode? '#1E1E1E':PALETTE.cream, borderColor: isDarkMode? '#333':'#EAD8A6'}]}>
+        <View style={[styles.titleCard,{backgroundColor:isDarkMode? '#1E1E1E':PALETTE.cream, borderColor: isDarkMode? '#333':'#EAD8A6'}]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={{top:8,bottom:8,left:8,right:8}}>
             <Ionicons name="arrow-back" size={22} color={theme.text} />
           </TouchableOpacity>
           <Image source={isDarkMode? require('../styles/logos/LogoDARK.png') : require('../styles/logos/LogoBRIGHT.png')} style={styles.avatar} resizeMode="contain" />
           <View style={{ flex:1 }}>
-            <Text style={[styles.titleMain,{color:theme.text}]}>Buscar y gestionar</Text>
-            <Text style={styles.subtitle}>Incidentes y seguimiento de casos</Text>
+            <Text style={[styles.titleMain,{color:theme.text}]}>{t('top.title')}</Text>
+            <Text style={styles.subtitle}>{t('top.subtitle')}</Text>
           </View>
         </View>
+
         {/* Search & Filters Card */}
         <View style={[styles.searchCard,{backgroundColor:isDarkMode? '#1E1E1E':'#fff', borderColor:isDarkMode? '#333':'#EAD8A6'}]}>
           <View style={[styles.search, { borderColor: isDarkMode? '#444':'#EAD8A6', backgroundColor: isDarkMode? '#2A2A2A':'#fff' }]}>
@@ -114,7 +129,7 @@ export default function SeleccionPacienteAlertas({ navigation, route }) {
             <TextInput
               value={q}
               onChangeText={setQ}
-              placeholder="Buscar por nombre o comunidad"
+              placeholder={t('search.placeholder')}
               placeholderTextColor={theme.placeholder || '#98A2B3'}
               style={{ flex: 1, paddingHorizontal: 8, color: theme.text }}
               onSubmitEditing={() => fetchPacientes(q)}
@@ -124,54 +139,77 @@ export default function SeleccionPacienteAlertas({ navigation, route }) {
               <Ionicons name="arrow-forward" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
+
           <View style={styles.filtersRowAlt}>
-            <TextInput placeholder="Edad min" keyboardType="numeric" value={minEdad} onChangeText={setMinEdad} style={[styles.filterInput,{backgroundColor:isDarkMode?'#2A2A2A':'#fff', color:theme.text}]} placeholderTextColor={theme.placeholder || '#98A2B3'} />
-            <TextInput placeholder="Edad max" keyboardType="numeric" value={maxEdad} onChangeText={setMaxEdad} style={[styles.filterInput,{backgroundColor:isDarkMode?'#2A2A2A':'#fff', color:theme.text}]} placeholderTextColor={theme.placeholder || '#98A2B3'} />
-            <TextInput placeholder="IMC min" keyboardType="numeric" value={minIMC} onChangeText={setMinIMC} style={[styles.filterInput,{backgroundColor:isDarkMode?'#2A2A2A':'#fff', color:theme.text}]} placeholderTextColor={theme.placeholder || '#98A2B3'} />
-            <TextInput placeholder="IMC max" keyboardType="numeric" value={maxIMC} onChangeText={setMaxIMC} style={[styles.filterInput,{backgroundColor:isDarkMode?'#2A2A2A':'#fff', color:theme.text}]} placeholderTextColor={theme.placeholder || '#98A2B3'} />
-            <TextInput placeholder="Comunidad" value={comunidadTxt} onChangeText={setComunidadTxt} style={[styles.filterInput, { flexBasis: '48%', backgroundColor:isDarkMode?'#2A2A2A':'#fff', color:theme.text }]} placeholderTextColor={theme.placeholder || '#98A2B3'} />
+            <TextInput placeholder={t('filters.minAge')} keyboardType="numeric" value={minEdad} onChangeText={setMinEdad} style={[styles.filterInput,{backgroundColor:isDarkMode?'#2A2A2A':'#fff', color:theme.text}]} placeholderTextColor={theme.placeholder || '#98A2B3'} />
+            <TextInput placeholder={t('filters.maxAge')} keyboardType="numeric" value={maxEdad} onChangeText={setMaxEdad} style={[styles.filterInput,{backgroundColor:isDarkMode?'#2A2A2A':'#fff', color:theme.text}]} placeholderTextColor={theme.placeholder || '#98A2B3'} />
+            <TextInput placeholder={t('filters.minBMI')} keyboardType="numeric" value={minIMC} onChangeText={setMinIMC} style={[styles.filterInput,{backgroundColor:isDarkMode?'#2A2A2A':'#fff', color:theme.text}]} placeholderTextColor={theme.placeholder || '#98A2B3'} />
+            <TextInput placeholder={t('filters.maxBMI')} keyboardType="numeric" value={maxIMC} onChangeText={setMaxIMC} style={[styles.filterInput,{backgroundColor:isDarkMode?'#2A2A2A':'#fff', color:theme.text}]} placeholderTextColor={theme.placeholder || '#98A2B3'} />
+            <TextInput placeholder={t('filters.community')} value={comunidadTxt} onChangeText={setComunidadTxt} style={[styles.filterInput, { flexBasis: '48%', backgroundColor:isDarkMode?'#2A2A2A':'#fff', color:theme.text }]} placeholderTextColor={theme.placeholder || '#98A2B3'} />
             <TouchableOpacity style={[styles.applyBtn, { backgroundColor: PALETTE.tangerine, flexGrow:1 }]} onPress={() => fetchPacientes(q)}>
-              <Text style={{ color: '#fff', fontWeight: '800', textAlign:'center' }}>Filtrar</Text>
+              <Text style={{ color: '#fff', fontWeight: '800', textAlign:'center' }}>{t('filters.apply')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.clearBtn, { flexGrow:1, backgroundColor:isDarkMode?'#2A2A2A':'#fff', borderColor:isDarkMode?'#444':'#EAD8A6' }]} onPress={() => { setMinEdad(''); setMaxEdad(''); setMinIMC(''); setMaxIMC(''); setComunidadTxt(''); fetchPacientes(q); }}>
-              <Text style={{ color: PALETTE.tangerine, fontWeight:'800', textAlign:'center' }}>Limpiar</Text>
+              <Text style={{ color: PALETTE.tangerine, fontWeight:'800', textAlign:'center' }}>{t('filters.clear')}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
+
       <ScrollView contentContainerStyle={{ padding:16, paddingBottom:120 }}>
-        {items.length === 0 ? <Text style={{ textAlign:'center', color: theme.secondaryText, marginTop:20 }}>Sin pacientes</Text> : items.map(item => {
-          const worst = item._flagWorst;
-          const bmi = item.imc;
-          let bmiCat = null; let bmiColor = '#6698CC';
-          if (bmi || bmi === 0) {
-            if (bmi < 18.5) { bmiCat = 'Bajo'; bmiColor='#3B82F6'; }
-            else if (bmi < 25) { bmiCat='Normal'; bmiColor='#10B981'; }
-            else if (bmi < 30) { bmiCat='Sobrepeso'; bmiColor='#F59E0B'; }
-            else if (bmi < 35) { bmiCat='Obesidad I'; bmiColor='#F97316'; }
-            else if (bmi < 40) { bmiCat='Obesidad II'; bmiColor='#DC2626'; }
-            else { bmiCat='Obesidad III'; bmiColor='#8B0000'; }
-          }
+        {items.length === 0 ? (
+          <Text style={{ textAlign:'center', color: theme.secondaryText, marginTop:20 }}>{t('empty')}</Text>
+        ) : (
+          items.map(item => {
+            const worst = item._flagWorst;
+            const bmi = item.imc;
+
+            // BMI category (solo UI)
+            let bmiKey = null; let bmiColor = '#6698CC';
+            if (bmi || bmi === 0) {
+              if (bmi < 18.5) { bmiKey = 'low'; bmiColor='#3B82F6'; }
+              else if (bmi < 25) { bmiKey='normal'; bmiColor='#10B981'; }
+              else if (bmi < 30) { bmiKey='overweight'; bmiColor='#F59E0B'; }
+              else if (bmi < 35) { bmiKey='obesity1'; bmiColor='#F97316'; }
+              else if (bmi < 40) { bmiKey='obesity2'; bmiColor='#DC2626'; }
+              else { bmiKey='obesity3'; bmiColor='#8B0000'; }
+            }
+            const bmiLabel = bmiKey ? t(`bmi.categories.${bmiKey}`) : null;
+
             return (
-              <TouchableOpacity key={item.id_paciente} style={[styles.card, { backgroundColor: theme.cardBackground || (isDarkMode ? '#1E1E1E':'#fff'), borderColor:'#EAD8A6' }]} onPress={() => navigation.navigate('DetallePaciente', { paciente: item })}>
+              <TouchableOpacity
+                key={item.id_paciente}
+                style={[styles.card, { backgroundColor: theme.cardBackground || (isDarkMode ? '#1E1E1E':'#fff'), borderColor:'#EAD8A6' }]}
+                onPress={() => navigation.navigate('DetallePaciente', { paciente: item })}
+              >
                 <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'center' }}>
                   <View style={{ flexDirection:'row', alignItems:'center' }}>
                     <View style={[styles.dot, { backgroundColor: worst === 'Crítica' ? '#E53935' : worst === 'Alta' ? '#F08C21' : worst === 'Media' ? '#FFC107' : worst === 'Baja' ? '#4CAF50' : PALETTE.sea }]} />
-                    <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>{item.nombre} {item.apellido || ''}</Text>
+                    <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>
+                      {item.nombre} {item.apellido || ''}
+                    </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={theme.secondaryText} />
                 </View>
-                <Text style={{ color: theme.secondaryText, marginTop:4 }}>{item.edad ? item.edad + ' años • ' : ''}{item.comunidad_pueblo || 'Sin comunidad'}{worst ? ` • ${worst}` : ''}</Text>
-                {bmiCat && (
+                <Text style={{ color: theme.secondaryText, marginTop:4 }}>
+                  {item.edad ? `${item.edad} ${t('units.years')} • ` : ''}
+                  {item.comunidad_pueblo || t('placeholders.noCommunity')}
+                  {worst ? ` • ${worstLabelUI(worst)}` : ''}
+                </Text>
+
+                {bmiLabel && (
                   <View style={{ marginTop:6, flexDirection:'row', alignItems:'center', gap:8 }}>
                     <View style={{ backgroundColor:bmiColor, paddingHorizontal:10, paddingVertical:4, borderRadius:14 }}>
-                      <Text style={{ color:'#fff', fontSize:11, fontWeight:'700' }}>{bmiCat} (IMC {bmi.toFixed ? bmi.toFixed(1): bmi})</Text>
+                      <Text style={{ color:'#fff', fontSize:11, fontWeight:'700' }}>
+                        {bmiLabel} ({t('bmi.short')} {bmi.toFixed ? bmi.toFixed(1) : bmi})
+                      </Text>
                     </View>
                   </View>
                 )}
               </TouchableOpacity>
             );
-        })}
+          })
+        )}
       </ScrollView>
       <View style={{ height:50 }} />
     </View>

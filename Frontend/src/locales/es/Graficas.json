@@ -1,0 +1,12 @@
+{
+  "top": {
+    "title": "Gráficas",
+    "subtitle": "Indicadores y reportes"
+  },
+  "cards": {
+    "byDept": "Casos reportados por departamento",
+    "monthlyTrend": "Tendencia mensual de casos reportados",
+    "ageGender": "Distribución por rango de edad y género",
+    "weightVsAge": "Peso vs. edad de los niños en casos reportados"
+  }
+}

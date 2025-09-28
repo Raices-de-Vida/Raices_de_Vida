@@ -1,0 +1,40 @@
+{
+  "top": {
+    "title": "Search & manage",
+    "subtitle": "Incidents and case follow-up"
+  },
+  "search": {
+    "placeholder": "Search by name or community"
+  },
+  "filters": {
+    "minAge": "Min age",
+    "maxAge": "Max age",
+    "minBMI": "Min BMI",
+    "maxBMI": "Max BMI",
+    "community": "Community",
+    "apply": "Apply",
+    "clear": "Clear"
+  },
+  "empty": "No patients",
+  "placeholders": {
+    "noCommunity": "No community"
+  },
+  "units": { "years": "years" },
+  "bmi": {
+    "short": "BMI",
+    "categories": {
+      "low": "Underweight",
+      "normal": "Normal",
+      "overweight": "Overweight",
+      "obesity1": "Obesity I",
+      "obesity2": "Obesity II",
+      "obesity3": "Obesity III"
+    }
+  },
+  "flags": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  }
+}

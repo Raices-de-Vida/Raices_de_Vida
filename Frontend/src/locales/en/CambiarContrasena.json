@@ -1,0 +1,29 @@
+{
+  "top": {
+    "title": "Change password"
+  },
+  "fields": {
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm new password"
+  },
+  "placeholders": {
+    "current": "Enter your current password",
+    "new": "Enter your new password",
+    "confirm": "Confirm the new password"
+  },
+  "buttons": {
+    "save": "Save changes"
+  },
+  "alerts": {
+    "error": {
+      "title": "Error",
+      "required": "All fields are required.",
+      "mismatch": "New password doesn't match."
+    },
+    "success": {
+      "title": "Success",
+      "message": "Password updated successfully."
+    }
+  }
+}

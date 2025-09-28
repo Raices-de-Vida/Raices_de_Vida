@@ -1,0 +1,28 @@
+{
+  "top": {
+    "title": "Inicio",
+    "subtitle": "Panel de alertas"
+  },
+  "empty": {
+    "active": "No hay alertas activas por el momento.",
+    "inactive": "No hay alertas inactivas por el momento."
+  },
+  "badges": {
+    "unsynced": "• Sin sincronizar"
+  },
+  "placeholders": {
+    "noName": "Sin nombre",
+    "noCommunity": "Sin comunidad"
+  },
+  "seeMore": "Ver más",
+  "fab": {
+    "newPatient": "Nuevo paciente"
+  },
+  "notifications": {
+    "permissionDeniedTitle": "Permiso denegado",
+    "permissionDeniedBody": "No recibirás notificaciones."
+  },
+  "units": {
+    "years": "años"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "title": "Terms & Conditions of Use",
+  "lastUpdated": "Last updated: April 8, 2025",
+  "acceptLabel": "I accept the terms and conditions",
+  "continue": "Continue",
+  "sections": {
+    "s1": {
+      "title": "1. Acceptance of Terms",
+      "body": "By registering or using the app, you agree to these Terms and Conditions. If you do not agree with any part, you should not use the app."
+    },
+    "s2": {
+      "title": "2. Definitions",
+      "body": "User: Any person using the app, including NGOs, community leaders, volunteers, or visitors.\nMalnutrition case: A report created by users about a person affected by malnutrition.\nWe/Us: The development team of the Raíces de Vida application."
+    },
+    "s3": {
+      "title": "3. Use of the App",
+      "body": "Only real, verifiable, non-commercial information may be recorded.\nUsing the app to spread false, violent, or discriminatory content is not allowed.\nUploaded content must respect the privacy and dignity of affected individuals."
+    },
+    "s4": {
+      "title": "4. User Responsibility",
+      "body": "Users are responsible for the accuracy of the data they enter.\nImproper use may result in suspension or deletion of the account."
+    },
+    "s5": {
+      "title": "5. Privacy & Data Protection",
+      "body": "The app stores personal data solely for contact and coordination of aid.\nData will be anonymized to protect identity.\nPersonal information will not be shared without consent."
+    },
+    "s6": {
+      "title": "6. Notifications",
+      "body": "The app may send notifications about new cases, campaigns, or assistance.\nYou can disable them from your device settings."
+    },
+    "s7": {
+      "title": "7. Intellectual Property",
+      "body": "All app content is owned by the development team or licensed for its use."
+    },
+    "s8": {
+      "title": "8. Changes",
+      "body": "We may modify these terms at any time and will notify you of relevant changes."
+    },
+    "s9": {
+      "title": "9. Support & Contact",
+      "body": "For questions or technical reports, please write to our support email."
+    }
+  }
+}

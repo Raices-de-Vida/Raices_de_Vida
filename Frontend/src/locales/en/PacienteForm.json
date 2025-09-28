@@ -1,0 +1,111 @@
+{
+  "top": { "title": "New patient", "subtitle": "Registration form" },
+
+  "cards": {
+    "id": "Identification",
+    "vitals": "Vital signs (snapshot)",
+    "allergies": "Allergies",
+    "habitsCurrent": "Current habits",
+    "habitsPast": "Past habits",
+    "reproductive": "Reproductive health",
+    "stateRelations": "Status & relations"
+  },
+
+  "fields": {
+    "dateReg": "Registration date",
+    "language": "Language *",
+    "firstName": "First name *",
+    "lastName": "Last name",
+    "gender": "Gender *",
+    "useDate": "Use date",
+    "useAge": "Use age",
+    "ageYears": "Age (years) *",
+    "birthdate": "Birth date *",
+    "phone": "Phone (8 digits)",
+    "community": "Community / Town *",
+
+    "sysBP": "Systolic BP (mmHg)",
+    "diaBP": "Diastolic BP (mmHg)",
+    "heartRate": "Heart rate (bpm)",
+    "spo2": "SpO₂ (%)",
+    "glucose": "Glucose (mg/dL)",
+    "temperature": "Temperature (°C)",
+    "weight": "Weight (kg)",
+    "height": "Height (cm)",
+    "vitalsDate": "Vital signs date",
+
+    "hasAllergies": "Has allergies?",
+    "whatAllergies": "Which allergies?",
+
+    "tobacco": "Tobacco",
+    "alcohol": "Alcohol",
+    "drugs": "Drugs",
+    "qtyFreq": "Quantity / Frequency",
+    "pastSuffix": "(past)",
+    "qtyFreqPast": "Quantity / Frequency (past)",
+    "drugsDetail": "Type / Frequency",
+
+    "lastMenstruation": "Last menstruation",
+    "menopause": "Menopause",
+    "pregnancies": "Pregnancies",
+    "births": "Births",
+    "spontaneousAbortions": "Spontaneous abortions",
+    "inducedAbortions": "Induced abortions",
+    "useContraceptives": "Uses contraceptives?",
+    "method": "Contraceptive method",
+
+    "patientState": "Patient status",
+    "lastUpdate": "Last update date",
+    "notes": "General notes",
+    "communityId": "Community ID",
+    "familyId": "Family ID",
+    "userId": "Registration user (ID)"
+  },
+
+  "options": {
+    "genders": { "F": "Female", "M": "Male" },
+    "languages": { "es": "Spanish", "kich": "Kʼicheʼ", "qeq": "Qʼeqchiʼ", "other": "Other" },
+    "states": { "Activo": "Active", "Inactivo": "Inactive", "Derivado": "Referred", "Fallecido": "Deceased" },
+    "methods": { "Ninguno": "None", "Pastillas": "Pills", "Inyección": "Injection", "DIU": "IUD", "Condón": "Condom", "Natural": "Natural", "Otro": "Other" }
+  },
+
+  "placeholders": {
+    "firstName": "Ana",
+    "lastName": "Pérez",
+    "community": "San Pedro La Laguna",
+    "phone": "50212345",
+    "allergies": "Describe allergies",
+    "qtyCigs": "e.g., 5 cig/day",
+    "qtyAlcohol": "e.g., 2 times/week",
+    "drugsDetail": "Detail",
+    "optional": "(optional)",
+    "ddmmyyyy": "DD/MM/YYYY",
+    "ageSample": "12",
+    "notes": "General notes"
+  },
+
+  "errors": {
+    "requiredField": "Required field",
+    "invalidDate": "Invalid date",
+    "phone8": "Must be exactly 8 digits.",
+    "formTitle": "Check the form",
+    "formMsg": "Verify required fields, date/age, phone (8 digits) and valid ranges.",
+    "errorTitle": "Error",
+    "createFail": "Could not create patient."
+  },
+
+  "ranges": {
+    "sis": "Range 60–250",
+    "dia": "Range 30–150",
+    "hr": "Range 30–220",
+    "spo2": "Range 50–100",
+    "glu": "Range 20–600",
+    "temp": "Range 30.0–43.0",
+    "weight": "Range 1–300 kg",
+    "height": "Range 30–250 cm"
+  },
+
+  "hint": "* Required: Language, First name, Gender and Age or Birth date.",
+  "toast": { "saved": "Patient saved" },
+  "footer": { "cancel": "Cancel", "save": "Save patient" }
+}

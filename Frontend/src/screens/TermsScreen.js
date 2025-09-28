@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import ThemeToggle from '../components/ThemeToggle';
+import { useTranslation } from 'react-i18next';
 
 const PALETTE = {
   tangerine: '#F08C21',
@@ -18,6 +19,7 @@ export default function TermsScreen({ navigation }) {
   const [accepted, setAccepted] = useState(false);
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { t } = useTranslation('Terms');
 
   // Colores para “vibes”: en claro usamos la paleta; en oscuro usamos el theme
   const bg       = isDarkMode ? theme.background        : PALETTE.butter;
@@ -40,53 +42,46 @@ export default function TermsScreen({ navigation }) {
 
       {/* “paper” */}
       <View style={[styles.paper, { backgroundColor: paperBg, borderColor: border }]}>
-        <Text style={[styles.title, { color: titleCol }]}>Términos y Condiciones de Uso</Text>
+
+        <Text style={[styles.title, { color: titleCol }]}>{t('title')}</Text>
         <Text style={[styles.small, { color: isDarkMode ? theme.secondaryText : '#6B7280' }]}>
-          Última actualización: 08 de abril de 2025
+          {t('lastUpdated')}
         </Text>
 
-        <Section title="1. Aceptación de los Términos" color={accent}>
-          Al registrarte o utilizar la aplicación, aceptas cumplir con estos Términos y Condiciones. Si no estás de acuerdo con alguna parte, no deberás usar la aplicación.
+        <Section title={t('sections.s1.title')} color={accent}>
+          {t('sections.s1.body')}
         </Section>
 
-        <Section title="2. Definiciones" color={accent}>
-          Usuario: Cualquier persona que utilice la aplicación, ya sea como ONG, líder comunitario, voluntario o visitante.{'\n'}
-          Caso de desnutrición: Reporte generado por usuarios sobre una persona afectada por desnutrición.{'\n'}
-          Nosotros: El equipo desarrollador de la aplicación Raíces de Vida.
+        <Section title={t('sections.s2.title')} color={accent}>
+          {t('sections.s2.body')}
         </Section>
 
-        <Section title="3. Uso de la Aplicación" color={accent}>
-          Solo se puede registrar información real, verificable y sin fines comerciales.{'\n'}
-          No está permitido el uso de la app para difundir información falsa, violenta o discriminatoria.{'\n'}
-          El contenido subido debe respetar la privacidad y dignidad de las personas afectadas.
+        <Section title={t('sections.s3.title')} color={accent}>
+          {t('sections.s3.body')}
         </Section>
 
-        <Section title="4. Responsabilidad del Usuario" color={accent}>
-          Los usuarios son responsables de la veracidad de los datos ingresados.{'\n'}
-          El uso indebido puede llevar a la suspensión o eliminación de la cuenta.
+        <Section title={t('sections.s4.title')} color={accent}>
+          {t('sections.s4.body')}
         </Section>
 
-        <Section title="5. Privacidad y Protección de Datos" color={accent}>
-          La app almacena datos personales solo para fines de contacto y coordinación de ayuda.{'\n'}
-          Los datos serán anonimizados para proteger la identidad.{'\n'}
-          No se compartirá información personal sin consentimiento.
+        <Section title={t('sections.s5.title')} color={accent}>
+          {t('sections.s5.body')}
         </Section>
 
-        <Section title="6. Notificaciones" color={accent}>
-          La app puede enviar notificaciones sobre nuevos casos, campañas o ayuda.{'\n'}
-          Puedes desactivarlas desde la configuración de tu dispositivo.
+        <Section title={t('sections.s6.title')} color={accent}>
+          {t('sections.s6.body')}
         </Section>
 
-        <Section title="7. Propiedad Intelectual" color={accent}>
-          Todos los contenidos de la app son propiedad del equipo desarrollador o licenciados para su uso.
+        <Section title={t('sections.s7.title')} color={accent}>
+          {t('sections.s7.body')}
         </Section>
 
-        <Section title="8. Modificaciones" color={accent}>
-          Podemos modificar estos términos en cualquier momento y notificaremos los cambios relevantes.
+        <Section title={t('sections.s8.title')} color={accent}>
+          {t('sections.s8.body')}
         </Section>
 
-        <Section title="9. Soporte y Contacto" color={accent}>
-          Para consultas o reportes técnicos, escríbenos al correo de soporte.
+        <Section title={t('sections.s9.title')} color={accent}>
+          {t('sections.s9.body')}
         </Section>
 
         <View style={styles.checkboxContainer}>
@@ -98,7 +93,7 @@ export default function TermsScreen({ navigation }) {
             />
           </TouchableOpacity>
           <Text style={[styles.checkboxText, { color: isDarkMode ? theme.text : '#1F2937' }]}>
-            Acepto los términos y condiciones
+            {t('acceptLabel')}
           </Text>
         </View>
 
@@ -107,7 +102,7 @@ export default function TermsScreen({ navigation }) {
           disabled={!accepted}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.buttonText}>Continuar</Text>
+          <Text style={styles.buttonText}>{t('continue')}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

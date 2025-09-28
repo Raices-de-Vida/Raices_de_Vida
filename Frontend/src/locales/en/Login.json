@@ -1,0 +1,23 @@
+{
+  "title": "Welcome back!",
+  "placeholders": {
+    "email": "Email",
+    "password": "Password"
+  },
+  "ui": {
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot your password?",
+    "signIn": "Sign in",
+    "noAccount": "Don't have an account? Sign up",
+    "offline": "Offline"
+  },
+  "alerts": {
+    "fillAll": "Please fill in all fields.",
+    "offlineSignedIn": "You have signed in in offline mode",
+    "needOnlineFirst": "You need a connection for the first sign-in.",
+    "cannotOffline": "Can't sign in offline",
+    "missingRole": "The server did not return the user's role.",
+    "loginErrorTitle": "Error signing in",
+    "enableForgotPassword": "Enable the \"ForgotPassword\" screen to continue."
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "title": "Create account",
+  "optionalEmail": "Or enter your email",
+  "placeholders": {
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone (8 digits)",
+    "dpi": "DPI (13 digits)",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "selectType": "Select a type"
+  },
+  "labels": {
+    "userType": "User type"
+  },
+  "roles": {
+    "ONG": "NGO",
+    "Voluntario": "Volunteer",
+    "LiderComunitario": "Community leader"
+  },
+  "buttons": {
+    "register": "Sign up"
+  },
+  "links": {
+    "haveAccount": "Already have an account? Log in",
+    "terms": "Terms and conditions"
+  },
+  "alerts": {
+    "fillAll": "Please fill in all fields.",
+    "dpiLen": "DPI must have exactly 13 digits.",
+    "phoneLen": "Phone number must have 8 digits.",
+    "pwdMismatch": "Passwords do not match.",
+    "registerError": "Error registering user"
+  }
+}

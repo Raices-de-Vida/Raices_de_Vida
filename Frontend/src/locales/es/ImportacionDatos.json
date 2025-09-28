@@ -1,0 +1,20 @@
+{
+  "top": {
+    "title": "Importación de datos",
+    "subtitle": "Gestiona archivos Excel y más"
+  },
+  "cards": {
+    "importExcel": {
+      "title": "Cargar desde Excel",
+      "subtitle": "Importa datos desde archivo .xlsx"
+    },
+    "exportExcel": {
+      "title": "Exportar a Excel",
+      "subtitle": "Guarda los datos en un Excel"
+    },
+    "mapGt": {
+      "title": "Mapa de Guatemala",
+      "subtitle": "Visualiza los departamentos"
+    }
+  }
+}

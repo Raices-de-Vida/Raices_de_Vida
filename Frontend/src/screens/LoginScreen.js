@@ -1,4 +1,3 @@
-// src/screens/LoginScreen.js
 import axios from 'axios';
 import React, { useState, useEffect, useContext } from 'react';
 import {
@@ -12,17 +11,17 @@ import { useOffline } from '../context/OfflineContext';
 import OfflineStorage from '../services/OfflineStorage';
 import { AuthContext } from '../context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 
-const PALETTE = {
-  tangerine: '#F08C21',
-  blush:     '#E36888',
-  butter:    '#F2D88F',
-  sea:       '#6698CC',
-  cream:     '#FFF7DA',
-};
+const PALETTE = { tangerine: '#F08C21', blush: '#E36888', butter: '#F2D88F', sea: '#6698CC', cream: '#FFF7DA' };
+
+/** 🔔 Modo demo: cambia a false para volver al login real */
+const DEMO_LOGIN = true;
 
 export default function LoginScreen({ navigation }) {
   const { signIn } = useContext(AuthContext);
+  const { t } = useTranslation('Login');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
@@ -34,10 +33,9 @@ export default function LoginScreen({ navigation }) {
   const { isConnected } = useOffline();
 
   const isEmpty = (val) => submitted && val.trim() === '';
-
   const normalizeRole = (rol) => (rol === 'ONG' ? 'Ong' : rol === 'Voluntario' ? 'Volunteer' : rol);
 
-  // Cargar email guardado si el usuario marcó "Recordarme"
+  // Cargar email recordado
   useEffect(() => {
     (async () => {
       try {
@@ -66,78 +64,115 @@ export default function LoginScreen({ navigation }) {
   }, []);
 
   const handleLogin = async () => {
-    setSubmitted(true);
-    if (!email.trim() || !password.trim()) {
-      alert('Por favor llena todos los campos');
-      return;
-    }
-
-    // Guardar/quitar email recordado
-    try {
-      await AsyncStorage.setItem('remember_me', remember ? 'true' : 'false');
-      if (remember) await AsyncStorage.setItem('remember_email', email);
-      else await AsyncStorage.removeItem('remember_email');
-    } catch {}
-
-    if (!isConnected) {
+    /** =========================
+     *  MODO DEMO (sin validación)
+     *  ========================= */
+    if (DEMO_LOGIN) {
       try {
-        const userData = await OfflineStorage.getUserData();
-        if (userData?.email === email) {
-          Alert.alert('Modo sin conexión', 'Has iniciado sesión en modo offline');
-          signIn(normalizeRole(userData.rol));
-          return;
-        }
-        Alert.alert('Error', 'Necesitas conexión para el primer inicio.');
+        // Mantener preferencia de "recordarme"
+        await AsyncStorage.setItem('remember_me', remember ? 'true' : 'false');
+        if (remember) await AsyncStorage.setItem('remember_email', email || 'demo@correo.com');
+        else await AsyncStorage.removeItem('remember_email');
+
+        // Heurística simple para rol según el email (opcional)
+        const guessedRole =
+          /ong/i.test(email) ? 'ONG' :
+          /(lider|leader)/i.test(email) ? 'Lider Comunitario' :
+          'Voluntario';
+
+        const demoUser = {
+          nombre: (email && email.split('@')[0]) || 'Demo User',
+          dpi: '---',
+          telefono: '---',
+          rol: guessedRole,
+          email: email || 'demo@correo.com',
+          fotoPerfil: '',
+        };
+
+        // Guardar mínimos para que otras pantallas lean bien
+        await AsyncStorage.multiSet([
+          ['nombre', demoUser.nombre],
+          ['dpi', demoUser.dpi],
+          ['telefono', demoUser.telefono],
+          ['tipo', demoUser.rol],
+          ['fotoPerfil', demoUser.fotoPerfil],
+        ]);
+        await OfflineStorage.saveUserData(demoUser);
+
+        // Entrar a la app usando el rol mapeado
+        signIn(normalizeRole(demoUser.rol));
         return;
-      } catch {
-        Alert.alert('Error', 'No se puede iniciar en modo offline');
+      } catch (e) {
+        Alert.alert('Demo', 'No se pudo completar el inicio de sesión de demostración.');
         return;
       }
     }
 
-    // 🔑 Intentar login online
-    try {
-      const payload = {
-        email: email.trim().toLowerCase(), // normalizamos a minúsculas
-        password: String(password),
-      };
-
-      const { data: user } = await axios.post('http://localhost:3001/api/auth/login', payload);
-
-      if (!user?.rol) {
-        Alert.alert('Error', 'El servidor no devolvió el rol del usuario.');
-        return;
-      }
-
-      const safeSet = async (k, v) => {
-        if (v !== undefined && v !== null) await AsyncStorage.setItem(k, String(v));
-      };
-      await safeSet('nombre', user.nombre);
-      await safeSet('dpi', user.dpi);
-      await safeSet('telefono', user.telefono);
-      await safeSet('tipo', user.rol);
-      await safeSet('fotoPerfil', user.fotoPerfil);
-
-      await OfflineStorage.saveUserData(user);
-
-      const mapped = normalizeRole(user.rol);
-      signIn(mapped);
-
-    } catch (error) {
-      const serverMsg =
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        'Error desconocido';
-
-      console.error('Error de login:', error?.response || error);
-      Alert.alert('Error al iniciar sesión', serverMsg);
-    }
+    /** ============================================
+     *  LOGIN REAL (RESTORE): descomenta para activar
+     *  ============================================
+     *
+     * setSubmitted(true);
+     * if (!email.trim() || !password.trim()) {
+     *   alert(t('alerts.fillAll'));
+     *   return;
+     * }
+     *
+     * // Guardar/quitar email recordado
+     * try {
+     *   await AsyncStorage.setItem('remember_me', remember ? 'true' : 'false');
+     *   if (remember) await AsyncStorage.setItem('remember_email', email);
+     *   else await AsyncStorage.removeItem('remember_email');
+     * } catch {}
+     *
+     * // Modo offline: permitir solo si ya hay sesión previa guardada
+     * if (!isConnected) {
+     *   try {
+     *     const userData = await OfflineStorage.getUserData();
+     *     if (userData?.email === email) {
+     *       Alert.alert(t('ui.offline'), t('alerts.offlineSignedIn'));
+     *       signIn(normalizeRole(userData.rol));
+     *       return;
+     *     }
+     *     Alert.alert('Error', t('alerts.needOnlineFirst'));
+     *     return;
+     *   } catch {
+     *     Alert.alert('Error', t('alerts.cannotOffline'));
+     *     return;
+     *   }
+     * }
+     *
+     * // 🔑 Intento de login online real
+     * try {
+     *   const payload = { email: email.trim().toLowerCase(), password: String(password) };
+     *   const { data: user } = await axios.post('http://localhost:3001/api/auth/login', payload);
+     *   if (!user?.rol) {
+     *     Alert.alert('Error', t('alerts.missingRole'));
+     *     return;
+     *   }
+     *   const safeSet = async (k, v) => { if (v !== undefined && v !== null) await AsyncStorage.setItem(k, String(v)); };
+     *   await safeSet('nombre', user.nombre);
+     *   await safeSet('dpi', user.dpi);
+     *   await safeSet('telefono', user.telefono);
+     *   await safeSet('tipo', user.rol);
+     *   await safeSet('fotoPerfil', user.fotoPerfil);
+     *   await OfflineStorage.saveUserData(user);
+     *   signIn(normalizeRole(user.rol));
+     * } catch (error) {
+     *   const serverMsg =
+     *     error?.response?.data?.message ||
+     *     error?.response?.data?.error ||
+     *     error?.message ||
+     *     'Error';
+     *   console.error('Error de login:', error?.response || error);
+     *   Alert.alert(t('alerts.loginErrorTitle'), serverMsg);
+     * }
+     */
   };
 
   const gotoOrAlert = (routeName, fallbackText) => {
     try { navigation.navigate(routeName); }
-    catch { Alert.alert('Próximamente', fallbackText || 'Esta pantalla aún no está disponible.'); }
+    catch { Alert.alert('Info', fallbackText || t('alerts.enableForgotPassword')); }
   };
 
   // Colores
@@ -160,17 +195,17 @@ export default function LoginScreen({ navigation }) {
       <View style={[styles.leaf, { backgroundColor: btnPrim, bottom: 70, right: 78, transform: [{ rotate: '-22deg'}]}]} />
 
       <View style={[styles.card, { backgroundColor: cardBg, borderColor: border }]}>
-        <Text style={[styles.title, { color: titleCol }]}>¡Bienvenido de nuevo!</Text>
+        <Text style={[styles.title, { color: titleCol }]}>{t('title')}</Text>
 
         {!isConnected && (
           <View style={[styles.offlineIndicator, { backgroundColor: theme.error || '#E57373' }]}>
-            <Text style={styles.offlineText}>Sin conexión</Text>
+            <Text style={styles.offlineText}>{t('ui.offline')}</Text>
           </View>
         )}
 
         <TextInput
           style={[styles.input, { borderColor: border, backgroundColor: '#FFFFFF', color: theme.text }, isEmpty(email) && styles.errorInput]}
-          placeholder="Correo electrónico"
+          placeholder={t('placeholders.email')}
           placeholderTextColor={theme.placeholder || '#98A2B3'}
           value={email}
           onChangeText={setEmail}
@@ -179,7 +214,7 @@ export default function LoginScreen({ navigation }) {
         />
         <TextInput
           style={[styles.input, { borderColor: border, backgroundColor: '#FFFFFF', color: theme.text }, isEmpty(password) && styles.errorInput]}
-          placeholder="Contraseña"
+          placeholder={t('placeholders.password')}
           placeholderTextColor={theme.placeholder || '#98A2B3'}
           value={password}
           onChangeText={setPassword}
@@ -199,20 +234,20 @@ export default function LoginScreen({ navigation }) {
               size={22}
               color={remember ? linkCol : (isDarkMode ? theme.secondaryText : '#94A3B8')}
             />
-            <Text style={[styles.rememberText, { color: theme.text }]}>Recordarme</Text>
+            <Text style={[styles.rememberText, { color: theme.text }]}>{t('ui.rememberMe')}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => gotoOrAlert('ForgotPassword', 'Habilita la pantalla "ForgotPassword" para continuar.')}>
-            <Text style={[styles.smallLink, { color: linkCol }]}>¿Olvidaste tu contraseña?</Text>
+          <TouchableOpacity onPress={() => gotoOrAlert('ForgotPassword', t('alerts.enableForgotPassword'))}>
+            <Text style={[styles.smallLink, { color: linkCol }]}>{t('ui.forgotPassword')}</Text>
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={[styles.button, { backgroundColor: btnPrim }]} onPress={handleLogin} disabled={isCheckingSession}>
-          <Text style={styles.buttonText}>Ingresar</Text>
+          <Text style={styles.buttonText}>{t('ui.signIn')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={[styles.link, { color: linkCol }]}>¿No tienes cuenta? Regístrate</Text>
+          <Text style={[styles.link, { color: linkCol }]}>{t('ui.noAccount')}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -252,6 +287,5 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontWeight: '800', fontSize: 16, textAlign: 'center', letterSpacing: 0.3 },
 
   link: { marginTop: 14, textDecorationLine: 'underline', fontSize: 14, textAlign: 'center', fontWeight: '600' },
-
 });
-
+//Para volver al comportamiento real, cambia DEMO_LOGIN a false y descomenta el bloque del “LOGIN REAL”.

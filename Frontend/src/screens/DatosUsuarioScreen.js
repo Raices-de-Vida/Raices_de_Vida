@@ -1,4 +1,3 @@
-// src/screens/DatosUsuarioScreen.js
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -7,12 +6,14 @@ import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import { useFocusEffect } from '@react-navigation/native';
 import ThemeToggle from '../components/ThemeToggle';
+import { useTranslation } from 'react-i18next';
 
 const PALETTE = { butter: '#F2D88F', cream: '#FFF7DA', sea: '#6698CC' };
 
 export default function DatosUsuarioScreen({ navigation }) {
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { t } = useTranslation('DatosUsuario');
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,17 +23,17 @@ export default function DatosUsuarioScreen({ navigation }) {
       const cargarUsuario = async () => {
         setLoading(true);
         try {
-          const nombre = await AsyncStorage.getItem('nombre');
-          const dpi = await AsyncStorage.getItem('dpi');
+          const nombre   = await AsyncStorage.getItem('nombre');
+          const dpi      = await AsyncStorage.getItem('dpi');
           const telefono = await AsyncStorage.getItem('telefono');
-          const tipo = await AsyncStorage.getItem('tipo');
-          const foto = await AsyncStorage.getItem('fotoPerfil');
+          const tipo     = await AsyncStorage.getItem('tipo');
+          const foto     = await AsyncStorage.getItem('fotoPerfil');
 
           setUser({
-            nombre: nombre || 'Nombre no disponible',
-            dpi: dpi || '---',
-            telefono: telefono || '---',
-            tipo: tipo || '---',
+            nombre,
+            dpi,
+            telefono,
+            tipo,
             foto: foto || null,
           });
         } catch (error) {
@@ -47,12 +48,22 @@ export default function DatosUsuarioScreen({ navigation }) {
 
   if (loading || !user) {
     return (
-      <View style={[styles.container, { backgroundColor: isDarkMode ? theme.background : PALETTE.butter, justifyContent: 'center', alignItems: 'center' }]}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: isDarkMode ? theme.background : PALETTE.butter, justifyContent: 'center', alignItems: 'center' }
+        ]}
+      >
         <ActivityIndicator size="large" color={theme.primaryButton || 'green'} />
-        <Text style={{ color: theme.text, marginTop: 10 }}>Cargando datos...</Text>
+        <Text style={{ color: theme.text, marginTop: 10 }}>{t('loading')}</Text>
       </View>
     );
   }
+
+  const nameSafe = user.nombre || t('fallbacks.nameUnavailable');
+  const dpiSafe = user.dpi || t('fallbacks.notAvailable');
+  const phoneSafe = user.telefono || t('fallbacks.notAvailable');
+  const roleSafe = user.tipo || t('fallbacks.notAvailable');
 
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? theme.background : PALETTE.butter }}>
@@ -81,8 +92,8 @@ export default function DatosUsuarioScreen({ navigation }) {
             resizeMode="contain"
           />
           <View>
-            <Text style={[styles.topTitle, { color: theme.text }]}>Datos de usuario</Text>
-            <Text style={[styles.topSubtitle, { color: PALETTE.sea }]}>Tu información personal</Text>
+            <Text style={[styles.topTitle, { color: theme.text }]}>{t('top.title')}</Text>
+            <Text style={[styles.topSubtitle, { color: PALETTE.sea }]}>{t('top.subtitle')}</Text>
           </View>
         </View>
 
@@ -100,13 +111,13 @@ export default function DatosUsuarioScreen({ navigation }) {
         </View>
 
         <View style={[styles.card, { backgroundColor: theme.cardBackground }]}>
-          <Text style={[styles.name, { color: theme.text }]}>{user.nombre}</Text>
-          <Text style={[styles.role, { color: theme.secondaryText }]}>{user.tipo}</Text>
+          <Text style={[styles.name, { color: theme.text }]}>{nameSafe}</Text>
+          <Text style={[styles.role, { color: theme.secondaryText }]}>{roleSafe}</Text>
         </View>
 
         <View style={[styles.card, { backgroundColor: theme.cardBackground }]}>
-          <Text style={[styles.label, { color: theme.text }]}>DPI: {user.dpi}</Text>
-          <Text style={[styles.label, { color: theme.text }]}>Teléfono: {user.telefono}</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('labels.dpi')}: {dpiSafe}</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('labels.phone')}: {phoneSafe}</Text>
         </View>
       </View>
     </View>

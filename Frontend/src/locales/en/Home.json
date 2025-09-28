@@ -1,0 +1,28 @@
+{
+  "top": {
+    "title": "Home",
+    "subtitle": "Alerts dashboard"
+  },
+  "empty": {
+    "active": "No active alerts at the moment.",
+    "inactive": "No inactive alerts at the moment."
+  },
+  "badges": {
+    "unsynced": "• Unsynced"
+  },
+  "placeholders": {
+    "noName": "No name",
+    "noCommunity": "No community"
+  },
+  "seeMore": "See more",
+  "fab": {
+    "newPatient": "New patient"
+  },
+  "notifications": {
+    "permissionDeniedTitle": "Permission denied",
+    "permissionDeniedBody": "You won't receive notifications."
+  },
+  "units": {
+    "years": "years"
+  }
+}

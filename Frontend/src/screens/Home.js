@@ -10,6 +10,7 @@ import { getTheme } from '../styles/theme';
 import { useOffline } from '../context/OfflineContext';
 import OfflineStorage from '../services/OfflineStorage';
 import BottomNav from '../components/BottomNav';
+import { useTranslation } from 'react-i18next';
 
 const PALETTE = {
   tangerine: '#F08C21',
@@ -34,38 +35,44 @@ export default function Home({ navigation, route }) {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
   const { isConnected } = useOffline();
+  const { t } = useTranslation('Home');
 
   // === permisos de notificación ===
   useEffect(() => {
     const solicitarPermisoNotificaciones = async () => {
       const yaPreguntado = await AsyncStorage.getItem('notificacionesPermitidas');
       if (yaPreguntado) return;
+
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       if (existingStatus !== 'granted') {
         const { status } = await Notifications.requestPermissionsAsync();
         await AsyncStorage.setItem('notificacionesPermitidas', status === 'granted' ? 'true' : 'false');
-        if (status !== 'granted') Alert.alert('Permiso denegado', 'No recibirás notificaciones.');
+        if (status !== 'granted') {
+          Alert.alert(
+            t('notifications.permissionDeniedTitle'),
+            t('notifications.permissionDeniedBody')
+          );
+        }
       } else {
         await AsyncStorage.setItem('notificacionesPermitidas', 'true');
       }
     };
     solicitarPermisoNotificaciones();
-  }, []);
+  }, [t]);
 
   const fetchAlertas = async () => {
     setLoading(true);
     try {
-
       let alertasData = MOCK_ALERTS;
 
       const pendingAlerts = (await OfflineStorage.getPendingAlerts?.()) || [];
       const localAlertas = pendingAlerts.map((a) => ({
         alerta_id: a.tempId,
-        nombre: a.nombre_paciente || 'Sin nombre',
+        nombre: a.nombre_paciente || t('placeholders.noName'),
         descripcion: a.descripcion,
-        comunidad: a.comunidad || 'Sin comunidad',
+        comunidad: a.comunidad || t('placeholders.noCommunity'),
         edad: a.edad_paciente,
-        estado: 'Pendiente',
+        estado: 'Pendiente', // Mantener literal del backend para no romper filtros
         tipo_alerta: a.tipo_alerta || 'Nutricional',
         prioridad: a.prioridad || 'Alta',
         pendingSync: true,
@@ -86,11 +93,11 @@ export default function Home({ navigation, route }) {
       <AntDesign name="exclamationcircle" size={28} color={PALETTE.blush} style={{ marginRight: 10 }} />
       <View style={{ flex: 1 }}>
         <Text style={[styles.alertName, { color: theme.text }]}>
-          {a.nombre}{a.pendingSync && <Text style={styles.pendingBadge}> • Sin sincronizar</Text>}
+          {a.nombre}{a.pendingSync && <Text style={styles.pendingBadge}> {t('badges.unsynced')}</Text>}
         </Text>
         <Text style={[styles.alertDesc, { color: theme.secondaryText }]}>{a.descripcion}</Text>
         <Text style={[styles.alertComunidad, { color: theme.secondaryText }]}>
-          {a.comunidad}{a.edad ? ` • ${a.edad} años` : ''}
+          {a.comunidad}{a.edad ? ` • ${a.edad} ${t('units.years')}` : ''}
         </Text>
       </View>
       <Text
@@ -110,20 +117,20 @@ export default function Home({ navigation, route }) {
       <View style={[styles.topBar, { backgroundColor: isDarkMode ? theme.inputBackground : '#FFF7DA' }]}>
         <View style={styles.titleRow}>
           <Image
-            source={isDarkMode 
-              ? require('../styles/logos/LogoDARK.png') 
+            source={isDarkMode
+              ? require('../styles/logos/LogoDARK.png')
               : require('../styles/logos/LogoBRIGHT.png')}
             style={styles.logo}
           />
           <View>
-            <Text style={[styles.topTitle, { color: theme.text }]}>Inicio</Text>
+            <Text style={[styles.topTitle, { color: theme.text }]}>{t('top.title')}</Text>
             <Text style={[styles.topSubtitle, { color: isDarkMode ? theme.secondaryText : '#6698CC' }]}>
-              Panel de alertas
+              {t('top.subtitle')}
             </Text>
           </View>
         </View>
         <TouchableOpacity style={styles.toggleButton} onPress={toggleDarkMode}>
-          <Ionicons name={isDarkMode ? "sunny-outline" : "moon-outline"} size={22} color={theme.text} />
+          <Ionicons name={isDarkMode ? 'sunny-outline' : 'moon-outline'} size={22} color={theme.text} />
         </TouchableOpacity>
       </View>
 
@@ -132,7 +139,7 @@ export default function Home({ navigation, route }) {
           <ActivityIndicator size="large" color={PALETTE.tangerine} style={{ marginVertical: 20 }} />
         ) : alertas.length === 0 ? (
           <Text style={[styles.noAlertsText, { color: theme.secondaryText }]}>
-            No hay alertas {activo ? 'activas' : 'inactivas'} por el momento.
+            {activo ? t('empty.active') : t('empty.inactive')}
           </Text>
         ) : (
           <>
@@ -145,7 +152,7 @@ export default function Home({ navigation, route }) {
                 activeOpacity={0.85}
               >
                 <Ionicons name="add-circle-outline" size={18} color="#fff" />
-                <Text style={styles.verMasText}>Ver más</Text>
+                <Text style={styles.verMasText}>{t('seeMore')}</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -159,7 +166,7 @@ export default function Home({ navigation, route }) {
         onPress={() => navigation.navigate('PacienteForm')}
       >
         <Ionicons name="person-add-outline" size={22} color="#fff" />
-        <Text style={styles.fabText}>Nuevo paciente</Text>
+        <Text style={styles.fabText}>{t('fab.newPatient')}</Text>
       </TouchableOpacity>
 
       <BottomNav navigation={navigation} />
@@ -218,11 +225,7 @@ const styles = StyleSheet.create({
 
   pendingBadge: { fontSize: 12, fontStyle: 'italic', color: PALETTE.tangerine },
 
-  verMasContainer: {
-    alignItems: 'center',
-    marginTop: 6,
-    marginBottom: 10,
-  },
+  verMasContainer: { alignItems: 'center', marginTop: 6, marginBottom: 10 },
   verMasButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -238,18 +241,14 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     gap: 8,
   },
-  verMasText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
+  verMasText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 
   noAlertsText: { textAlign: 'center', marginTop: 20, fontSize: 16 },
 
   fab: {
     position: 'absolute',
     right: 18,
-    bottom: 88,           
+    bottom: 88,
     backgroundColor: PALETTE.tangerine,
     paddingHorizontal: 16,
     height: 48,

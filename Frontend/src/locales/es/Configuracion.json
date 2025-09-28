@@ -1,0 +1,32 @@
+{
+  "top": {
+    "title": "Configuración",
+    "subtitle": "Preferencias y seguridad"
+  },
+  "sections": {
+    "language": {
+      "title": "Idioma",
+      "selectedSuffix": " • {{value}}",
+      "options": {
+        "es": "Español",
+        "en": "Inglés"
+      }
+    },
+    "region": {
+      "title": "Región",
+      "selectedSuffix": " • {{value}}",
+      "options": {
+        "north": "Norte",
+        "south": "Sur",
+        "west": "Occidente"
+      }
+    },
+    "organizations": "Organizaciones",
+    "changePassword": "Cambiar contraseña",
+    "logout": "Cerrar sesión"
+  },
+  "alerts": {
+    "signOutErrorTitle": "Error",
+    "signOutErrorMsg": "No se pudo cerrar sesión."
+  }
+}

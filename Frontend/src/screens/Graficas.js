@@ -9,47 +9,53 @@ import BottomNav from '../components/BottomNav';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 const GRAFICAS = [
-  { id: '1', titulo: 'Casos reportados por departamento', icono: 'chart-bar', ruta: 'GraficaDepartamento', color: '#ff7043' },
-  { id: '2', titulo: 'Tendencia mensual de casos reportados', icono: 'chart-line', ruta: 'GraficaTendencia', color: '#66bb6a' },
-  { id: '3', titulo: 'Distribución por rango de edad y género', icono: 'chart-pie', ruta: 'GraficaEdadGenero', color: '#ff7043' },
-  { id: '4', titulo: 'Peso vs. edad de los niños en casos reportados', icono: 'chart-scatter-plot', ruta: 'GraficaPesoEdad', color: '#66bb6a' }
+  { id: '1', labelKey: 'cards.byDept',       icono: 'chart-bar',          ruta: 'GraficaDepartamento', color: '#ff7043' },
+  { id: '2', labelKey: 'cards.monthlyTrend', icono: 'chart-line',         ruta: 'GraficaTendencia',    color: '#66bb6a' },
+  { id: '3', labelKey: 'cards.ageGender',    icono: 'chart-pie',          ruta: 'GraficaEdadGenero',   color: '#ff7043' },
+  { id: '4', labelKey: 'cards.weightVsAge',  icono: 'chart-scatter-plot', ruta: 'GraficaPesoEdad',     color: '#66bb6a' }
 ];
 
 export default function PantallaGraficas() {
   const navigation = useNavigation();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { t } = useTranslation('Graficas');
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card(theme, isDarkMode)} onPress={() => navigation.navigate(item.ruta)}>
+    <TouchableOpacity
+      style={styles.card(theme, isDarkMode)}
+      onPress={() => navigation.navigate(item.ruta)}
+    >
       <MaterialCommunityIcons name={item.icono} size={36} color={item.color} style={styles.icono} />
-      <Text style={[styles.texto, { color: theme.text }]}>{item.titulo}</Text>
+      <Text style={[styles.texto, { color: theme.text }]}>{t(item.labelKey)}</Text>
     </TouchableOpacity>
   );
 
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? theme.background : '#F2D88F' }]}>
-      
       {/* ===== Header moderno como Home ===== */}
       <View style={[styles.topBar, { backgroundColor: isDarkMode ? theme.inputBackground : '#FFF7DA' }]}>
         <View style={styles.titleRow}>
           <Image
-            source={isDarkMode 
-              ? require('../styles/logos/LogoDARK.png') 
-              : require('../styles/logos/LogoBRIGHT.png')}
+            source={
+              isDarkMode
+                ? require('../styles/logos/LogoDARK.png')
+                : require('../styles/logos/LogoBRIGHT.png')
+            }
             style={styles.logo}
           />
           <View>
-            <Text style={[styles.topTitle, { color: theme.text }]}>Gráficas</Text>
+            <Text style={[styles.topTitle, { color: theme.text }]}>{t('top.title')}</Text>
             <Text style={[styles.topSubtitle, { color: isDarkMode ? theme.secondaryText : '#6698CC' }]}>
-              Indicadores y reportes
+              {t('top.subtitle')}
             </Text>
           </View>
         </View>
         <TouchableOpacity style={styles.toggleButton} onPress={toggleDarkMode}>
-          <Ionicons name={isDarkMode ? "sunny-outline" : "moon-outline"} size={22} color={theme.text} />
+          <Ionicons name={isDarkMode ? 'sunny-outline' : 'moon-outline'} size={22} color={theme.text} />
         </TouchableOpacity>
       </View>
 
@@ -87,29 +93,11 @@ const styles = StyleSheet.create({
     elevation: 3,
     borderColor: '#EAD8A6',
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logo: {
-    width: 36,
-    height: 36,
-    marginRight: 10,
-    resizeMode: 'contain',
-  },
-  topTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  topSubtitle: {
-    marginTop: 4,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  toggleButton: {
-    padding: 6,
-    borderRadius: 10,
-  },
+  titleRow: { flexDirection: 'row', alignItems: 'center' },
+  logo: { width: 36, height: 36, marginRight: 10, resizeMode: 'contain' },
+  topTitle: { fontSize: 20, fontWeight: '800' },
+  topSubtitle: { marginTop: 4, fontSize: 12, fontWeight: '700' },
+  toggleButton: { padding: 6, borderRadius: 10 },
 
   /* ===== Cards ===== */
   card: (theme, isDarkMode) => ({
@@ -125,14 +113,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     borderWidth: 1,
-    borderColor: '#EAD8A6', // borde suave
+    borderColor: '#EAD8A6',
   }),
-  icono: {
-    marginRight: 15,
-  },
-  texto: {
-    fontSize: 16,
-    flex: 1,
-    flexWrap: 'wrap',
-  },
+  icono: { marginRight: 15 },
+  texto: { fontSize: 16, flex: 1, flexWrap: 'wrap' },
 });

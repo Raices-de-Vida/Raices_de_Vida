@@ -1,32 +1,52 @@
 // src/screens/ConfiguracionScreen.js
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Image } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import { AuthContext } from '../context/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 
 const PALETTE = { butter: '#F2D88F', cream: '#FFF7DA', sea: '#6698CC' };
+const LANG_OPTIONS = ['es', 'en'];                // 👈 solo Español e English
+const REGION_OPTIONS = ['north', 'south', 'west'];
 
 export default function ConfiguracionScreen({ navigation }) {
   const [mostrarIdiomas, setMostrarIdiomas] = useState(false);
   const [mostrarRegiones, setMostrarRegiones] = useState(false);
-  const [idiomaSeleccionado, setIdiomaSeleccionado] = useState(null);
-  const [regionSeleccionada, setRegionSeleccionada] = useState(null);
+  const [idiomaSeleccionado, setIdiomaSeleccionado] = useState(null); // 'es' | 'en'
+  const [regionSeleccionada, setRegionSeleccionada] = useState(null); // 'north' | ...
 
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
-
   const { signOut } = useContext(AuthContext);
+  const { t, i18n } = useTranslation('Configuracion');
+
+  // Refleja el idioma actual al abrir la pantalla
+  useEffect(() => {
+    setIdiomaSeleccionado(i18n.language === 'en' ? 'en' : 'es');
+  }, [i18n.language]);
 
   const cerrarSesion = async () => {
     try {
       await signOut();
     } catch {
-      Alert.alert('Error', 'No se pudo cerrar sesión.');
+      Alert.alert(t('alerts.signOutErrorTitle'), t('alerts.signOutErrorMsg'));
     }
   };
+
+  // 🔤 Cambia el idioma global y persiste preferencia
+  const onSelectIdioma = async (code) => {
+    setIdiomaSeleccionado(code);
+    setMostrarIdiomas(false);
+    await i18n.changeLanguage(code);
+    await AsyncStorage.setItem('app_language', code);
+  };
+
+  const langLabel = (code) => t(`sections.language.options.${code}`);
+  const regionLabel = (code) => t(`sections.region.options.${code}`);
 
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? theme.background : PALETTE.butter }}>
@@ -55,8 +75,8 @@ export default function ConfiguracionScreen({ navigation }) {
             resizeMode="contain"
           />
           <View>
-            <Text style={[styles.topTitle, { color: theme.text }]}>Configuración</Text>
-            <Text style={[styles.topSubtitle, { color: PALETTE.sea }]}>Preferencias y seguridad</Text>
+            <Text style={[styles.topTitle, { color: theme.text }]}>{t('top.title')}</Text>
+            <Text style={[styles.topSubtitle, { color: PALETTE.sea }]}>{t('top.subtitle')}</Text>
           </View>
         </View>
 
@@ -71,7 +91,12 @@ export default function ConfiguracionScreen({ navigation }) {
           activeOpacity={0.8}
         >
           <Ionicons name="language-outline" size={22} color="green" />
-          <Text style={[styles.optionText, { color: theme.text }]}>Idioma</Text>
+          <Text style={[styles.optionText, { color: theme.text }]}>
+            {t('sections.language.title')}
+            {idiomaSeleccionado
+              ? t('sections.language.selectedSuffix', { value: langLabel(idiomaSeleccionado) })
+              : ''}
+          </Text>
           <Ionicons
             name={mostrarIdiomas ? 'chevron-up' : 'chevron-forward'}
             size={20}
@@ -79,20 +104,21 @@ export default function ConfiguracionScreen({ navigation }) {
             style={{ marginLeft: 'auto' }}
           />
         </TouchableOpacity>
+
         {mostrarIdiomas && (
           <View style={[styles.dropdown, { backgroundColor: theme.inputBackground }]}>
-            {['Español', 'English', 'Kaqchikel'].map((idioma) => (
-              <TouchableOpacity key={idioma} onPress={() => setIdiomaSeleccionado(idioma)}>
+            {LANG_OPTIONS.map((code) => (
+              <TouchableOpacity key={code} onPress={() => onSelectIdioma(code)}>
                 <Text
                   style={[
                     styles.dropdownText,
                     {
-                      color: idiomaSeleccionado === idioma ? 'green' : theme.text,
-                      fontWeight: idiomaSeleccionado === idioma ? 'bold' : 'normal',
+                      color: idiomaSeleccionado === code ? 'green' : theme.text,
+                      fontWeight: idiomaSeleccionado === code ? 'bold' : 'normal',
                     },
                   ]}
                 >
-                  {idioma}
+                  {langLabel(code)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -106,7 +132,12 @@ export default function ConfiguracionScreen({ navigation }) {
           activeOpacity={0.8}
         >
           <Ionicons name="location-outline" size={22} color="green" />
-          <Text style={[styles.optionText, { color: theme.text }]}>Región</Text>
+          <Text style={[styles.optionText, { color: theme.text }]}>
+            {t('sections.region.title')}
+            {regionSeleccionada
+              ? t('sections.region.selectedSuffix', { value: regionLabel(regionSeleccionada) })
+              : ''}
+          </Text>
           <Ionicons
             name={mostrarRegiones ? 'chevron-up' : 'chevron-forward'}
             size={20}
@@ -114,20 +145,21 @@ export default function ConfiguracionScreen({ navigation }) {
             style={{ marginLeft: 'auto' }}
           />
         </TouchableOpacity>
+
         {mostrarRegiones && (
           <View style={[styles.dropdown, { backgroundColor: theme.inputBackground }]}>
-            {['Norte', 'Sur', 'Occidente'].map((region) => (
-              <TouchableOpacity key={region} onPress={() => setRegionSeleccionada(region)}>
+            {REGION_OPTIONS.map((code) => (
+              <TouchableOpacity key={code} onPress={() => setRegionSeleccionada(code)}>
                 <Text
                   style={[
                     styles.dropdownText,
                     {
-                      color: regionSeleccionada === region ? 'green' : theme.text,
-                      fontWeight: regionSeleccionada === region ? 'bold' : 'normal',
+                      color: regionSeleccionada === code ? 'green' : theme.text,
+                      fontWeight: regionSeleccionada === code ? 'bold' : 'normal',
                     },
                   ]}
                 >
-                  {region}
+                  {regionLabel(code)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -140,7 +172,7 @@ export default function ConfiguracionScreen({ navigation }) {
           activeOpacity={0.8}
         >
           <Ionicons name="people-outline" size={22} color="green" />
-          <Text style={[styles.optionText, { color: theme.text }]}>Organizaciones</Text>
+          <Text style={[styles.optionText, { color: theme.text }]}>{t('sections.organizations')}</Text>
         </TouchableOpacity>
 
         {/* Cambiar contraseña */}
@@ -150,7 +182,7 @@ export default function ConfiguracionScreen({ navigation }) {
           activeOpacity={0.8}
         >
           <Ionicons name="lock-closed-outline" size={22} color="green" />
-          <Text style={[styles.optionText, { color: theme.text }]}>Cambiar contraseña</Text>
+          <Text style={[styles.optionText, { color: theme.text }]}>{t('sections.changePassword')}</Text>
         </TouchableOpacity>
 
         {/* Cerrar sesión */}
@@ -160,7 +192,7 @@ export default function ConfiguracionScreen({ navigation }) {
           activeOpacity={0.8}
         >
           <MaterialIcons name="logout" size={22} color="green" />
-          <Text style={[styles.optionText, { color: theme.text }]}>Cerrar sesión</Text>
+          <Text style={[styles.optionText, { color: theme.text }]}>{t('sections.logout')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

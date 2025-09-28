@@ -1,0 +1,32 @@
+{
+  "top": {
+    "title": "Settings",
+    "subtitle": "Preferences & security"
+  },
+  "sections": {
+    "language": {
+      "title": "Language",
+      "selectedSuffix": " • {{value}}",
+      "options": {
+        "es": "Spanish",
+        "en": "English"
+      }
+    },
+    "region": {
+      "title": "Region",
+      "selectedSuffix": " • {{value}}",
+      "options": {
+        "north": "North",
+        "south": "South",
+        "west": "West"
+      }
+    },
+    "organizations": "Organizations",
+    "changePassword": "Change password",
+    "logout": "Log out"
+  },
+  "alerts": {
+    "signOutErrorTitle": "Error",
+    "signOutErrorMsg": "Couldn't sign out."
+  }
+}

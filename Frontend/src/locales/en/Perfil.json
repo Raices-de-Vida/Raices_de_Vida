@@ -1,0 +1,30 @@
+{
+  "top": {
+    "title": "Profile",
+    "subtitle": "Your personal info"
+  },
+  "gallery": {
+    "permission": "Permission required to access the gallery"
+  },
+  "buttons": {
+    "deletePhoto": "Delete photo"
+  },
+  "placeholders": {
+    "name": "Name",
+    "role": "User role"
+  },
+  "cards": {
+    "userData": {
+      "title": "User data",
+      "subtitle": "Profile information"
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "App settings"
+    },
+    "register": {
+      "title": "Register new patient",
+      "subtitle": "Intake form"
+    }
+  }
+}

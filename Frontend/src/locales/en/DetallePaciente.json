@@ -1,0 +1,178 @@
+{
+  "top": { "subtitle": "Patient record" },
+  "tabs": {
+    "summary": "Summary",
+    "clinical": "Clinical",
+    "consult1": "Consult Page 1",
+    "consult2": "Consult Page 2"
+  },
+  "sections": {
+    "ident": "Identification",
+    "clin": "Clinical data",
+    "repro": "Reproductive",
+    "habits": "Habits",
+    "allergies": "Allergies",
+    "obs": "Notes"
+  },
+  "fields": {
+    "name": "Name",
+    "age": "Age",
+    "gender": "Gender",
+    "town": "Town/Village",
+    "status": "Status",
+    "weight": "Weight (kg)",
+    "height": "Height (cm)",
+    "bmi": "BMI",
+    "vitals": "Vitals",
+    "reproHistory": "Reproductive history",
+    "habits": "Habits",
+    "allergies": "Allergies",
+    "notes": "Notes"
+  },
+  "units": { "years": "years" },
+  "severity": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "critical": "Critical",
+    "unknown": "—"
+  },
+  "bmi": {
+    "underweight": "Underweight",
+    "normal": "Normal",
+    "overweight": "Overweight",
+    "obesity1": "Obesity I",
+    "obesity2": "Obesity II",
+    "obesity3": "Obesity III"
+  },
+  "buttons": { "save": "Save" },
+  "badges": { "manual": "Manual", "simulated": "SIMULATED" },
+  "alerts": {
+    "saved": { "title": "Saved", "updated": "Changes updated" },
+    "offline": { "title": "Offline", "queued": "Changes queued for sync." }
+  },
+  "errors": { "notFound": "Patient not found" },
+  "common": { "other": "Other", "specify": "Specify", "freeText": "Free text" },
+  "placeholders": { "townDemo": "Demo Community", "langEs": "Spanish" },
+
+  "c1": {
+    "title": "CONSULT PAGE (Clinical Summary)",
+    "basic": "Basic data",
+    "date": "Date",
+    "patientName": "Patient name",
+    "town": "Town/Village",
+    "consultType": {
+      "title": "Consult type",
+      "diabetes": "Diabetes",
+      "htn": "HTN",
+      "respiratory": "Respiratory"
+    },
+    "cc": "Chief complaint",
+    "language": "Language",
+    "phone": "Phone #",
+    "dobAge": "DOB/Age",
+    "gender": "Gender",
+
+    "vitals": {
+      "title": "Vital signs",
+      "subtitle": "Vitals",
+      "bp": "BP",
+      "hr": "HR",
+      "spo2": "SpO₂",
+      "bs": "BS",
+      "weight": "Weight",
+      "height": "Height",
+      "temp": "Temp"
+    },
+
+    "fast": {
+      "title": "Condition / Fasting",
+      "takenMed": "Taken Med?",
+      "fasting": "Fasting?"
+    },
+
+    "all": {
+      "title": "Allergies & Supplements",
+      "subtitle": "Allergies",
+      "nka": "No known allergies (NKA)",
+      "listPlaceholder": "list",
+      "vit": "Vitamin Pkts #",
+      "alb": "Albendazole Tabs #"
+    },
+
+    "hab": {
+      "titleSuffix": "Habits",
+      "current": "CURRENT",
+      "past": "PAST",
+      "tobacco": "Tobacco",
+      "alcohol": "Alcohol",
+      "drugs": "Drugs"
+    },
+
+    "repro": {
+      "title": "Reproductive",
+      "lmp": "LMP",
+      "menopause": "Menopause",
+      "obstetric": "Obstetric",
+      "controlQ": "Birth control?",
+      "methodQ": "Method?"
+    },
+
+    "hpi": "History of Present Illness",
+    "pmh": { "title": "Past Medical History", "medDx": "Medical dx", "surgery": "Surgery", "meds": "Meds" },
+    "pe": { "title": "Physical exam", "heart": "Heart", "lungs": "Lungs", "abdomen": "Abdomen", "gyn": "GYN" },
+    "impression": "Impression",
+    "plan": "Recommendation/Plan",
+    "rxNote": "RX slips will be attached to this page",
+
+    "further": { "title": "Further consult", "genSurg": "Gen Surg", "gyn": "GYN" },
+    "provider": "Provider",
+    "interpreter": "Interpreter",
+    "reverseNote": "SURGICAL CONSULT NOTES ON REVERSE"
+  },
+
+  "c2": {
+    "title": "CONSULT PAGE (Surgical)",
+    "general": "General data",
+    "date": "Date",
+    "hpi": "History of Present Illness",
+    "exam": "Physical exam",
+    "examSub": "PHYSICAL EXAM (appropriate to primary complaint)",
+    "assessment": "Assessment",
+    "impression": "Impression",
+    "plan": "Recommendation/Plan",
+    "medsrx": "Meds/RX",
+    "refs": "References",
+    "furtherTitle": "Further consult",
+    "surgeon": "Surgeon"
+  },
+
+  "seed": {
+    "c1": {
+      "chiefComplaint": "Intermittent abdominal pain for 2 weeks",
+      "allergy": "Penicillin",
+      "hpi": "Colicky pain after fatty meals, no vomiting.",
+      "medDx": "Mild asthma",
+      "surgery": "Appendectomy (2022)",
+      "meds": "Albuterol PRN",
+      "pe": {
+        "heart": "Regular rhythm, no murmurs",
+        "lungs": "Normal breath sounds, mild wheeze",
+        "abd": "Soft, mild RUQ tenderness",
+        "gyn": "No relevant findings"
+      },
+      "impression": "Possible biliary dysfunction / rule out cholelithiasis",
+      "plan": "Abdominal US when possible. Low-fat diet. Follow-up in 1 month.",
+      "provider": "Dr. Martinez"
+    },
+    "c2": {
+      "hpi": "Candidate for elective surgical evaluation depending on symptoms.",
+      "pe": "Soft abdomen, no guarding, Murphy negative.",
+      "impression": "Nonspecific abdominal pain likely biliary",
+      "plan": "Conservative management, schedule US. Re-evaluate.",
+      "medsrx": "Acetaminophen 500 mg PO q8h PRN",
+      "otherRef": "Nutrition",
+      "surgeon": "Dr. Lopez"
+    }
+  }
+}
