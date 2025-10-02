@@ -1,0 +1,15 @@
+
+{
+  "screens": {
+    "recommendations": {
+      "title": "Recomendaciones",
+      "subtitle": "Guías y buenas prácticas"
+    }
+  },
+  "cards": {
+    "plate": {
+      "title": "Plato recomendado",
+      "text": "Prioriza verduras, frutas, granos integrales y proteínas saludables. Mantén hidratación adecuada y limita azúcares añadidos y ultraprocesados."
+    }
+  }
+}

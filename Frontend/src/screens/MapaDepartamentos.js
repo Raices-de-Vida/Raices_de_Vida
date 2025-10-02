@@ -1,8 +1,8 @@
-// src/screens/MapaDepartamentos.js
+// src/screens/MapaDepartamentos.js (actualizado para i18n)
 import React, { useEffect, useRef, useState } from 'react'
 import {
   View, Image, TouchableOpacity, StyleSheet, Text, ScrollView,
-  useWindowDimensions, Animated, Platform, StatusBar, Dimensions
+  useWindowDimensions, Animated, StatusBar, Dimensions
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
@@ -10,11 +10,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import BottomNav from '../components/BottomNav'
 import { useTheme } from '../context/ThemeContext'
 import { getTheme } from '../styles/theme'
+import { useTranslation } from 'react-i18next'
 
 export default function MapaDepartamentos() {
   const navigation = useNavigation()
   const { isDarkMode, toggleDarkMode } = useTheme()
   const theme = getTheme(isDarkMode)
+  const { t } = useTranslation()
   const { width, height } = useWindowDimensions()
 
   const isLargeScreen = width > 768
@@ -115,7 +117,6 @@ export default function MapaDepartamentos() {
 
       setDepartamentosData(departamentosConDatos)
     } catch (error) {
-      console.log('Error cargando datos:', error)
       setDepartamentosData(departamentosGuatemala.map(dept => ({
         ...dept, alertas: 0, poblacion: '0 hab.', status: 'bajo'
       })))
@@ -133,20 +134,28 @@ export default function MapaDepartamentos() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'crítico': return '#FF4757'
-      case 'alto': return '#FF8C42'
-      case 'medio': return '#FFA726'
-      case 'bajo': return '#66BB6A'
+      case 'crítico':
+      case 'critical': return '#FF4757'
+      case 'alto':
+      case 'high': return '#FF8C42'
+      case 'medio':
+      case 'medium': return '#FFA726'
+      case 'bajo':
+      case 'low': return '#66BB6A'
       default: return theme.primaryButton
     }
   }
   const getStatusText = (status) => {
     switch (status) {
-      case 'crítico': return 'Crítico'
-      case 'alto': return 'Alto'
-      case 'medio': return 'Medio'
-      case 'bajo': return 'Bajo'
-      default: return 'Normal'
+      case 'crítico':
+      case 'critical': return t('status.critical')
+      case 'alto':
+      case 'high': return t('status.high')
+      case 'medio':
+      case 'medium': return t('status.medium')
+      case 'bajo':
+      case 'low': return t('status.low')
+      default: return t('status.normal')
     }
   }
 
@@ -159,7 +168,7 @@ export default function MapaDepartamentos() {
         backgroundColor={isDarkMode ? theme.inputBackground : '#FFF7DA'}
       />
 
-      {/* App-bar tipo tarjeta como Home/Gráficas */}
+      {/* App-bar tipo tarjeta */}
       <View style={[styles.topBar, { backgroundColor: isDarkMode ? theme.inputBackground : '#FFF7DA' }]}>
         <View style={styles.headerLeft}>
           <Image
@@ -168,9 +177,9 @@ export default function MapaDepartamentos() {
             resizeMode="contain"
           />
           <View>
-            <Text style={[styles.topTitle, { color: theme.text }]}>Departamentos</Text>
+            <Text style={[styles.topTitle, { color: theme.text }]}>{t('screens.map.title')}</Text>
             <Text style={[styles.topSubtitle, { color: isDarkMode ? theme.secondaryText : '#6698CC' }]}>
-              Mapa interactivo de Guatemala
+              {t('screens.map.subtitle')}
             </Text>
           </View>
         </View>
@@ -188,20 +197,20 @@ export default function MapaDepartamentos() {
         {/* Estadísticas */}
         <Animated.View style={[styles.statsCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <Text style={styles.statsTitle}>
-            <Ionicons name="analytics" size={20} color={theme.primaryButton} /> Resumen Nacional
+            <Ionicons name="analytics" size={20} color={theme.primaryButton} /> {t('sections.nationalSummary')}
           </Text>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{isLoading ? '...' : resumenNacional.alertasActivas}</Text>
-              <Text style={styles.statLabel}>Alertas Activas</Text>
+              <Text style={styles.statNumber}>{isLoading ? t('common.loadingDots') : resumenNacional.alertasActivas}</Text>
+              <Text style={styles.statLabel}>{t('stats.activeAlerts')}</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>{resumenNacional.totalDepartamentos}</Text>
-              <Text style={styles.statLabel}>Departamentos</Text>
+              <Text style={styles.statLabel}>{t('stats.departments')}</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{isLoading ? '...' : resumenNacional.casosCriticos}</Text>
-              <Text style={styles.statLabel}>Casos Críticos</Text>
+              <Text style={styles.statNumber}>{isLoading ? t('common.loadingDots') : resumenNacional.casosCriticos}</Text>
+              <Text style={styles.statLabel}>{t('stats.criticalCases')}</Text>
             </View>
           </View>
         </Animated.View>
@@ -209,9 +218,9 @@ export default function MapaDepartamentos() {
         {/* Mapa */}
         <Animated.View style={[styles.mapCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <Text style={styles.sectionTitle}>
-            <Ionicons name="map" size={20} color={theme.primaryButton} /> Mapa Interactivo
+            <Ionicons name="map" size={20} color={theme.primaryButton} /> {t('sections.interactiveMap')}
           </Text>
-          <Text style={styles.sectionSubtitle}>Toca cualquier departamento para ver sus alertas</Text>
+          <Text style={styles.sectionSubtitle}>{t('sections.interactiveMapHint')}</Text>
 
           <View style={styles.mapContainer}>
             <View style={styles.mapImageContainer}>
@@ -243,7 +252,7 @@ export default function MapaDepartamentos() {
                           color: dept.alertas > 0 ? '#333' : '#666',
                           fontWeight: dept.alertas > 0 ? 'bold' : '500'
                         }]}>
-                          {isLoading ? '...' : dept.alertas}
+                          {isLoading ? t('common.loadingDots') : dept.alertas}
                         </Text>
                       </View>
                     </TouchableOpacity>
@@ -257,7 +266,7 @@ export default function MapaDepartamentos() {
         {/* Lista */}
         <Animated.View style={[styles.listCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <Text style={styles.sectionTitle}>
-            <Ionicons name="list" size={20} color={theme.primaryButton} /> Departamentos Monitoreados
+            <Ionicons name="list" size={20} color={theme.primaryButton} /> {t('sections.monitoredDepartments')}
           </Text>
 
           {departamentosData.map((dept, index) => (
@@ -286,7 +295,7 @@ export default function MapaDepartamentos() {
                   </Text>
                   <Text style={styles.departmentDetail}>
                     <Ionicons name="warning" size={14} color={getStatusColor(dept.status)} />
-                    {isLoading ? ' ... alertas' : ` ${dept.alertas} alertas`}
+                    {isLoading ? ` ${t('common.loadingDots')} ${t('common.alerts')}` : ` ${dept.alertas} ${t('common.alerts')}`}
                   </Text>
                 </View>
               </View>
@@ -311,7 +320,6 @@ const getResponsiveStyles = (theme, screenInfo, isDarkMode) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      // Fondo amarillo para igualar Home/Gráficas
       backgroundColor: isDarkMode ? theme.background : '#F2D88F',
     },
 

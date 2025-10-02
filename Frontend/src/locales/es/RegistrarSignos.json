@@ -1,0 +1,32 @@
+
+{
+  "screens": {
+    "vitalsRegister": {
+      "title": "Registrar signos"
+    }
+  },
+  "fields": {
+    "bpSystolic": "PA Sistólica",
+    "bpDiastolic": "PA Diastólica",
+    "heartRate": "Frecuencia cardiaca",
+    "spo2": "SpO₂ (%)",
+    "weight": "Peso (kg)",
+    "height": "Estatura (cm)",
+    "temperature": "Temperatura (°C)"
+  },
+  "placeholders": {
+    "enterNumber": "Ingresa un valor…"
+  },
+  "buttons": {
+    "save": "Guardar"
+  },
+  "alerts": {
+    "successTitle": "Éxito",
+    "saved": "Signos vitales guardados",
+    "errorTitle": "Error",
+    "errorGeneric": "No se pudieron guardar los signos."
+  },
+  "common": {
+    "ok": "OK"
+  }
+}

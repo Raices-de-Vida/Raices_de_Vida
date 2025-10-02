@@ -1,0 +1,51 @@
+
+{
+  "screens": {
+    "editAlert": {
+      "title": "Edit Alert"
+    }
+  },
+  "fields": {
+    "name": "Name:",
+    "age": "Age:",
+    "location": "Location:",
+    "community": "Community:",
+    "emergencyDescription": "Emergency description:"
+  },
+  "placeholders": {
+    "name": "Name",
+    "age": "Age",
+    "location": "Location",
+    "community": "Community",
+    "description": "Description"
+  },
+  "buttons": {
+    "delete": "DELETE",
+    "update": "UPDATE",
+    "updating": "UPDATING..."
+  },
+  "alerts": {
+    "validation": {
+      "title": "Error",
+      "requiredFields": "Please complete the required fields"
+    },
+    "update": {
+      "title": "Success",
+      "success": "Alert updated successfully",
+      "error": "Could not update the alert"
+    },
+    "delete": {
+      "confirmTitle": "Confirm",
+      "confirmMessage": "Are you sure you want to delete this alert?",
+      "successTitle": "Success",
+      "success": "Alert deleted successfully",
+      "errorTitle": "Error",
+      "error": "Could not delete the alert"
+    }
+  },
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  }
+}

@@ -1,0 +1,23 @@
+
+{
+  "screens": {
+    "helpData": {
+      "title": "Datos de ayuda",
+      "subtitle": "Guías, tips e infografías"
+    }
+  },
+  "cards": {
+    "recommendations": {
+      "title": "Recomendaciones",
+      "subtitle": "Cómo utilizar un alimento"
+    },
+    "importance": {
+      "title": "Importancia",
+      "subtitle": "Buena salud"
+    },
+    "addInfographics": {
+      "title": "Agregar infografías",
+      "subtitle": "Sube nuevas infografías"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+
+{
+  "screens": {
+    "editAlert": {
+      "title": "Editar Alerta"
+    }
+  },
+  "fields": {
+    "name": "Nombre:",
+    "age": "Edad:",
+    "location": "Ubicación:",
+    "community": "Comunidad:",
+    "emergencyDescription": "Descripción de la emergencia:"
+  },
+  "placeholders": {
+    "name": "Nombre",
+    "age": "Edad",
+    "location": "Ubicación",
+    "community": "Comunidad",
+    "description": "Descripción"
+  },
+  "buttons": {
+    "delete": "ELIMINAR",
+    "update": "ACTUALIZAR",
+    "updating": "ACTUALIZANDO..."
+  },
+  "alerts": {
+    "validation": {
+      "title": "Error",
+      "requiredFields": "Por favor completa los campos obligatorios"
+    },
+    "update": {
+      "title": "Éxito",
+      "success": "Alerta actualizada correctamente",
+      "error": "No se pudo actualizar la alerta"
+    },
+    "delete": {
+      "confirmTitle": "Confirmar",
+      "confirmMessage": "¿Estás seguro de que quieres eliminar esta alerta?",
+      "successTitle": "Éxito",
+      "success": "Alerta eliminada correctamente",
+      "errorTitle": "Error",
+      "error": "No se pudo eliminar la alerta"
+    }
+  },
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancelar",
+    "delete": "Eliminar"
+  }
+}

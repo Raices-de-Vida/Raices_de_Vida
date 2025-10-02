@@ -1,0 +1,15 @@
+
+{
+  "screens": {
+    "recommendations": {
+      "title": "Recommendations",
+      "subtitle": "Guides and best practices"
+    }
+  },
+  "cards": {
+    "plate": {
+      "title": "Recommended plate",
+      "text": "Prioritize vegetables, fruits, whole grains, and healthy proteins. Stay well hydrated and limit added sugars and ultra-processed foods."
+    }
+  }
+}

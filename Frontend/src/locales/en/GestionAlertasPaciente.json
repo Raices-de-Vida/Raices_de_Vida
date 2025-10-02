@@ -1,0 +1,53 @@
+
+{
+  "screens": {
+    "alertsMgmt": {
+      "title": "Alert management",
+      "patientAlerts": "Patient alerts",
+      "noAlerts": "No alerts recorded.",
+      "history": "History (forms)",
+      "noForms": "No forms recorded yet.",
+      "noDate": "No date"
+    }
+  },
+  "sync": {
+    "syncing": "Syncing…",
+    "queued": "Queued: {{count}}",
+    "synced": "Synced",
+    "retry": "Retry"
+  },
+  "actions": {
+    "markFollowUp": "Mark for follow-up",
+    "autoEvaluate": "Auto-evaluate"
+  },
+  "levels": {
+    "celeste": "Light blue",
+    "verde": "Green",
+    "amarillo": "Yellow",
+    "naranja": "Orange",
+    "rojo": "Red"
+  },
+  "alerts": {
+    "ok": "Done",
+    "error": "Error",
+    "created": "An alert was created for this patient.",
+    "createFailed": "Could not create",
+    "autoEvalTitle": "Auto-evaluation",
+    "autoEvalDone": "Evaluation completed",
+    "offlineTitle": "Offline",
+    "offlineSaved": "Change saved and will sync automatically.",
+    "flagApplied": "{{level}} flag applied."
+  },
+  "metrics": {
+    "bmi": "BMI",
+    "bp": "BP",
+    "hr": "HR",
+    "spo2": "SpO₂",
+    "glucose": "Glucose",
+    "temp": "Temp",
+    "weight": "Weight",
+    "height": "Ht",
+    "kg": "kg",
+    "cm": "cm"
+  }
+}

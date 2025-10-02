@@ -1,18 +1,25 @@
-// src/screens/ImportanciaScreen.js
+// src/screens/ImportanciaScreen.js (actualizado para i18n)
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
+import { useTranslation } from 'react-i18next';
 
 export default function ImportanciaScreen({ navigation }) {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { t } = useTranslation();
 
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? theme.background : '#F2D88F' }]}>
       {/* ===== App Bar tipo tarjeta ===== */}
-      <View style={[styles.topBar, { backgroundColor: isDarkMode ? theme.inputBackground : '#FFF7DA', borderColor: theme.border || '#F1E7C6' }]}>
+      <View
+        style={[
+          styles.topBar,
+          { backgroundColor: isDarkMode ? theme.inputBackground : '#FFF7DA', borderColor: theme.border || '#F1E7C6' }
+        ]}
+      >
         <View style={styles.leftGroup}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7}>
             <Ionicons name="arrow-back" size={22} color={theme.text} />
@@ -25,9 +32,9 @@ export default function ImportanciaScreen({ navigation }) {
           />
 
           <View>
-            <Text style={[styles.topTitle, { color: theme.text }]}>Importancia</Text>
+            <Text style={[styles.topTitle, { color: theme.text }]}>{t('screens.importance.title')}</Text>
             <Text style={[styles.topSubtitle, { color: isDarkMode ? theme.secondaryText : '#6698CC' }]}>
-              Infografía de higiene
+              {t('screens.importance.subtitle')}
             </Text>
           </View>
         </View>
@@ -39,11 +46,18 @@ export default function ImportanciaScreen({ navigation }) {
 
       {/* ===== Contenido ===== */}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.imageCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)' }]}>
+        <View
+          style={[
+            styles.imageCard,
+            { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)' }
+          ]}
+        >
           <Image
             source={require('../../assets/importancia-higiene.png')} // asegúrate que exista
             style={styles.infografia}
             resizeMode="contain"
+            accessible
+            accessibilityLabel={t('screens.importance.subtitle')}
           />
         </View>
       </ScrollView>
@@ -72,13 +86,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
-    elevation: 3,
+    elevation: 3
   },
   leftGroup: { flexDirection: 'row', alignItems: 'center' },
   backButton: {
     padding: 8,
     borderRadius: 10,
-    marginRight: 6,
+    marginRight: 6
   },
   logo: { width: 36, height: 36, marginRight: 10, borderRadius: 8 },
   topTitle: { fontSize: 20, fontWeight: '800' },
@@ -95,11 +109,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
+    elevation: 2
   },
   infografia: {
     width: '100%',
     height: 420,
-    borderRadius: 12,
-  },
+    borderRadius: 12
+  }
 });

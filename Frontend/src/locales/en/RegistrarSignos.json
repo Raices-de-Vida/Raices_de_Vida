@@ -1,0 +1,32 @@
+
+{
+  "screens": {
+    "vitalsRegister": {
+      "title": "Record vitals"
+    }
+  },
+  "fields": {
+    "bpSystolic": "Systolic BP",
+    "bpDiastolic": "Diastolic BP",
+    "heartRate": "Heart rate",
+    "spo2": "SpO₂ (%)",
+    "weight": "Weight (kg)",
+    "height": "Height (cm)",
+    "temperature": "Temperature (°C)"
+  },
+  "placeholders": {
+    "enterNumber": "Enter a value…"
+  },
+  "buttons": {
+    "save": "Save"
+  },
+  "alerts": {
+    "successTitle": "Success",
+    "saved": "Vitals saved",
+    "errorTitle": "Error",
+    "errorGeneric": "Could not save the vitals."
+  },
+  "common": {
+    "ok": "OK"
+  }
+}

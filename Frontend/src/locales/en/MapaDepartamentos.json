@@ -1,0 +1,31 @@
+
+{
+  "screens": {
+    "map": {
+      "title": "Departments",
+      "subtitle": "Interactive map of Guatemala"
+    }
+  },
+  "sections": {
+    "nationalSummary": "National Summary",
+    "interactiveMap": "Interactive Map",
+    "interactiveMapHint": "Tap any department to view its alerts",
+    "monitoredDepartments": "Monitored Departments"
+  },
+  "stats": {
+    "activeAlerts": "Active Alerts",
+    "departments": "Departments",
+    "criticalCases": "Critical Cases"
+  },
+  "status": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "normal": "Normal"
+  },
+  "common": {
+    "alerts": "alerts",
+    "loadingDots": "..."
+  }
+}

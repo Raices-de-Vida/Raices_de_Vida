@@ -19,6 +19,16 @@ import enDatosUsuario from '../locales/en/DatosUsuario.json';
 import enCambiarContrasena from '../locales/en/CambiarContrasena.json';
 import enPacienteForm from '../locales/en/PacienteForm.json';
 import enDetallePaciente from '../locales/en/DetallePaciente.json';
+import enAlertasDepartamento from '../locales/en/AlertasDepartamento.json';
+import enDatosAyuda from '../locales/en/DatosAyuda.json';
+import enEditarAlerta from '../locales/en/EditarAlerta.json';
+import enImportancia from '../locales/en/Importancia.json';
+import enMapaDepartamentos from '../locales/en/MapaDepartamentos.json';
+import enRecomendaciones from '../locales/en/Recomendaciones.json';
+import enRegisterAlerta from '../locales/en/RegisterAlerta.json';
+import enRegisterCommunity from '../locales/en/RegisterCommunity.json';
+import enRegistrarSignos from '../locales/en/RegistrarSignos.json';
+import enSubirInfo from '../locales/en/SubirInfo.json';
 
 /* ===== ES ===== */
 import esCommon from '../locales/es/common.json';
@@ -36,6 +46,16 @@ import esDatosUsuario from '../locales/es/DatosUsuario.json';
 import esCambiarContrasena from '../locales/es/CambiarContrasena.json';
 import esPacienteForm from '../locales/es/PacienteForm.json';
 import esDetallePaciente from '../locales/es/DetallePaciente.json';
+import esAlertasDepartamento from '../locales/es/AlertasDepartamento.json';
+import esDatosAyuda from '../locales/es/DatosAyuda.json';
+import esEditarAlerta from '../locales/es/EditarAlerta.json';
+import esImportancia from '../locales/es/Importancia.json';
+import esMapaDepartamentos from '../locales/es/MapaDepartamentos.json';
+import esRecomendaciones from '../locales/es/Recomendaciones.json';
+import esRegisterAlerta from '../locales/es/RegisterAlerta.json';
+import esRegisterCommunity from '../locales/es/RegisterCommunity.json';
+import esRegistrarSignos from '../locales/es/RegistrarSignos.json';
+import esSubirInfo from '../locales/es/SubirInfo.json';
 
 export const NAMESPACES = [
   'common',
@@ -52,7 +72,18 @@ export const NAMESPACES = [
   'DatosUsuario',
   'CambiarContrasena',
   'PacienteForm',
-  'DetallePaciente'
+  'DetallePaciente',
+  // nuevos
+  'AlertasDepartamento',
+  'DatosAyuda',
+  'EditarAlerta',
+  'Importancia',
+  'MapaDepartamentos',
+  'Recomendaciones',
+  'RegisterAlerta',
+  'RegisterCommunity',
+  'RegistrarSignos',
+  'SubirInfo'
 ];
 
 const resources = {
@@ -71,7 +102,17 @@ const resources = {
     DatosUsuario: enDatosUsuario,
     CambiarContrasena: enCambiarContrasena,
     PacienteForm: enPacienteForm,
-    DetallePaciente: enDetallePaciente
+    DetallePaciente: enDetallePaciente,
+    AlertasDepartamento: enAlertasDepartamento,
+    DatosAyuda: enDatosAyuda,
+    EditarAlerta: enEditarAlerta,
+    Importancia: enImportancia,
+    MapaDepartamentos: enMapaDepartamentos,
+    Recomendaciones: enRecomendaciones,
+    RegisterAlerta: enRegisterAlerta,
+    RegisterCommunity: enRegisterCommunity,
+    RegistrarSignos: enRegistrarSignos,
+    SubirInfo: enSubirInfo
   },
   es: {
     common: esCommon,
@@ -88,7 +129,17 @@ const resources = {
     DatosUsuario: esDatosUsuario,
     CambiarContrasena: esCambiarContrasena,
     PacienteForm: esPacienteForm,
-    DetallePaciente: esDetallePaciente
+    DetallePaciente: esDetallePaciente,
+    AlertasDepartamento: esAlertasDepartamento,
+    DatosAyuda: esDatosAyuda,
+    EditarAlerta: esEditarAlerta,
+    Importancia: esImportancia,
+    MapaDepartamentos: esMapaDepartamentos,
+    Recomendaciones: esRecomendaciones,
+    RegisterAlerta: esRegisterAlerta,
+    RegisterCommunity: esRegisterCommunity,
+    RegistrarSignos: esRegistrarSignos,
+    SubirInfo: esSubirInfo
   }
 };
 

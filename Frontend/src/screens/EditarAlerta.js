@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// src/screens/EditarAlerta.js  (actualizado para i18n)
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -6,8 +7,10 @@ import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import ThemeToggle from '../components/ThemeToggle';
 import BottomNav from '../components/BottomNav';
+import { useTranslation } from 'react-i18next';
 
 export default function EditarAlerta({ navigation, route }) {
+  const { t } = useTranslation();
   const { alerta } = route.params;
   const [nombre, setNombre] = useState(alerta.nombre || '');
   const [edad, setEdad] = useState(alerta.edad ? alerta.edad.toString() : '');
@@ -20,7 +23,7 @@ export default function EditarAlerta({ navigation, route }) {
 
   const handleUpdate = async () => {
     if (!nombre || !descripcion || !comunidad) {
-      Alert.alert('Error', 'Por favor completa los campos obligatorios');
+      Alert.alert(t('alerts.validation.title'), t('alerts.validation.requiredFields'));
       return;
     }
 
@@ -29,21 +32,21 @@ export default function EditarAlerta({ navigation, route }) {
       const alertaActualizada = {
         ...alerta,
         nombre,
-        edad: edad ? parseInt(edad) : null,
+        edad: edad ? parseInt(edad, 10) : null,
         ubicacion,
         comunidad,
         descripcion
       };
 
-      //Cambiar la URL a la correcta en cada computadora
+      // Cambiar la URL a la correcta en cada computadora (protocolo opcionalmente http:)
       await axios.put(`//localhost:3001/api/alertas/${alerta.alerta_id}`, alertaActualizada);
-      
-      Alert.alert('Éxito', 'Alerta actualizada correctamente', [
-        { text: 'OK', onPress: () => navigation.navigate('Home', { refresh: true }) }
+
+      Alert.alert(t('alerts.update.title'), t('alerts.update.success'), [
+        { text: t('common.ok'), onPress: () => navigation.navigate('Home', { refresh: true }) }
       ]);
     } catch (error) {
       console.error('Error al actualizar la alerta:', error);
-      Alert.alert('Error', 'No se pudo actualizar la alerta');
+      Alert.alert(t('alerts.update.title'), t('alerts.update.error'));
     } finally {
       setLoading(false);
     }
@@ -51,22 +54,22 @@ export default function EditarAlerta({ navigation, route }) {
 
   const handleDelete = () => {
     Alert.alert(
-      'Confirmar',
-      '¿Estás seguro de que quieres eliminar esta alerta?',
+      t('alerts.delete.confirmTitle'),
+      t('alerts.delete.confirmMessage'),
       [
-        { text: 'Cancelar', style: 'cancel' },
-        { 
-          text: 'Eliminar', 
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             setLoading(true);
             try {
               await axios.delete(`//localhost:3001/api/alertas/${alerta.alerta_id}`);
-              Alert.alert('Éxito', 'Alerta eliminada correctamente');
+              Alert.alert(t('alerts.delete.successTitle'), t('alerts.delete.success'));
               navigation.navigate('Home', { refresh: true });
             } catch (error) {
               console.error('Error al eliminar la alerta:', error);
-              Alert.alert('Error', 'No se pudo eliminar la alerta');
+              Alert.alert(t('alerts.delete.errorTitle'), t('alerts.delete.error'));
             } finally {
               setLoading(false);
             }
@@ -79,18 +82,18 @@ export default function EditarAlerta({ navigation, route }) {
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       <ThemeToggle />
-      
+
       <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
         <View style={[styles.header, { backgroundColor: theme.header }]}>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Editar Alerta</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>{t('screens.editAlert.title')}</Text>
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={[styles.label, { color: theme.text }]}>Nombre:</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('fields.name')}</Text>
           <View style={[styles.inputBox, { backgroundColor: theme.inputBackground }]}>
             <TextInput
               style={[styles.input, { color: theme.text }]}
-              placeholder="Nombre"
+              placeholder={t('placeholders.name')}
               value={nombre}
               onChangeText={setNombre}
               placeholderTextColor={isDarkMode ? '#888' : '#999'}
@@ -100,11 +103,11 @@ export default function EditarAlerta({ navigation, route }) {
             </TouchableOpacity>
           </View>
 
-          <Text style={[styles.label, { color: theme.text }]}>Edad:</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('fields.age')}</Text>
           <View style={[styles.inputBox, { backgroundColor: theme.inputBackground }]}>
             <TextInput
               style={[styles.input, { color: theme.text }]}
-              placeholder="Edad"
+              placeholder={t('placeholders.age')}
               value={edad}
               onChangeText={setEdad}
               keyboardType="numeric"
@@ -115,11 +118,11 @@ export default function EditarAlerta({ navigation, route }) {
             </TouchableOpacity>
           </View>
 
-          <Text style={[styles.label, { color: theme.text }]}>Ubicación:</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('fields.location')}</Text>
           <View style={[styles.inputBox, { backgroundColor: theme.inputBackground }]}>
             <TextInput
               style={[styles.input, { color: theme.text }]}
-              placeholder="Ubicación"
+              placeholder={t('placeholders.location')}
               value={ubicacion}
               onChangeText={setUbicacion}
               placeholderTextColor={isDarkMode ? '#888' : '#999'}
@@ -129,11 +132,11 @@ export default function EditarAlerta({ navigation, route }) {
             </TouchableOpacity>
           </View>
 
-          <Text style={[styles.label, { color: theme.text }]}>Comunidad:</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('fields.community')}</Text>
           <View style={[styles.inputBox, { backgroundColor: theme.inputBackground }]}>
             <TextInput
               style={[styles.input, { color: theme.text }]}
-              placeholder="Comunidad"
+              placeholder={t('placeholders.community')}
               value={comunidad}
               onChangeText={setComunidad}
               placeholderTextColor={isDarkMode ? '#888' : '#999'}
@@ -143,11 +146,11 @@ export default function EditarAlerta({ navigation, route }) {
             </TouchableOpacity>
           </View>
 
-          <Text style={[styles.label, { color: theme.text }]}>Descripción de la emergencia:</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('fields.emergencyDescription')}</Text>
           <View style={[styles.inputBoxLarge, { backgroundColor: theme.inputBackground }]}>
             <TextInput
               style={[styles.inputLarge, { color: theme.text }]}
-              placeholder="Descripción"
+              placeholder={t('placeholders.description')}
               value={descripcion}
               onChangeText={setDescripcion}
               multiline
@@ -160,18 +163,20 @@ export default function EditarAlerta({ navigation, route }) {
           </View>
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              style={[styles.deleteButton, { backgroundColor: theme.deleteButton }]} 
+            <TouchableOpacity
+              style={[styles.deleteButton, { backgroundColor: theme.deleteButton }]}
               onPress={handleDelete}
             >
-              <Text style={styles.buttonText}>ELIMINAR</Text>
+              <Text style={styles.buttonText}>{t('buttons.delete')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.updateButton, { backgroundColor: theme.primaryButton }]} 
+            <TouchableOpacity
+              style={[styles.updateButton, { backgroundColor: theme.primaryButton }]}
               onPress={handleUpdate}
               disabled={loading}
             >
-              <Text style={styles.buttonText}>{loading ? 'ACTUALIZANDO...' : 'ACTUALIZAR'}</Text>
+              <Text style={styles.buttonText}>
+                {loading ? t('buttons.updating') : t('buttons.update')}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

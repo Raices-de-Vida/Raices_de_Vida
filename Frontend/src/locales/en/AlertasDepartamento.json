@@ -1,0 +1,21 @@
+
+{
+  "screens": {
+    "alertsByDepartment": {
+      "title": "Alerts by department"
+    }
+  },
+  "alert": {
+    "types": {
+      "chronic_malnutrition": "Chronic malnutrition",
+      "acute_malnutrition": "Acute malnutrition"
+    }
+  },
+  "departments": {
+    "Alta Verapaz": "Alta Verapaz",
+    "Izabal": "Izabal"
+  },
+  "labels": {
+    "location_in_department": "{{location}}, {{department}}"
+  }
+}

@@ -5,10 +5,12 @@ import { Ionicons } from '@expo/vector-icons';
 import BottomNav from '../components/BottomNav';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
+import { useTranslation } from 'react-i18next';
 
 export default function DatosAyudaScreen({ navigation }) {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { t } = useTranslation();
 
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? theme.background : '#F2D88F' }}>
@@ -36,14 +38,16 @@ export default function DatosAyudaScreen({ navigation }) {
             resizeMode="contain"
           />
           <View>
-            <Text style={[styles.topTitle, { color: theme.text }]}>Datos de ayuda</Text>
+            <Text style={[styles.topTitle, { color: theme.text }]}>
+              {t('screens.helpData.title')}
+            </Text>
             <Text
               style={[
                 styles.topSubtitle,
                 { color: isDarkMode ? theme.secondaryText : '#6698CC' },
               ]}
             >
-              Guías, tips e infografías
+              {t('screens.helpData.subtitle')}
             </Text>
           </View>
         </View>
@@ -63,7 +67,10 @@ export default function DatosAyudaScreen({ navigation }) {
         <TouchableOpacity
           style={[
             styles.card,
-            { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)' },
+            {
+              backgroundColor: theme.cardBackground,
+              borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)',
+            },
           ]}
           onPress={() => navigation.navigate('Recomendaciones')}
           activeOpacity={0.85}
@@ -72,9 +79,11 @@ export default function DatosAyudaScreen({ navigation }) {
             <Ionicons name="thumbs-up-outline" size={20} color="#2E7D32" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>Recomendaciones</Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>
+              {t('cards.recommendations.title')}
+            </Text>
             <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>
-              Cómo utilizar un alimento
+              {t('cards.recommendations.subtitle')}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
@@ -84,7 +93,10 @@ export default function DatosAyudaScreen({ navigation }) {
         <TouchableOpacity
           style={[
             styles.card,
-            { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)' },
+            {
+              backgroundColor: theme.cardBackground,
+              borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)',
+            },
           ]}
           onPress={() => navigation.navigate('Importancia')}
           activeOpacity={0.85}
@@ -93,8 +105,12 @@ export default function DatosAyudaScreen({ navigation }) {
             <Ionicons name="information-circle-outline" size={20} color="#6698CC" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>Importancia</Text>
-            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>Buena salud</Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>
+              {t('cards.importance.title')}
+            </Text>
+            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>
+              {t('cards.importance.subtitle')}
+            </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
         </TouchableOpacity>
@@ -103,7 +119,10 @@ export default function DatosAyudaScreen({ navigation }) {
         <TouchableOpacity
           style={[
             styles.card,
-            { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)' },
+            {
+              backgroundColor: theme.cardBackground,
+              borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)',
+            },
           ]}
           onPress={() => navigation.navigate('SubirInfografia')}
           activeOpacity={0.85}
@@ -112,9 +131,11 @@ export default function DatosAyudaScreen({ navigation }) {
             <Ionicons name="add-circle-outline" size={20} color="#E36888" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>Agregar infografías</Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>
+              {t('cards.addInfographics.title')}
+            </Text>
             <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>
-              Sube nuevas infografías
+              {t('cards.addInfographics.subtitle')}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />

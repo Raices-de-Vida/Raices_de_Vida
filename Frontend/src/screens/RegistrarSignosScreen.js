@@ -1,10 +1,13 @@
+// src/screens/RegistrarSignosScreen.js (actualizado para i18n)
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { registrarSignos } from '../services/pacientes';
+import { useTranslation } from 'react-i18next';
 
 export default function RegistrarSignosScreen({ route, navigation }) {
+  const { t } = useTranslation();
   const { id_paciente } = route.params;
   const [sistolica, setSistolica] = useState('');
   const [diastolica, setDiastolica] = useState('');
@@ -18,20 +21,20 @@ export default function RegistrarSignosScreen({ route, navigation }) {
     try {
       const token = await AsyncStorage.getItem('token');
       const payload = {
-        presion_arterial_sistolica: parseInt(sistolica) || null,
-        presion_arterial_diastolica: parseInt(diastolica) || null,
-        frecuencia_cardiaca: parseInt(fc) || null,
+        presion_arterial_sistolica: parseInt(sistolica, 10) || null,
+        presion_arterial_diastolica: parseInt(diastolica, 10) || null,
+        frecuencia_cardiaca: parseInt(fc, 10) || null,
         saturacion_oxigeno: parseFloat(spo2) || null,
         peso: parseFloat(peso) || null,
         estatura: parseFloat(estatura) || null,
         temperatura: parseFloat(temp) || null,
       };
       await registrarSignos(id_paciente, payload, token);
-      Alert.alert('Éxito', 'Signos vitales guardados', [
-        { text: 'OK', onPress: () => navigation.goBack() }
+      Alert.alert(t('alerts.successTitle'), t('alerts.saved'), [
+        { text: t('common.ok'), onPress: () => navigation.goBack() }
       ]);
     } catch (err) {
-      Alert.alert('Error', err?.message || 'No se pudieron guardar los signos.');
+      Alert.alert(t('alerts.errorTitle'), err?.message || t('alerts.errorGeneric'));
     }
   };
 
@@ -41,35 +44,81 @@ export default function RegistrarSignosScreen({ route, navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.title}>Registrar signos</Text>
+        <Text style={styles.title}>{t('screens.vitalsRegister.title')}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.body}>
-        <Input label="PA Sistólica" value={sistolica} onChangeText={setSistolica} keyboardType="numeric" />
-        <Input label="PA Diastólica" value={diastolica} onChangeText={setDiastolica} keyboardType="numeric" />
-        <Input label="Frecuencia cardiaca" value={fc} onChangeText={setFc} keyboardType="numeric" />
-        <Input label="SpO₂ (%)" value={spo2} onChangeText={setSpo2} keyboardType="decimal-pad" />
-        <Input label="Peso (kg)" value={peso} onChangeText={setPeso} keyboardType="decimal-pad" />
-        <Input label="Estatura (cm)" value={estatura} onChangeText={setEstatura} keyboardType="decimal-pad" />
-        <Input label="Temperatura (°C)" value={temp} onChangeText={setTemp} keyboardType="decimal-pad" />
+        <Input
+          label={t('fields.bpSystolic')}
+          placeholder={t('placeholders.enterNumber')}
+          value={sistolica}
+          onChangeText={setSistolica}
+          keyboardType="numeric"
+        />
+        <Input
+          label={t('fields.bpDiastolic')}
+          placeholder={t('placeholders.enterNumber')}
+          value={diastolica}
+          onChangeText={setDiastolica}
+          keyboardType="numeric"
+        />
+        <Input
+          label={t('fields.heartRate')}
+          placeholder={t('placeholders.enterNumber')}
+          value={fc}
+          onChangeText={setFc}
+          keyboardType="numeric"
+        />
+        <Input
+          label={t('fields.spo2')}
+          placeholder={t('placeholders.enterNumber')}
+          value={spo2}
+          onChangeText={setSpo2}
+          keyboardType="decimal-pad"
+        />
+        <Input
+          label={t('fields.weight')}
+          placeholder={t('placeholders.enterNumber')}
+          value={peso}
+          onChangeText={setPeso}
+          keyboardType="decimal-pad"
+        />
+        <Input
+          label={t('fields.height')}
+          placeholder={t('placeholders.enterNumber')}
+          value={estatura}
+          onChangeText={setEstatura}
+          keyboardType="decimal-pad"
+        />
+        <Input
+          label={t('fields.temperature')}
+          placeholder={t('placeholders.enterNumber')}
+          value={temp}
+          onChangeText={setTemp}
+          keyboardType="decimal-pad"
+        />
 
         <TouchableOpacity style={styles.btn} onPress={handleGuardar}>
           <Ionicons name="save-outline" size={18} color="#fff" />
-          <Text style={styles.btnTxt}>Guardar</Text>
+          <Text style={styles.btnTxt}>{t('buttons.save')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
   );
 }
 
-function Input({ label, ...props }) {
+function Input({ label, placeholder, ...props }) {
   return (
     <View style={{ marginBottom:12 }}>
       <Text style={{ fontSize:12, color:'#555', marginBottom:4 }}>{label}</Text>
-      <TextInput {...props} style={{
-        borderWidth:1, borderColor:'#E9E2C6', borderRadius:12,
-        paddingHorizontal:12, paddingVertical:10, backgroundColor:'#fff'
-      }}/>
+      <TextInput
+        {...props}
+        placeholder={placeholder}
+        style={{
+          borderWidth:1, borderColor:'#E9E2C6', borderRadius:12,
+          paddingHorizontal:12, paddingVertical:10, backgroundColor:'#fff'
+        }}
+      />
     </View>
   );
 }
@@ -86,5 +135,5 @@ const styles = StyleSheet.create({
     marginTop:20, backgroundColor:'#F08C21', padding:14, borderRadius:14,
     alignItems:'center', flexDirection:'row', justifyContent:'center', gap:8
   },
-  btnTxt:{ color:'#fff', fontWeight:'800', fontSize:16 },
+  btnTxt:{ color:'#fff', fontWeight:'800', fontSize:16 }
 });

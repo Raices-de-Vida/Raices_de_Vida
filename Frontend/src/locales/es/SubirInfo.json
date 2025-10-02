@@ -1,0 +1,41 @@
+
+{
+  "screens": {
+    "infographics": {
+      "title": "Infografías",
+      "subtitle": "Subir y registrar material"
+    }
+  },
+  "upload": {
+    "addPhoto": "Agregar fotografía",
+    "tapToSelect": "Toca para seleccionar desde galería o cámara",
+    "success": "✅ Infografía subida correctamente",
+    "needPermission": "Se necesita permiso para acceder a la galería"
+  },
+  "fields": {
+    "author": "Nombre del autor",
+    "date": "Fecha",
+    "organization": "Organización",
+    "topic": "Tema",
+    "bibliography": "Bibliografía"
+  },
+  "placeholders": {
+    "authorExample": "Ej. Juan Pérez",
+    "pickOrganization": "Selecciona una organización…",
+    "pickTopic": "Selecciona un tema…",
+    "references": "Escribe referencias o fuentes…"
+  },
+  "orgs": {
+    "yoop": "Yoop",
+    "un": "ONU",
+    "volunteer": "Voluntario"
+  },
+  "topics": {
+    "nutrition": "Nutrición",
+    "hygiene": "Higiene",
+    "other": "Otros"
+  },
+  "buttons": {
+    "submit": "Subir infografía"
+  }
+}

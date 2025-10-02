@@ -1,4 +1,4 @@
-// src/screens/SubirInfografiaScreen.js
+// src/screens/SubirInfografiaScreen.js (actualizado para i18n)
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, Platform
@@ -10,6 +10,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import BottomNav from '../components/BottomNav';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
+import { useTranslation } from 'react-i18next';
 
 const PALETTE = {
   butter: '#F2D88F',
@@ -24,6 +25,7 @@ const PALETTE = {
 export default function SubirInfografiaScreen({ navigation }) {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { t } = useTranslation();
 
   const [form, setForm] = useState({
     autor: '',
@@ -42,7 +44,7 @@ export default function SubirInfografiaScreen({ navigation }) {
   const handleAgregarFoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      alert('Se necesita permiso para acceder a la galería');
+      alert(t('upload.needPermission'));
       return;
     }
 
@@ -59,7 +61,7 @@ export default function SubirInfografiaScreen({ navigation }) {
   };
 
   const handleSubir = () => {
-    alert('✅ Infografía subida correctamente');
+    alert(t('upload.success'));
   };
 
   return (
@@ -86,9 +88,11 @@ export default function SubirInfografiaScreen({ navigation }) {
             style={styles.logo}
           />
           <View>
-            <Text style={[styles.topTitle, { color: theme.text }]}>Infografías</Text>
+            <Text style={[styles.topTitle, { color: theme.text }]}>
+              {t('screens.infographics.title')}
+            </Text>
             <Text style={[styles.topSubtitle, { color: isDarkMode ? theme.secondaryText : PALETTE.sea }]}>
-              Subir y registrar material
+              {t('screens.infographics.subtitle')}
             </Text>
           </View>
         </View>
@@ -108,6 +112,8 @@ export default function SubirInfografiaScreen({ navigation }) {
           ]}
           onPress={handleAgregarFoto}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={t('upload.addPhoto')}
         >
           {form.imagen ? (
             <Image source={{ uri: form.imagen }} style={styles.imagePreview} />
@@ -116,9 +122,9 @@ export default function SubirInfografiaScreen({ navigation }) {
               <View style={[styles.badge, { backgroundColor: isDarkMode ? '#243126' : PALETTE.greenBg }]}>
                 <MaterialCommunityIcons name="camera-plus" size={26} color={PALETTE.green} />
               </View>
-              <Text style={[styles.uploadTitle, { color: theme.text }]}>Agregar fotografía</Text>
+              <Text style={[styles.uploadTitle, { color: theme.text }]}>{t('upload.addPhoto')}</Text>
               <Text style={[styles.uploadHint, { color: theme.secondaryText }]}>
-                Toca para seleccionar desde galería o cámara
+                {t('upload.tapToSelect')}
               </Text>
             </>
           )}
@@ -126,17 +132,17 @@ export default function SubirInfografiaScreen({ navigation }) {
 
         {/* Autor */}
         <Field
-          label="Nombre del autor"
+          label={t('fields.author')}
           value={form.autor}
-          onChangeText={(t) => handleChange('autor', t)}
+          onChangeText={(tval) => handleChange('autor', tval)}
           onClear={() => clearField('autor')}
-          placeholder="Ej. Juan Pérez"
+          placeholder={t('placeholders.authorExample')}
           theme={theme}
         />
 
         {/* Fecha */}
         <View style={styles.fieldWrap}>
-          <Text style={[styles.label, { color: theme.text }]}>Fecha</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('fields.date')}</Text>
           <TouchableOpacity
             style={[styles.inputBox, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder }]}
             onPress={() => handleChange('showFecha', true)}
@@ -161,39 +167,39 @@ export default function SubirInfografiaScreen({ navigation }) {
 
         {/* Organización */}
         <PickerField
-          label="Organización"
+          label={t('fields.organization')}
           value={form.organizacion}
           onValueChange={(v) => handleChange('organizacion', v)}
           items={[
-            { label: 'Yoop', value: 'Yoop' },
-            { label: 'ONU', value: 'ONU' },
-            { label: 'Voluntario', value: 'Voluntario' },
+            { label: t('orgs.yoop'), value: 'Yoop' },
+            { label: t('orgs.un'), value: 'ONU' },
+            { label: t('orgs.volunteer'), value: 'Voluntario' }
           ]}
-          placeholder="Selecciona una organización…"
+          placeholder={t('placeholders.pickOrganization')}
           theme={theme}
         />
 
         {/* Tema */}
         <PickerField
-          label="Tema"
+          label={t('fields.topic')}
           value={form.tema}
           onValueChange={(v) => handleChange('tema', v)}
           items={[
-            { label: 'Nutrición', value: 'Nutrición' },
-            { label: 'Higiene', value: 'Higiene' },
-            { label: 'Otros', value: 'Otros' },
+            { label: t('topics.nutrition'), value: 'Nutrición' },
+            { label: t('topics.hygiene'), value: 'Higiene' },
+            { label: t('topics.other'), value: 'Otros' }
           ]}
-          placeholder="Selecciona un tema…"
+          placeholder={t('placeholders.pickTopic')}
           theme={theme}
         />
 
         {/* Bibliografía */}
         <Field
-          label="Bibliografía"
+          label={t('fields.bibliography')}
           value={form.bibliografia}
-          onChangeText={(t) => handleChange('bibliografia', t)}
+          onChangeText={(tval) => handleChange('bibliografia', tval)}
           onClear={() => clearField('bibliografia')}
-          placeholder="Escribe referencias o fuentes…"
+          placeholder={t('placeholders.references')}
           multiline
           theme={theme}
         />
@@ -201,7 +207,7 @@ export default function SubirInfografiaScreen({ navigation }) {
         {/* Botón enviar */}
         <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: PALETTE.orange }]} onPress={handleSubir}>
           <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
-          <Text style={styles.primaryText}>Subir infografía</Text>
+          <Text style={styles.primaryText}>{t('buttons.submit')}</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -229,7 +235,7 @@ function Field({ label, value, onChangeText, onClear, placeholder, multiline = f
           multiline={multiline}
         />
         {!!value && (
-          <TouchableOpacity onPress={onClear}>
+          <TouchableOpacity onPress={onClear} accessibilityLabel="Clear">
             <Ionicons name="close-circle" size={18} color={theme.inputBorder} />
           </TouchableOpacity>
         )}

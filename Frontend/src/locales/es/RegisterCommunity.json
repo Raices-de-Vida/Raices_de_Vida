@@ -1,0 +1,48 @@
+
+{
+  "screens": {
+    "registerCommunity": {
+      "title": "Registro Comunitario",
+      "subtitle": "Crea una cuenta como miembro de la comunidad"
+    }
+  },
+  "fields": {
+    "firstName": "Nombre *",
+    "lastName": "Apellido *",
+    "dpi": "DPI *",
+    "phone": "Teléfono",
+    "emailOpt": "Email (opcional)",
+    "password": "Contraseña *",
+    "confirmPassword": "Confirmar Contraseña *",
+    "community": "Comunidad *",
+    "selectCommunity": "Selecciona tu comunidad"
+  },
+  "placeholders": {
+    "firstName": "Ingresa tu nombre",
+    "lastName": "Ingresa tu apellido",
+    "dpi": "Ingresa tu DPI (13 dígitos)",
+    "phone": "Ingresa tu número de teléfono",
+    "email": "Ingresa tu email (opcional)",
+    "password": "Ingresa tu contraseña",
+    "confirmPassword": "Confirma tu contraseña"
+  },
+  "checkbox": {
+    "isLeader": "Soy Líder Comunitario"
+  },
+  "buttons": {
+    "register": "Registrarme",
+    "processing": "Procesando…",
+    "login": "¿Ya tienes cuenta? Inicia sesión",
+    "terms": "Términos y condiciones"
+  },
+  "alerts": {
+    "errorTitle": "Error",
+    "required": "Por favor completa todos los campos obligatorios",
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "dpiInvalid": "El DPI debe tener 13 dígitos numéricos",
+    "registerSuccessTitle": "Registro exitoso",
+    "registerSuccessMsg": "Tu cuenta ha sido creada correctamente.",
+    "registerGenericError": "No se pudo completar el registro.",
+    "duplicate": "Este DPI o email ya está registrado."
+  }
+}

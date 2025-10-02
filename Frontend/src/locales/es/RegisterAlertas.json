@@ -1,0 +1,84 @@
+
+{
+  "screens": {
+    "registerAlert": {
+      "title": "Nueva Alerta",
+      "subtitle": "Registro de emergencia"
+    }
+  },
+  "sections": {
+    "personalInfo": "Información Personal",
+    "specificLocation": "Ubicación específica",
+    "classification": "Clasificación de Emergencia",
+    "description": "Descripción de la Emergencia",
+    "evidence": "Evidencia Fotográfica",
+    "evidenceHint": "Opcional - Ayuda a evaluar la situación"
+  },
+  "fields": {
+    "fullName": "Nombre completo",
+    "fullNamePh": "Ingresa el nombre",
+    "age": "Edad",
+    "agePh": "Años",
+    "locationPh": "Dirección, referencias, coordenadas...",
+    "community": "Comunidad",
+    "communityPh": "Selecciona una comunidad",
+    "alertType": "Tipo de alerta",
+    "alertTypePh": "Selecciona el tipo",
+    "priority": "Nivel de prioridad",
+    "priorityPh": "Selecciona prioridad",
+    "descPh": "Describe detalladamente la situación de emergencia: síntomas, cuándo comenzó, circunstancias importantes, estado actual, tratamientos intentados, evolución, factores de riesgo..."
+  },
+  "types": {
+    "medical": "Médica",
+    "nutritional": "Nutricional",
+    "psychosocial": "Psicosocial",
+    "urgent": "Urgente"
+  },
+  "priorities": {
+    "low": "Baja",
+    "medium": "Media",
+    "high": "Alta",
+    "critical": "Crítica"
+  },
+  "photo": {
+    "add": "Agregar fotografía",
+    "tapToSelect": "Toca para seleccionar desde galería",
+    "change": "Cambiar",
+    "removeTitle": "Eliminar foto",
+    "removeMsg": "¿Estás seguro de que quieres eliminar la foto?",
+    "cancel": "Cancelar",
+    "remove": "Eliminar",
+    "permTitle": "Permisos necesarios",
+    "permMsg": "Necesitamos permisos para acceder a tus fotos.",
+    "understood": "Entendido",
+    "loadError": "No se pudo cargar la imagen"
+  },
+  "buttons": {
+    "cancel": "Cancelar",
+    "create": "Crear Alerta",
+    "sending": "Enviando...",
+    "retry": "Reintentar"
+  },
+  "modal": {
+    "sending": "Enviando alerta...",
+    "pleaseWait": "Por favor espera"
+  },
+  "alerts": {
+    "incompleteTitle": "Campos incompletos",
+    "createdTitle": "Alerta creada",
+    "createdMsg": "La alerta ha sido registrada exitosamente",
+    "errorTitle": "Error",
+    "createFail": "No se pudo crear la alerta. Intenta nuevamente."
+  },
+  "validation": {
+    "nameRequired": "El nombre es obligatorio",
+    "nameMin": "El nombre debe tener al menos 2 caracteres",
+    "ageRequired": "La edad es obligatoria",
+    "ageInvalid": "Ingresa una edad válida",
+    "communityRequired": "Selecciona una comunidad",
+    "typeRequired": "Selecciona el tipo de alerta",
+    "priorityRequired": "Selecciona el nivel de prioridad",
+    "descRequired": "La descripción es obligatoria",
+    "descMin": "La descripción debe tener al menos 50 caracteres para proporcionar suficiente detalle sobre la emergencia"
+  }
+}

@@ -1,4 +1,4 @@
-// src/screens/RegisterAlertas.js
+// src/screens/RegisterAlertas.js (actualizado para i18n)
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Image,
@@ -10,6 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
+import { useTranslation } from 'react-i18next';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -18,6 +19,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 export default function RegisterAlertas({ navigation }) {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { t } = useTranslation();
   const { width, height } = useWindowDimensions();
   const screenDimensions = Dimensions.get('window');
 
@@ -52,9 +54,12 @@ export default function RegisterAlertas({ navigation }) {
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scrollViewRef = useRef();
 
+  // Comunidades (nombres propios no se traducen)
   const comunidades = ['San Gaspar Ixchil', 'Santa Bárbara', 'Huehuetenango', 'Cahabón', 'Colotenango', 'Lanquín'];
-  const tipos = ['Médica', 'Nutricional', 'Psicosocial', 'Urgente'];
-  const prioridades = ['Baja', 'Media', 'Alta', 'Crítica'];
+
+  // Tipos y prioridades traducibles
+  const tipos = [t('types.medical'), t('types.nutritional'), t('types.psychosocial'), t('types.urgent')];
+  const prioridades = [t('priorities.low'), t('priorities.medium'), t('priorities.high'), t('priorities.critical')];
 
   useEffect(() => {
     cargarDatosPrevios();
@@ -102,7 +107,7 @@ export default function RegisterAlertas({ navigation }) {
       const fotoGuardada = await AsyncStorage.getItem('fotoAlerta');
       if (fotoGuardada) setFoto(fotoGuardada);
     } catch (error) {
-      console.log('Error cargando datos previos:', error);
+      // noop
     }
   };
 
@@ -152,7 +157,7 @@ export default function RegisterAlertas({ navigation }) {
   const seleccionarFoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permisos necesarios', 'Necesitamos permisos para acceder a tus fotos.', [{ text: 'Entendido' }]);
+      Alert.alert(t('photo.permTitle'), t('photo.permMsg'), [{ text: t('photo.understood') }]);
       return;
     }
     try {
@@ -169,15 +174,15 @@ export default function RegisterAlertas({ navigation }) {
         setFoto(selectedImage);
       }
     } catch (error) {
-      Alert.alert('Error', 'No se pudo cargar la imagen');
+      Alert.alert(t('alerts.errorTitle'), t('photo.loadError'));
     }
   };
 
   const eliminarFoto = async () => {
-    Alert.alert('Eliminar foto', '¿Estás seguro de que quieres eliminar la foto?', [
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert(t('photo.removeTitle'), t('photo.removeMsg'), [
+      { text: t('photo.cancel'), style: 'cancel' },
       {
-        text: 'Eliminar',
+        text: t('photo.remove'),
         style: 'destructive',
         onPress: async () => {
           await AsyncStorage.removeItem('fotoAlerta');
@@ -189,34 +194,34 @@ export default function RegisterAlertas({ navigation }) {
 
   const validarFormulario = () => {
     const { nombre, edad, comunidad, tipoAlerta, prioridad, descripcion } = formData;
-    if (!nombre.trim()) return 'El nombre es obligatorio';
-    if (nombre.trim().length < 2) return 'El nombre debe tener al menos 2 caracteres';
-    if (!edad.trim()) return 'La edad es obligatoria';
-    if (isNaN(edad) || parseInt(edad) <= 0 || parseInt(edad) > 150) return 'Ingresa una edad válida';
-    if (!comunidad) return 'Selecciona una comunidad';
-    if (!tipoAlerta) return 'Selecciona el tipo de alerta';
-    if (!prioridad) return 'Selecciona el nivel de prioridad';
-    if (!descripcion.trim()) return 'La descripción es obligatoria';
-    if (descripcion.trim().length < 50)
-      return 'La descripción debe tener al menos 50 caracteres para proporcionar suficiente detalle sobre la emergencia';
+    if (!nombre.trim()) return t('validation.nameRequired');
+    if (nombre.trim().length < 2) return t('validation.nameMin');
+    if (!edad.trim()) return t('validation.ageRequired');
+    if (isNaN(edad) || parseInt(edad) <= 0 || parseInt(edad) > 150) return t('validation.ageInvalid');
+    if (!comunidad) return t('validation.communityRequired');
+    if (!tipoAlerta) return t('validation.typeRequired');
+    if (!prioridad) return t('validation.priorityRequired');
+    if (!descripcion.trim()) return t('validation.descRequired');
+    if (descripcion.trim().length < 50) return t('validation.descMin');
     return null;
   };
 
   const handleCrear = async () => {
     const error = validarFormulario();
     if (error) {
-      Alert.alert('Campos incompletos', error);
+      Alert.alert(t('alerts.incompleteTitle'), error);
       return;
     }
     setIsLoading(true);
     try {
+      // Aquí iría tu POST real
       await new Promise(resolve => setTimeout(resolve, 2000));
       await AsyncStorage.removeItem('fotoAlerta');
-      Alert.alert('Alerta creada', 'La alerta ha sido registrada exitosamente', [
+      Alert.alert(t('alerts.createdTitle'), t('alerts.createdMsg'), [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (error) {
-      Alert.alert('Error', 'No se pudo crear la alerta. Intenta nuevamente.');
+      Alert.alert(t('alerts.errorTitle'), t('alerts.createFail'));
     } finally {
       setIsLoading(false);
     }
@@ -232,7 +237,7 @@ export default function RegisterAlertas({ navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={isDarkMode ? theme.inputBackground : '#FFF7DA'} />
 
-      {/* Header tipo “tarjeta” como Home/Gráficas */}
+      {/* Header */}
       <View style={[styles.topBar, { backgroundColor: isDarkMode ? theme.inputBackground : '#FFF7DA' }]}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7}>
@@ -246,8 +251,8 @@ export default function RegisterAlertas({ navigation }) {
           />
 
           <View>
-            <Text style={[styles.topTitle, { color: theme.text }]}>Nueva Alerta</Text>
-            <Text style={[styles.topSubtitle, { color: isDarkMode ? theme.secondaryText : '#6698CC' }]}>Registro de emergencia</Text>
+            <Text style={[styles.topTitle, { color: theme.text }]}>{t('screens.registerAlert.title')}</Text>
+            <Text style={[styles.topSubtitle, { color: isDarkMode ? theme.secondaryText : '#6698CC' }]}>{t('screens.registerAlert.subtitle')}</Text>
           </View>
         </View>
 
@@ -266,15 +271,15 @@ export default function RegisterAlertas({ navigation }) {
         {/* Información personal */}
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>
-            <Ionicons name="person" size={20} color={theme.primaryButton} /> Información Personal
+            <Ionicons name="person" size={20} color={theme.primaryButton} /> {t('sections.personalInfo')}
           </Text>
 
           <View style={isLargeScreen ? styles.rowContainer : styles.columnContainer}>
             <FormField
-              label="Nombre completo"
+              label={t('fields.fullName')}
               value={formData.nombre}
-              onChangeText={(t) => updateFormData('nombre', t)}
-              placeholder="Ingresa el nombre"
+              onChangeText={(tval) => updateFormData('nombre', tval)}
+              placeholder={t('fields.fullNamePh')}
               icon="person-outline"
               theme={theme}
               style={isLargeScreen ? styles.halfWidth : styles.fullWidth}
@@ -283,10 +288,10 @@ export default function RegisterAlertas({ navigation }) {
             />
 
             <FormField
-              label="Edad"
+              label={t('fields.age')}
               value={formData.edad}
-              onChangeText={(t) => updateFormData('edad', t)}
-              placeholder="Años"
+              onChangeText={(tval) => updateFormData('edad', tval)}
+              placeholder={t('fields.agePh')}
               icon="calendar-outline"
               keyboardType="numeric"
               theme={theme}
@@ -301,7 +306,7 @@ export default function RegisterAlertas({ navigation }) {
         <View style={styles.sectionCard}>
           <View style={styles.sectionTitleRow}>
             <Text style={styles.sectionTitle}>
-              <Ionicons name="location-outline" size={20} color={theme.primaryButton} /> Ubicación específica
+              <Ionicons name="location-outline" size={20} color={theme.primaryButton} /> {t('sections.specificLocation')}
             </Text>
             <View style={styles.charCounterContainer}>
               <Text
@@ -325,10 +330,10 @@ export default function RegisterAlertas({ navigation }) {
           <View style={[styles.textAreaContainer, { minHeight: 100 }]}>
             <TextInput
               style={[styles.textArea, { minHeight: 60 }]}
-              placeholder="Dirección, referencias, coordenadas..."
+              placeholder={t('fields.locationPh')}
               placeholderTextColor={theme.inputPlaceholder}
               value={formData.ubicacion}
-              onChangeText={(t) => updateFormData('ubicacion', t)}
+              onChangeText={(tval) => updateFormData('ubicacion', tval)}
               multiline
               numberOfLines={3}
               textAlignVertical="top"
@@ -340,13 +345,13 @@ export default function RegisterAlertas({ navigation }) {
         {/* Clasificación */}
         <View style={[styles.sectionCard, activeDropdown && { zIndex: 10000, elevation: 10000 }]}>
           <Text style={styles.sectionTitle}>
-            <Ionicons name="medical" size={20} color={theme.primaryButton} /> Clasificación de Emergencia
+            <Ionicons name="medical" size={20} color={theme.primaryButton} /> {t('sections.classification')}
           </Text>
 
           <DropdownField
-            label="Comunidad"
+            label={t('fields.community')}
             value={formData.comunidad}
-            placeholder="Selecciona una comunidad"
+            placeholder={t('fields.communityPh')}
             options={comunidades}
             onSelect={(v) => selectOption('comunidad', v)}
             isOpen={dropdownStates.comunidades}
@@ -362,9 +367,9 @@ export default function RegisterAlertas({ navigation }) {
 
           <View style={isLargeScreen ? styles.rowContainer : styles.columnContainer}>
             <DropdownField
-              label="Tipo de alerta"
+              label={t('fields.alertType')}
               value={formData.tipoAlerta}
-              placeholder="Selecciona el tipo"
+              placeholder={t('fields.alertTypePh')}
               options={tipos}
               onSelect={(v) => selectOption('tipoAlerta', v)}
               isOpen={dropdownStates.tipos}
@@ -379,9 +384,9 @@ export default function RegisterAlertas({ navigation }) {
             />
 
             <DropdownField
-              label="Nivel de prioridad"
+              label={t('fields.priority')}
               value={formData.prioridad}
-              placeholder="Selecciona prioridad"
+              placeholder={t('fields.priorityPh')}
               options={prioridades}
               onSelect={(v) => selectOption('prioridad', v)}
               isOpen={dropdownStates.prioridades}
@@ -402,7 +407,7 @@ export default function RegisterAlertas({ navigation }) {
         <View style={styles.sectionCard}>
           <View style={styles.sectionTitleRow}>
             <Text style={styles.sectionTitle}>
-              <Ionicons name="document-text" size={20} color={theme.primaryButton} /> Descripción de la Emergencia
+              <Ionicons name="document-text" size={20} color={theme.primaryButton} /> {t('sections.description')}
             </Text>
             <View style={styles.charCounterContainer}>
               <Text
@@ -421,10 +426,10 @@ export default function RegisterAlertas({ navigation }) {
           <View style={styles.textAreaContainer}>
             <TextInput
               style={styles.textArea}
-              placeholder="Describe detalladamente la situación de emergencia: síntomas, cuándo comenzó, circunstancias importantes, estado actual, tratamientos intentados, evolución, factores de riesgo..."
+              placeholder={t('fields.descPh')}
               placeholderTextColor={theme.inputPlaceholder}
               value={formData.descripcion}
-              onChangeText={(t) => updateFormData('descripcion', t)}
+              onChangeText={(tval) => updateFormData('descripcion', tval)}
               multiline
               numberOfLines={8}
               textAlignVertical="top"
@@ -437,9 +442,9 @@ export default function RegisterAlertas({ navigation }) {
         {/* Evidencia */}
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>
-            <Ionicons name="camera" size={20} color={theme.primaryButton} /> Evidencia Fotográfica
+            <Ionicons name="camera" size={20} color={theme.primaryButton} /> {t('sections.evidence')}
           </Text>
-          <Text style={styles.sectionSubtitle}>Opcional - Ayuda a evaluar la situación</Text>
+          <Text style={styles.sectionSubtitle}>{t('sections.evidenceHint')}</Text>
 
           {foto ? (
             <View style={styles.imageContainer}>
@@ -449,15 +454,15 @@ export default function RegisterAlertas({ navigation }) {
               </TouchableOpacity>
               <TouchableOpacity onPress={seleccionarFoto} style={styles.changeImageButton} activeOpacity={0.7}>
                 <Ionicons name="camera" size={16} color={theme.primaryButton} />
-                <Text style={[styles.changeImageText, { color: theme.primaryButton }]}>Cambiar</Text>
+                <Text style={[styles.changeImageText, { color: theme.primaryButton }]}>{t('photo.change')}</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <TouchableOpacity style={styles.photoUploadArea} onPress={seleccionarFoto} activeOpacity={0.7}>
               <View style={styles.photoUploadContent}>
                 <Ionicons name="camera-outline" size={32} color={theme.primaryButton} />
-                <Text style={styles.photoUploadText}>Agregar fotografía</Text>
-                <Text style={styles.photoUploadSubtext}>Toca para seleccionar desde galería</Text>
+                <Text style={styles.photoUploadText}>{t('photo.add')}</Text>
+                <Text style={styles.photoUploadSubtext}>{t('photo.tapToSelect')}</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -467,7 +472,7 @@ export default function RegisterAlertas({ navigation }) {
         <View style={styles.actionButtonsContainer}>
           <TouchableOpacity style={[styles.actionButton, styles.cancelButton]} onPress={() => navigation.goBack()} activeOpacity={0.8}>
             <Ionicons name="close-outline" size={20} color={theme.cancelButtonText} />
-            <Text style={[styles.actionButtonText, { color: theme.cancelButtonText }]}>Cancelar</Text>
+            <Text style={[styles.actionButtonText, { color: theme.cancelButtonText }]}>{t('buttons.cancel')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.actionButton, styles.createButton]} onPress={handleCrear} disabled={isLoading} activeOpacity={0.8}>
@@ -477,7 +482,7 @@ export default function RegisterAlertas({ navigation }) {
               <Ionicons name="checkmark-outline" size={20} color={theme.primaryButtonText} />
             )}
             <Text style={[styles.actionButtonText, { color: theme.primaryButtonText }]}>
-              {isLoading ? 'Enviando...' : 'Crear Alerta'}
+              {isLoading ? t('buttons.sending') : t('buttons.create')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -488,8 +493,8 @@ export default function RegisterAlertas({ navigation }) {
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.primaryButton} />
-            <Text style={styles.loadingText}>Enviando alerta...</Text>
-            <Text style={[styles.loadingText, { fontSize: 14, opacity: 0.7 }]}>Por favor espera</Text>
+            <Text style={styles.loadingText}>{t('modal.sending')}</Text>
+            <Text style={[styles.loadingText, { fontSize: 14, opacity: 0.7 }]}>{t('modal.pleaseWait')}</Text>
           </View>
         </View>
       </Modal>
@@ -497,7 +502,7 @@ export default function RegisterAlertas({ navigation }) {
   );
 }
 
-/* ====== Subcomponentes (igual que los tuyos, sin cambios funcionales) ====== */
+/* ====== Subcomponentes ====== */
 const FormField = ({
   label, value, onChangeText, placeholder, icon, keyboardType = 'default',
   theme, style, maxLength, multiline = false, numberOfLines = 1,
@@ -576,11 +581,20 @@ const DropdownField = ({
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'Baja': return theme.priorityLow;
-      case 'Media': return theme.priorityMedium;
-      case 'Alta': return theme.priorityHigh;
-      case 'Crítica': return theme.priorityCritical;
-      default: return theme.text;
+      case 'Baja':
+      case 'Low':
+        return theme.priorityLow;
+      case 'Media':
+      case 'Medium':
+        return theme.priorityMedium;
+      case 'Alta':
+      case 'High':
+        return theme.priorityHigh;
+      case 'Crítica':
+      case 'Critical':
+        return theme.priorityCritical;
+      default:
+        return theme.text;
     }
   };
 
@@ -689,7 +703,7 @@ const getFieldStyles = (theme) => StyleSheet.create({
   priorityIndicator: { width: 10, height: 10, borderRadius: 5, marginLeft: 12 },
 });
 
-/* ===== Estilos responsivos + header “tarjeta” ===== */
+/* ===== Estilos responsivos + header ===== */
 const getResponsiveStyles = (theme, screenInfo, isDarkMode) => {
   const { width, height, isLargeScreen, isTablet, isSmallScreen } = screenInfo;
 
@@ -700,11 +714,8 @@ const getResponsiveStyles = (theme, screenInfo, isDarkMode) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      // Fondo amarillo en claro; oscuro conserva el tema
       backgroundColor: isDarkMode ? theme.background : '#F2D88F',
     },
-
-    /* App-bar tipo tarjeta (igual a Home/Gráficas) */
     topBar: {
       height: 72,
       marginHorizontal: 16,
@@ -735,7 +746,6 @@ const getResponsiveStyles = (theme, screenInfo, isDarkMode) => {
     topSubtitle: { marginTop: 2, fontSize: 12, fontWeight: '700' },
     toggleButton: { padding: 6, borderRadius: 10 },
 
-    /* Contenido */
     scrollContent: { paddingHorizontal: 20 * paddingScale, paddingVertical: 20 * spacingScale, paddingBottom: 50 * spacingScale },
 
     sectionCard: {

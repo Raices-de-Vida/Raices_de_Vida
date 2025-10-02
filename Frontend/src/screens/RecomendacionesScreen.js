@@ -1,4 +1,4 @@
-// src/screens/RecomendacionesScreen.js
+// src/screens/RecomendacionesScreen.js (actualizado para i18n)
 import React, { useRef, useEffect } from 'react';
 import {
   View,
@@ -8,15 +8,16 @@ import {
   TouchableOpacity,
   Image,
   Animated,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
+import { useTranslation } from 'react-i18next';
 
 export default function RecomendacionesScreen({ navigation }) {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { t } = useTranslation();
 
   // Animaciones: entrada + “pop” al presionar
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -59,7 +60,7 @@ export default function RecomendacionesScreen({ navigation }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? theme.background : '#F2D88F' }}>
-      {/* Header tipo píldora (consistente con Home/Graficas/Importación) */}
+      {/* Header tipo píldora */}
       <View
         style={[
           styles.topBar,
@@ -84,9 +85,11 @@ export default function RecomendacionesScreen({ navigation }) {
             resizeMode="contain"
           />
           <View>
-            <Text style={[styles.topTitle, { color: theme.text }]}>Recomendaciones</Text>
+            <Text style={[styles.topTitle, { color: theme.text }]}>
+              {t('screens.recommendations.title')}
+            </Text>
             <Text style={[styles.topSubtitle, { color: isDarkMode ? theme.secondaryText : '#6698CC' }]}>
-              Guías y buenas prácticas
+              {t('screens.recommendations.subtitle')}
             </Text>
           </View>
         </View>
@@ -120,11 +123,10 @@ export default function RecomendacionesScreen({ navigation }) {
         {/* Bloque opcional de texto/descripción */}
         <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder || 'rgba(0,0,0,0.06)' }]}>
           <Text style={[styles.cardTitle, { color: theme.text }]}>
-            Plato recomendado
+            {t('cards.plate.title')}
           </Text>
           <Text style={[styles.cardText, { color: theme.secondaryText }]}>
-            Prioriza verduras, frutas, granos integrales y proteínas saludables.
-            Mantén hidratación adecuada y limita azúcares añadidos y ultraprocesados.
+            {t('cards.plate.text')}
           </Text>
         </View>
       </ScrollView>

@@ -1,0 +1,48 @@
+
+{
+  "screens": {
+    "registerCommunity": {
+      "title": "Community Registration",
+      "subtitle": "Create an account as a community member"
+    }
+  },
+  "fields": {
+    "firstName": "First name *",
+    "lastName": "Last name *",
+    "dpi": "DPI/National ID *",
+    "phone": "Phone",
+    "emailOpt": "Email (optional)",
+    "password": "Password *",
+    "confirmPassword": "Confirm password *",
+    "community": "Community *",
+    "selectCommunity": "Select your community"
+  },
+  "placeholders": {
+    "firstName": "Enter your first name",
+    "lastName": "Enter your last name",
+    "dpi": "Enter your ID (13 digits)",
+    "phone": "Enter your phone number",
+    "email": "Enter your email (optional)",
+    "password": "Enter your password",
+    "confirmPassword": "Confirm your password"
+  },
+  "checkbox": {
+    "isLeader": "I am a Community Leader"
+  },
+  "buttons": {
+    "register": "Register",
+    "processing": "Processing…",
+    "login": "Already have an account? Log in",
+    "terms": "Terms and conditions"
+  },
+  "alerts": {
+    "errorTitle": "Error",
+    "required": "Please complete all required fields",
+    "passwordMismatch": "Passwords do not match",
+    "dpiInvalid": "ID must be 13 numeric digits",
+    "registerSuccessTitle": "Registration successful",
+    "registerSuccessMsg": "Your account has been created.",
+    "registerGenericError": "Could not complete registration.",
+    "duplicate": "This ID or email is already registered."
+  }
+}

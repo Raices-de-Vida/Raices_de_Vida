@@ -1,12 +1,7 @@
+// src/screens/RegisterCommunityScreen.js (actualizado para i18n)
 import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Alert
+  View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -14,10 +9,12 @@ import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import ThemeToggle from '../components/ThemeToggle';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 
 export default function RegisterCommunityScreen({ navigation }) {
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { t } = useTranslation();
 
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
@@ -36,14 +33,12 @@ export default function RegisterCommunityScreen({ navigation }) {
   const isEmpty = (value) => submitted && value.trim() === '';
 
   useEffect(() => {
-    //Cargar la lista de comunidades del backend
     const fetchComunidades = async () => {
       try {
         const response = await axios.get('//localhost:3001/api/comunidades');
         setComunidades(response.data);
       } catch (error) {
         console.error('Error cargando comunidades:', error);
-        // Comunidades predefinidas como fallback [DUMMY DATA]
         setComunidades([
           { id_comunidad: 1, nombre_comunidad: 'San Gaspar Ixchil' },
           { id_comunidad: 2, nombre_comunidad: 'Santa Bárbara' },
@@ -54,69 +49,63 @@ export default function RegisterCommunityScreen({ navigation }) {
         ]);
       }
     };
-
     fetchComunidades();
   }, []);
 
   const handleRegister = async () => {
     setSubmitted(true);
-    
-    // Validación de campos obligatorios
+
     if (!nombre || !apellido || !dpi || !comunidad || !password || !confirmPassword) {
-      Alert.alert('Error', 'Por favor completa todos los campos obligatorios');
+      Alert.alert(t('alerts.errorTitle'), t('alerts.required'));
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Las contraseñas no coinciden');
+      Alert.alert(t('alerts.errorTitle'), t('alerts.passwordMismatch'));
       return;
     }
 
     if (dpi.length !== 13 || isNaN(dpi)) {
-      Alert.alert('Error', 'El DPI debe tener 13 dígitos numéricos');
+      Alert.alert(t('alerts.errorTitle'), t('alerts.dpiInvalid'));
       return;
     }
 
     setLoading(true);
-    
     try {
-      // Obtener ID de la comunidad seleccionada
       const comunidadSeleccionada = comunidades.find(c => c.nombre_comunidad === comunidad);
       const id_comunidad = comunidadSeleccionada?.id_comunidad || 1;
-      
-      // Datos para el registro
+
       const userData = {
         nombre,
         apellido,
         dpi,
         telefono,
-        email: email || `${dpi}@raicesdevida.app`, // Email generado si no se proporciona
+        email: email || `${dpi}@raicesdevida.app`,
         password,
+        // IMPORTANTE: mantén estos valores tal cual si el backend los espera en español
         rol: esLider ? 'Lider Comunitario' : 'Miembro Comunidad',
         tipo_referencia: 'Comunidad',
         id_referencia: id_comunidad
       };
 
-      const response = await axios.post('//localhost:3001/api/auth/register/community', userData);
-      
+      await axios.post('//localhost:3001/api/auth/register/community', userData);
+
       Alert.alert(
-        'Registro exitoso',
-        'Tu cuenta ha sido creada correctamente.',
+        t('alerts.registerSuccessTitle'),
+        t('alerts.registerSuccessMsg'),
         [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
       );
     } catch (error) {
       console.error('Error en el registro:', error);
-      
-      let errorMessage = 'No se pudo completar el registro.';
+      let errorMessage = t('alerts.registerGenericError');
       if (error.response) {
         if (error.response.status === 409) {
-          errorMessage = 'Este DPI o email ya está registrado.';
+          errorMessage = t('alerts.duplicate');
         } else if (error.response.data?.error) {
           errorMessage = error.response.data.error;
         }
       }
-      
-      Alert.alert('Error', errorMessage);
+      Alert.alert(t('alerts.errorTitle'), errorMessage);
     } finally {
       setLoading(false);
     }
@@ -126,16 +115,16 @@ export default function RegisterCommunityScreen({ navigation }) {
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
         <ThemeToggle />
-        
-        <Text style={[styles.title, { color: theme.text }]}>Registro Comunitario</Text>
+
+        <Text style={[styles.title, { color: theme.text }]}>{t('screens.registerCommunity.title')}</Text>
         <Text style={[styles.subtitle, { color: theme.secondaryText }]}>
-          Crea una cuenta como miembro de la comunidad
+          {t('screens.registerCommunity.subtitle')}
         </Text>
 
         {/* Nombre */}
-        <Text style={[styles.label, { color: theme.text }]}>Nombre *</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('fields.firstName')}</Text>
         <View style={[
-          styles.inputBox, 
+          styles.inputBox,
           isEmpty(nombre) && styles.errorInput,
           { backgroundColor: theme.inputBackground }
         ]}>
@@ -143,15 +132,15 @@ export default function RegisterCommunityScreen({ navigation }) {
             style={[styles.input, { color: theme.text }]}
             value={nombre}
             onChangeText={setNombre}
-            placeholder="Ingresa tu nombre"
+            placeholder={t('placeholders.firstName')}
             placeholderTextColor={theme.secondaryText}
           />
         </View>
 
         {/* Apellido */}
-        <Text style={[styles.label, { color: theme.text }]}>Apellido *</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('fields.lastName')}</Text>
         <View style={[
-          styles.inputBox, 
+          styles.inputBox,
           isEmpty(apellido) && styles.errorInput,
           { backgroundColor: theme.inputBackground }
         ]}>
@@ -159,15 +148,15 @@ export default function RegisterCommunityScreen({ navigation }) {
             style={[styles.input, { color: theme.text }]}
             value={apellido}
             onChangeText={setApellido}
-            placeholder="Ingresa tu apellido"
+            placeholder={t('placeholders.lastName')}
             placeholderTextColor={theme.secondaryText}
           />
         </View>
 
         {/* DPI */}
-        <Text style={[styles.label, { color: theme.text }]}>DPI *</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('fields.dpi')}</Text>
         <View style={[
-          styles.inputBox, 
+          styles.inputBox,
           isEmpty(dpi) && styles.errorInput,
           { backgroundColor: theme.inputBackground }
         ]}>
@@ -175,7 +164,7 @@ export default function RegisterCommunityScreen({ navigation }) {
             style={[styles.input, { color: theme.text }]}
             value={dpi}
             onChangeText={setDpi}
-            placeholder="Ingresa tu DPI (13 dígitos)"
+            placeholder={t('placeholders.dpi')}
             keyboardType="numeric"
             maxLength={13}
             placeholderTextColor={theme.secondaryText}
@@ -183,41 +172,35 @@ export default function RegisterCommunityScreen({ navigation }) {
         </View>
 
         {/* Teléfono */}
-        <Text style={[styles.label, { color: theme.text }]}>Teléfono</Text>
-        <View style={[
-          styles.inputBox,
-          { backgroundColor: theme.inputBackground }
-        ]}>
+        <Text style={[styles.label, { color: theme.text }]}>{t('fields.phone')}</Text>
+        <View style={[styles.inputBox, { backgroundColor: theme.inputBackground }]}>
           <TextInput
             style={[styles.input, { color: theme.text }]}
             value={telefono}
             onChangeText={setTelefono}
-            placeholder="Ingresa tu número de teléfono"
+            placeholder={t('placeholders.phone')}
             keyboardType="phone-pad"
             placeholderTextColor={theme.secondaryText}
           />
         </View>
 
         {/* Email (opcional) */}
-        <Text style={[styles.label, { color: theme.text }]}>Email (opcional)</Text>
-        <View style={[
-          styles.inputBox,
-          { backgroundColor: theme.inputBackground }
-        ]}>
+        <Text style={[styles.label, { color: theme.text }]}>{t('fields.emailOpt')}</Text>
+        <View style={[styles.inputBox, { backgroundColor: theme.inputBackground }]}>
           <TextInput
             style={[styles.input, { color: theme.text }]}
             value={email}
             onChangeText={setEmail}
-            placeholder="Ingresa tu email (opcional)"
+            placeholder={t('placeholders.email')}
             keyboardType="email-address"
             placeholderTextColor={theme.secondaryText}
           />
         </View>
 
         {/* Contraseña */}
-        <Text style={[styles.label, { color: theme.text }]}>Contraseña *</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('fields.password')}</Text>
         <View style={[
-          styles.inputBox, 
+          styles.inputBox,
           isEmpty(password) && styles.errorInput,
           { backgroundColor: theme.inputBackground }
         ]}>
@@ -225,16 +208,16 @@ export default function RegisterCommunityScreen({ navigation }) {
             style={[styles.input, { color: theme.text }]}
             value={password}
             onChangeText={setPassword}
-            placeholder="Ingresa tu contraseña"
+            placeholder={t('placeholders.password')}
             secureTextEntry
             placeholderTextColor={theme.secondaryText}
           />
         </View>
 
         {/* Confirmar Contraseña */}
-        <Text style={[styles.label, { color: theme.text }]}>Confirmar Contraseña *</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('fields.confirmPassword')}</Text>
         <View style={[
-          styles.inputBox, 
+          styles.inputBox,
           isEmpty(confirmPassword) && styles.errorInput,
           { backgroundColor: theme.inputBackground }
         ]}>
@@ -242,14 +225,14 @@ export default function RegisterCommunityScreen({ navigation }) {
             style={[styles.input, { color: theme.text }]}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
-            placeholder="Confirma tu contraseña"
+            placeholder={t('placeholders.confirmPassword')}
             secureTextEntry
             placeholderTextColor={theme.secondaryText}
           />
         </View>
 
-        {/* Comunidad */}
-        <Text style={[styles.label, { color: theme.text }]}>Comunidad *</Text>
+        {/* Comunidad (dropdown simple) */}
+        <Text style={[styles.label, { color: theme.text }]}>{t('fields.community')}</Text>
         <TouchableOpacity
           style={[
             styles.dropdownBox,
@@ -259,76 +242,52 @@ export default function RegisterCommunityScreen({ navigation }) {
           onPress={() => setMostrarComunidades(!mostrarComunidades)}
         >
           <Text style={[styles.dropdownText, { color: comunidad ? theme.text : theme.secondaryText }]}>
-            {comunidad || 'Selecciona tu comunidad'}
+            {comunidad || t('fields.selectCommunity')}
           </Text>
-          <Ionicons 
-            name={mostrarComunidades ? 'chevron-up' : 'chevron-down'} 
-            size={20} 
-            color={theme.text}
-          />
+          <Ionicons name={mostrarComunidades ? 'chevron-up' : 'chevron-down'} size={20} color={theme.text} />
         </TouchableOpacity>
-        
+
         {mostrarComunidades && (
-          <View style={[
-            styles.optionGroup, 
-            { backgroundColor: theme.inputBackground }
-          ]}>
+          <View style={[styles.optionGroup, { backgroundColor: theme.inputBackground }]}>
             {comunidades.map((item) => (
-              <TouchableOpacity 
+              <TouchableOpacity
                 key={item.id_comunidad}
                 onPress={() => {
                   setComunidad(item.nombre_comunidad);
                   setMostrarComunidades(false);
                 }}
               >
-                <Text style={[styles.option, { color: theme.text }]}>
-                  {item.nombre_comunidad}
-                </Text>
+                <Text style={[styles.option, { color: theme.text }]}>{item.nombre_comunidad}</Text>
               </TouchableOpacity>
             ))}
           </View>
         )}
 
         {/* Checkbox para Líder Comunitario */}
-        <TouchableOpacity 
-          style={styles.checkboxContainer}
-          onPress={() => setEsLider(!esLider)}
-        >
+        <TouchableOpacity style={styles.checkboxContainer} onPress={() => setEsLider(!esLider)}>
           <Ionicons
             name={esLider ? 'checkbox-outline' : 'square-outline'}
             size={24}
             color={theme.secondaryButton}
           />
-          <Text style={[styles.checkboxText, { color: theme.text }]}>
-            Soy Líder Comunitario
-          </Text>
+          <Text style={[styles.checkboxText, { color: theme.text }]}>{t('checkbox.isLeader')}</Text>
         </TouchableOpacity>
 
         {/* Botón de registro */}
-        <TouchableOpacity 
-          style={[
-            styles.button,
-            { backgroundColor: theme.secondaryButton },
-            loading && { opacity: 0.7 }
-          ]}
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: theme.secondaryButton }, loading && { opacity: 0.7 }]}
           onPress={handleRegister}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>
-            {loading ? 'Procesando...' : 'Registrarme'}
-          </Text>
+          <Text style={styles.buttonText}>{loading ? t('buttons.processing') : t('buttons.register')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-          <Text style={[styles.link, { color: theme.secondaryButton }]}>
-            ¿Ya tienes cuenta? Inicia sesión
-          </Text>
+          <Text style={[styles.link, { color: theme.secondaryButton }]}>{t('buttons.login')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('Terms')}>
-          <Text style={[styles.termsLink, { color: theme.secondaryButton }]}>
-            Términos y condiciones
-          </Text>
+          <Text style={[styles.termsLink, { color: theme.secondaryButton }]}>{t('buttons.terms')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -340,22 +299,22 @@ const styles = StyleSheet.create({
     padding: 24,
     flexGrow: 1,
     paddingTop: 90,
-    paddingBottom: 40,
+    paddingBottom: 40
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 8
   },
   subtitle: {
     fontSize: 16,
-    marginBottom: 20,
+    marginBottom: 20
   },
   label: {
     fontSize: 14,
     fontWeight: '500',
     marginBottom: 5,
-    marginLeft: 4,
+    marginLeft: 4
   },
   inputBox: {
     borderRadius: 8,
@@ -363,16 +322,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     marginBottom: 16,
-    height: 48,
+    height: 48
   },
   input: {
     flex: 1,
     height: '100%',
-    fontSize: 16,
+    fontSize: 16
   },
   errorInput: {
     borderWidth: 1,
-    borderColor: '#FF3B30',
+    borderColor: '#FF3B30'
   },
   dropdownBox: {
     borderRadius: 8,
@@ -382,52 +341,52 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     marginBottom: 16,
-    height: 48,
+    height: 48
   },
   dropdownText: {
-    fontSize: 16,
+    fontSize: 16
   },
   optionGroup: {
     borderRadius: 8,
     padding: 10,
     marginTop: -14,
     marginBottom: 16,
-    maxHeight: 200,
+    maxHeight: 200
   },
   option: {
     fontSize: 16,
     paddingVertical: 10,
-    paddingHorizontal: 5,
+    paddingHorizontal: 5
   },
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 16,
+    marginVertical: 16
   },
   checkboxText: {
     fontSize: 16,
-    marginLeft: 10,
+    marginLeft: 10
   },
   button: {
     paddingVertical: 14,
     borderRadius: 8,
     marginTop: 10,
-    alignItems: 'center',
+    alignItems: 'center'
   },
   buttonText: {
     color: '#fff',
     fontWeight: '600',
-    fontSize: 16,
+    fontSize: 16
   },
   link: {
     marginTop: 16,
     textAlign: 'center',
     fontSize: 14,
-    textDecorationLine: 'underline',
+    textDecorationLine: 'underline'
   },
   termsLink: {
     marginTop: 8,
     textAlign: 'center',
-    fontSize: 13,
+    fontSize: 13
   }
 });

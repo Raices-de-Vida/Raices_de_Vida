@@ -1,0 +1,84 @@
+
+{
+  "screens": {
+    "registerAlert": {
+      "title": "New Alert",
+      "subtitle": "Emergency registration"
+    }
+  },
+  "sections": {
+    "personalInfo": "Personal information",
+    "specificLocation": "Specific location",
+    "classification": "Emergency classification",
+    "description": "Emergency description",
+    "evidence": "Photo evidence",
+    "evidenceHint": "Optional — Helps assess the situation"
+  },
+  "fields": {
+    "fullName": "Full name",
+    "fullNamePh": "Enter the name",
+    "age": "Age",
+    "agePh": "Years",
+    "locationPh": "Address, landmarks, coordinates...",
+    "community": "Community",
+    "communityPh": "Select a community",
+    "alertType": "Alert type",
+    "alertTypePh": "Select a type",
+    "priority": "Priority level",
+    "priorityPh": "Select priority",
+    "descPh": "Describe the emergency in detail: symptoms, when it started, relevant circumstances, current status, treatments tried, evolution, risk factors..."
+  },
+  "types": {
+    "medical": "Medical",
+    "nutritional": "Nutritional",
+    "psychosocial": "Psychosocial",
+    "urgent": "Urgent"
+  },
+  "priorities": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "critical": "Critical"
+  },
+  "photo": {
+    "add": "Add photo",
+    "tapToSelect": "Tap to pick from gallery",
+    "change": "Change",
+    "removeTitle": "Remove photo",
+    "removeMsg": "Are you sure you want to remove the photo?",
+    "cancel": "Cancel",
+    "remove": "Remove",
+    "permTitle": "Permissions required",
+    "permMsg": "We need permission to access your photos.",
+    "understood": "Got it",
+    "loadError": "Could not load the image"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "create": "Create Alert",
+    "sending": "Sending...",
+    "retry": "Retry"
+  },
+  "modal": {
+    "sending": "Sending alert...",
+    "pleaseWait": "Please wait"
+  },
+  "alerts": {
+    "incompleteTitle": "Incomplete fields",
+    "createdTitle": "Alert created",
+    "createdMsg": "The alert has been successfully registered",
+    "errorTitle": "Error",
+    "createFail": "Could not create the alert. Please try again."
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "nameMin": "Name must be at least 2 characters",
+    "ageRequired": "Age is required",
+    "ageInvalid": "Please enter a valid age",
+    "communityRequired": "Select a community",
+    "typeRequired": "Select an alert type",
+    "priorityRequired": "Select a priority level",
+    "descRequired": "Description is required",
+    "descMin": "Description must be at least 50 characters to provide enough detail about the emergency"
+  }
+}
