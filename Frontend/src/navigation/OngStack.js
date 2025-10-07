@@ -8,7 +8,7 @@ import EditarAlerta from '../screens/EditarAlerta';
 import SeleccionPacienteAlertas from '../screens/SeleccionPacienteAlertas';
 import GestionAlertasPaciente from '../screens/GestionAlertasPaciente';
 import ConfiguracionScreen from '../screens/ConfiguracionScreen';
-import CambiarContrasena from '../screens/cambiarContrasenaScreen';
+import CambiarContrasena from '../screens/CambiarContrasenaScreen';
 import PantallaGraficas from '../screens/Graficas';
 import DatosUsuarioScreen from '../screens/DatosUsuarioScreen';
 import ImportanciaScreen from '../screens/ImportanciaScreen';
