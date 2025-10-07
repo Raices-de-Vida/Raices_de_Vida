@@ -5,7 +5,7 @@ import HomeScreen from '../screens/Home';
 import PerfilScreen from '../screens/PerfilScreen';
 import RegisterAlertas from '../screens/RegisterAlertas';
 import ConfiguracionScreen from '../screens/ConfiguracionScreen';
-import CambiarContrasena from '../screens/cambiarContrasenaScreen';
+import CambiarContrasena from '../screens/CambiarContrasenaScreen';
 import DatosUsuarioScreen from '../screens/DatosUsuarioScreen';
 import SubirInfografiaScreen from '../screens/SubirInfografiaScreen';
 import MapaDepartamentos from '../screens/MapaDepartamentos';
