@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'reac
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
+import { useTranslation } from 'react-i18next';
 
 export default function CambiarContrasenaScreen({ navigation }) {
   const [actual, setActual] = useState('');
@@ -11,17 +12,18 @@ export default function CambiarContrasenaScreen({ navigation }) {
 
   const { isDarkMode } = useTheme();
   const theme = getTheme(isDarkMode);
+  const { t } = useTranslation('CambiarContrasena');
 
   const handleGuardar = () => {
     if (!actual || !nueva || !confirmar) {
-      Alert.alert('Error', 'Todos los campos son obligatorios');
+      Alert.alert(t('alerts.error.title'), t('alerts.error.required'));
       return;
     }
     if (nueva !== confirmar) {
-      Alert.alert('Error', 'La nueva contraseña no coincide');
+      Alert.alert(t('alerts.error.title'), t('alerts.error.mismatch'));
       return;
     }
-    Alert.alert('Éxito', 'Contraseña actualizada correctamente');
+    Alert.alert(t('alerts.success.title'), t('alerts.success.message'));
     setActual('');
     setNueva('');
     setConfirmar('');
@@ -34,41 +36,41 @@ export default function CambiarContrasenaScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>Cambiar Contraseña</Text>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>{t('top.title')}</Text>
       </View>
 
-      <Text style={[styles.label, { color: theme.text }]}>Contraseña actual</Text>
+      <Text style={[styles.label, { color: theme.text }]}>{t('fields.current')}</Text>
       <TextInput
         style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text }]}
         value={actual}
         onChangeText={setActual}
-        placeholder="Ingresa tu contraseña actual"
+        placeholder={t('placeholders.current')}
         secureTextEntry
         placeholderTextColor={theme.secondaryText}
       />
 
-      <Text style={[styles.label, { color: theme.text }]}>Nueva contraseña</Text>
+      <Text style={[styles.label, { color: theme.text }]}>{t('fields.new')}</Text>
       <TextInput
         style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text }]}
         value={nueva}
         onChangeText={setNueva}
-        placeholder="Ingresa tu nueva contraseña"
+        placeholder={t('placeholders.new')}
         secureTextEntry
         placeholderTextColor={theme.secondaryText}
       />
 
-      <Text style={[styles.label, { color: theme.text }]}>Confirmar nueva contraseña</Text>
+      <Text style={[styles.label, { color: theme.text }]}>{t('fields.confirm')}</Text>
       <TextInput
         style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text }]}
         value={confirmar}
         onChangeText={setConfirmar}
-        placeholder="Confirma la nueva contraseña"
+        placeholder={t('placeholders.confirm')}
         secureTextEntry
         placeholderTextColor={theme.secondaryText}
       />
 
       <TouchableOpacity style={[styles.button, { backgroundColor: theme.primaryButton }]} onPress={handleGuardar}>
-        <Text style={styles.buttonText}>Guardar cambios</Text>
+        <Text style={styles.buttonText}>{t('buttons.save')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -86,28 +88,9 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   backButton: { padding: 4 },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  label: {
-    fontWeight: 'bold',
-    marginBottom: 6,
-    marginTop: 10,
-  },
-  input: {
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
-  },
-  button: {
-    padding: 15,
-    borderRadius: 8,
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
+  headerTitle: { fontSize: 20, fontWeight: 'bold' },
+  label: { fontWeight: 'bold', marginBottom: 6, marginTop: 10 },
+  input: { borderRadius: 8, padding: 10, marginBottom: 12 },
+  button: { padding: 15, borderRadius: 8, marginTop: 20, alignItems: 'center' },
+  buttonText: { color: 'white', fontWeight: 'bold' },
 });
