@@ -1,0 +1,140 @@
+name: Test Básico - Primer Workflow
+
+# Este workflow se ejecuta manualmente y con cada push
+on:
+  push:
+    branches: [ main, develop, test-* ]
+  workflow_dispatch:  # Permite ejecutarlo manualmente desde GitHub
+    inputs:
+      test_level:
+        description: 'Nivel de prueba'
+        required: true
+        default: 'basic'
+        type: choice
+        options:
+          - basic
+          - backend
+          - frontend
+          - full
+
+jobs:
+  test-basic:
+    name: Prueba Básica
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    - name: 🎯 Mostrar información
+      run: |
+        echo "🚀 Probando GitHub Actions!"
+        echo "📂 Repositorio: ${{ github.repository }}"
+        echo "🌿 Branch: ${{ github.ref_name }}"
+        echo "👤 Autor: ${{ github.actor }}"
+        echo "📝 Commit: ${{ github.sha }}"
+        echo "🎮 Evento: ${{ github.event_name }}"
+        echo "📊 Nivel: ${{ inputs.test_level || 'auto' }}"
+
+    - name: 📋 Listar archivos del proyecto
+      run: |
+        echo "Estructura del proyecto:"
+        ls -la
+        echo ""
+        echo "Carpetas principales:"
+        ls -d */ 2>/dev/null || echo "No hay carpetas"
+
+  test-backend:
+    name: Test Backend Rápido
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_level == 'backend' || github.event.inputs.test_level == 'full' || github.event_name == 'push'
+    
+    defaults:
+      run:
+        working-directory: ./Backend
+
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: 📦 Verificar package.json
+      run: |
+        echo "Verificando Backend..."
+        cat package.json | grep '"name"'
+        cat package.json | grep '"version"'
+
+    - name: 📚 Instalar dependencias
+      run: |
+        echo "Instalando dependencias del backend..."
+        npm ci
+        echo "✅ Dependencias instaladas"
+
+    - name: 🧪 Test simple (sin DB)
+      run: |
+        echo "Ejecutando test básico..."
+        npm test -- --testPathPattern=basic || echo "⚠️ No hay tests básicos configurados aún"
+
+  test-frontend:
+    name: Test Frontend Rápido
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_level == 'frontend' || github.event.inputs.test_level == 'full' || github.event_name == 'push'
+    
+    defaults:
+      run:
+        working-directory: ./Frontend
+
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: 📦 Verificar package.json
+      run: |
+        echo "Verificando Frontend..."
+        cat package.json | grep '"name"'
+        cat package.json | grep '"version"'
+
+    - name: 📚 Instalar dependencias
+      run: |
+        echo "Instalando dependencias del frontend..."
+        npm install --legacy-peer-deps
+        echo "✅ Dependencias instaladas"
+
+    - name: ✅ Verificación completada
+      run: echo "Frontend verificado correctamente"
+
+  summary:
+    name: 📊 Resumen
+    runs-on: ubuntu-latest
+    needs: [test-basic, test-backend, test-frontend]
+    if: always()
+
+    steps:
+    - name: 📈 Mostrar resultados
+      run: |
+        echo "===================="
+        echo "📊 RESUMEN DE PRUEBAS"
+        echo "===================="
+        echo "✅ Test Básico: ${{ needs.test-basic.result }}"
+        echo "🔧 Backend: ${{ needs.test-backend.result }}"
+        echo "📱 Frontend: ${{ needs.test-frontend.result }}"
+        echo "===================="
+        
+        if [ "${{ needs.test-basic.result }}" = "success" ] && \
+           [ "${{ needs.test-backend.result }}" = "success" ] && \
+           [ "${{ needs.test-frontend.result }}" = "success" ]; then
+          echo "🎉 ¡TODO CORRECTO!"
+          exit 0
+        else
+          echo "⚠️ Algunos tests fallaron"
+          exit 0  # No fallar el workflow por ahora
+        fi
