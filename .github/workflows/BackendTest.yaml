@@ -10,7 +10,7 @@ on:
 
 jobs:
   # --------------------------------------------
-  # JOB 1: Test Módulo 1 - Autenticación
+  # JOB 1: Test Módulo 1 - Autenticacion
   # --------------------------------------------
   test-module1:
     name: 🔐 Módulo 1 - Autenticación (38 tests)
