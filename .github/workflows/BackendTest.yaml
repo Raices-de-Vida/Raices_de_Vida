@@ -8,7 +8,7 @@ on:
     paths:
       - 'Backend/**'  # SOLO si cambio algo en Backend/
 
-obs:
+jobs:
   # --------------------------------------------
   # JOB 1: Test Módulo 1 - Autenticación
   # --------------------------------------------
