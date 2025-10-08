@@ -69,7 +69,7 @@ jobs:
     # Step 5: Si falla, subir logs
     - name: 📋 Subir logs si falla
       if: failure()  # Solo si el step anterior falló
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: module1-logs
         path: Backend/npm-debug.log*
