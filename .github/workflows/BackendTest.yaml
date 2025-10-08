@@ -1,0 +1,74 @@
+on:
+  push:
+    branches: 
+      - main
+      - 'test-**'  # También en branches que empiecen con 'test-'
+    paths:
+      - 'Backend/**'  # SOLO si cambio algo en Backend/
+
+obs:
+  # --------------------------------------------
+  # JOB 1: Test Módulo 1 - Autenticación
+  # --------------------------------------------
+  test-module1:
+    name: 🔐 Módulo 1 - Autenticación (38 tests)
+    runs-on: ubuntu-latest
+    
+    # Aquí definimos que TODOS los comandos se ejecuten en Backend/
+    defaults:
+      run:
+        working-directory: ./Backend
+    
+    # PostgreSQL como servicio (necesario para tests)
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: Proyecto1
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    # Step 1: Bajar el código del repo
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+
+    # Step 2: Instalar Node.js
+    - name: 🟢 Setup Node.js 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: Backend/package-lock.json
+
+    # Step 3: Instalar dependencias
+    - name: 📦 Instalar dependencias
+      run: npm ci  # npm ci es más rápido que npm install en CI
+
+    # Step 4: Ejecutar tests del Módulo 1
+    - name: 🧪 Ejecutar Módulo 1
+      run: npm run test:security:module1
+      env:
+        # Variables de entorno para los tests
+        DB_HOST: localhost  # En GitHub Actions, los services están en localhost
+        DB_USER: user
+        DB_PASSWORD: password
+        DB_NAME: Proyecto1
+        JWT_SECRET: test_secret_key
+        PORT: 3001
+
+    # Step 5: Si falla, subir logs
+    - name: 📋 Subir logs si falla
+      if: failure()  # Solo si el step anterior falló
+      uses: actions/upload-artifact@v3
+      with:
+        name: module1-logs
+        path: Backend/npm-debug.log*
+        if-no-files-found: ignore

@@ -1,4 +1,4 @@
-name: Test Básico - Primer Workflow
+name: Minor Workflow
 
 # Este workflow se ejecuta manualmente y con cada push
 on:
@@ -19,24 +19,24 @@ on:
 
 jobs:
   test-basic:
-    name: Prueba Básica
+    name: Minor Workflow Job
     runs-on: ubuntu-latest
     
     steps:
-    - name: 📥 Checkout código
+    - name: Checkout código
       uses: actions/checkout@v4
 
-    - name: 🎯 Mostrar información
+    - name: Mostrar información
       run: |
-        echo "🚀 Probando GitHub Actions!"
-        echo "📂 Repositorio: ${{ github.repository }}"
-        echo "🌿 Branch: ${{ github.ref_name }}"
-        echo "👤 Autor: ${{ github.actor }}"
-        echo "📝 Commit: ${{ github.sha }}"
-        echo "🎮 Evento: ${{ github.event_name }}"
-        echo "📊 Nivel: ${{ inputs.test_level || 'auto' }}"
+        echo "Probando GitHub Actions!"
+        echo "Repositorio: ${{ github.repository }}"
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Autor: ${{ github.actor }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Evento: ${{ github.event_name }}"
+        echo "Nivel: ${{ inputs.test_level || 'auto' }}"
 
-    - name: 📋 Listar archivos del proyecto
+    - name: Listar archivos del proyecto
       run: |
         echo "Estructura del proyecto:"
         ls -la
