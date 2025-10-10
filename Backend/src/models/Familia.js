@@ -80,6 +80,11 @@ const Familia = sequelize.define('Familias', {
       min: 0
     }
   },
+  // ✅ NUEVO: Personal encargado
+  personal_encargado: {
+    type: DataTypes.STRING(255),
+    defaultValue: '100'
+  },
   id_comunidad: DataTypes.INTEGER
 }, {
   tableName: 'Familias',

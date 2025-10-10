@@ -32,6 +32,17 @@ const User = sequelize.define('Usuarios', {
     type: DataTypes.ENUM('ONG', 'Voluntario', 'Lider Comunitario'),
     allowNull: true
   },
+  // ✅ NUEVO: Fecha de registro
+  fecha_registro: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
+  },
+  // ✅ NUEVO: Último acceso
+  ultimo_acceso: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
   tipo_referencia: {
     type: DataTypes.ENUM('ONG', 'Voluntario', 'Comunidad'),
     allowNull: true
@@ -49,11 +60,17 @@ const User = sequelize.define('Usuarios', {
   timestamps: false, 
   hooks: {
     beforeCreate: async (user) => {
+      // Encriptar contraseña
       if (user.password) {
         user.password = await bcrypt.hash(user.password, 10);
       }
+      // Asegurar fecha de registro
+      if (!user.fecha_registro) {
+        user.fecha_registro = new Date();
+      }
     },
     beforeUpdate: async (user) => {
+      // Encriptar contraseña solo si cambió
       if (user.changed('password')) {
         user.password = await bcrypt.hash(user.password, 10);
       }
@@ -61,9 +78,15 @@ const User = sequelize.define('Usuarios', {
   }
 });
 
-// Validar las contraseñas
+// Método para validar contraseñas
 User.prototype.validPassword = async function(password) {
   return await bcrypt.compare(password, this.password);
+};
+
+// ✅ NUEVO: Método para actualizar último acceso
+User.prototype.updateLastAccess = async function() {
+  this.ultimo_acceso = new Date();
+  await this.save();
 };
 
 module.exports = User;

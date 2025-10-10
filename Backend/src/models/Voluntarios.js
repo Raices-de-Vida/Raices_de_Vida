@@ -49,6 +49,12 @@ const Voluntario = sequelize.define('Voluntarios', {
   },
   tipo_voluntario: DataTypes.STRING(255),
   institucion: DataTypes.STRING(255),
+  // ✅ NUEVO: Fecha de registro
+  fecha_registro: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
+  },
   estado: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
@@ -60,6 +66,7 @@ const Voluntario = sequelize.define('Voluntarios', {
   timestamps: false,
   hooks: {
     beforeCreate: (voluntario) => {
+      // Asegurar fecha de registro
       if (!voluntario.fecha_registro) {
         voluntario.fecha_registro = new Date();
       }

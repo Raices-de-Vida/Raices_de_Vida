@@ -9,11 +9,17 @@ const CasoCritico = sequelize.define('Casos_Criticos', {
   },
   id_nino: {
     type: DataTypes.INTEGER,
-    allowNull: true // CAMBIO: Hacer opcional para evitar constraint errors
+    allowNull: true
   },
   id_familia: {
     type: DataTypes.INTEGER,
     allowNull: false
+  },
+  // ✅ NUEVO: Fecha de detección explícita
+  fecha_deteccion: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
   },
   descripcion: {
     type: DataTypes.TEXT,
@@ -37,6 +43,12 @@ const CasoCritico = sequelize.define('Casos_Criticos', {
     type: DataTypes.ENUM('Voluntario', 'ONG'),
     allowNull: false
   },
+  // ✅ NUEVO: Fecha de última actualización explícita
+  fecha_ultima_actualizacion: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
+  },
   requiere_traslado: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
@@ -48,12 +60,17 @@ const CasoCritico = sequelize.define('Casos_Criticos', {
   timestamps: false,
   hooks: {
     beforeCreate: (caso) => {
+      // Asegurar que las fechas tengan valores por defecto
       if (!caso.fecha_deteccion) {
         caso.fecha_deteccion = new Date();
       }
       if (!caso.fecha_ultima_actualizacion) {
         caso.fecha_ultima_actualizacion = new Date();
       }
+    },
+    beforeUpdate: (caso) => {
+      // Actualizar automáticamente la fecha de última actualización
+      caso.fecha_ultima_actualizacion = new Date();
     }
   }
 });

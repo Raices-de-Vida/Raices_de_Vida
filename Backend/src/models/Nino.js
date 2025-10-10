@@ -38,8 +38,31 @@ const Nino = sequelize.define('Ninos', {
       min: 0
     }
   },
+  // ✅ NUEVO: Campo IMC calculado virtualmente
+  // Se calcula automáticamente a partir de peso y talla
+  // Fórmula: peso / (talla^2)
+  imc: {
+    type: DataTypes.VIRTUAL,
+    get() {
+      const peso = this.getDataValue('peso');
+      const talla = this.getDataValue('talla');
+      if (peso && talla && talla > 0) {
+        return parseFloat((peso / (talla * talla)).toFixed(2));
+      }
+      return null;
+    },
+    set(value) {
+      throw new Error('No se puede establecer el IMC manualmente, se calcula automáticamente');
+    }
+  },
   estado_nutricional: {
     type: DataTypes.ENUM('Normal', 'Desnutrición Leve', 'Desnutrición Moderada', 'Desnutrición Severa')
+  },
+  // ✅ NUEVO: Fecha de evaluación
+  // Registra cuándo se realizó la última evaluación nutricional
+  fecha_evaluacion: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
   },
   alergias: DataTypes.TEXT,
   observaciones: DataTypes.TEXT,
@@ -52,6 +75,7 @@ const Nino = sequelize.define('Ninos', {
   timestamps: false,
   hooks: {
     beforeCreate: (nino) => {
+      // Asegurar que fecha_evaluacion tenga un valor al crear
       if (!nino.fecha_evaluacion) {
         nino.fecha_evaluacion = new Date();
       }
