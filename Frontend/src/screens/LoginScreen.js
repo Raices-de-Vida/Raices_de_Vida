@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next';
 const PALETTE = { tangerine: '#F08C21', blush: '#E36888', butter: '#F2D88F', sea: '#6698CC', cream: '#FFF7DA' };
 
 /** 🔔 Modo demo: cambia a false para volver al login real */
-const DEMO_LOGIN = true;
+const DEMO_LOGIN = false;
 
 export default function LoginScreen({ navigation }) {
   const { signIn } = useContext(AuthContext);
@@ -64,110 +64,81 @@ export default function LoginScreen({ navigation }) {
   }, []);
 
   const handleLogin = async () => {
-    /** =========================
-     *  MODO DEMO (sin validación)
-     *  ========================= */
-    if (DEMO_LOGIN) {
+    setSubmitted(true);
+    if (!email.trim() || !password.trim()) {
+      alert(t('alerts.fillAll'));
+      return;
+    }
+
+    // Save/remove remembered email
+    try {
+      await AsyncStorage.setItem('remember_me', remember ? 'true' : 'false');
+      if (remember) {
+        await AsyncStorage.setItem('remember_email', email);
+      } else {
+        await AsyncStorage.removeItem('remember_email');
+      }
+    } catch (error) {
+      console.error('Error saving remember preferences:', error);
+    }
+
+    // Handle offline mode
+    if (!isConnected) {
       try {
-        // Mantener preferencia de "recordarme"
-        await AsyncStorage.setItem('remember_me', remember ? 'true' : 'false');
-        if (remember) await AsyncStorage.setItem('remember_email', email || 'demo@correo.com');
-        else await AsyncStorage.removeItem('remember_email');
-
-        // Heurística simple para rol según el email (opcional)
-        const guessedRole =
-          /ong/i.test(email) ? 'ONG' :
-          /(lider|leader)/i.test(email) ? 'Lider Comunitario' :
-          'Voluntario';
-
-        const demoUser = {
-          nombre: (email && email.split('@')[0]) || 'Demo User',
-          dpi: '---',
-          telefono: '---',
-          rol: guessedRole,
-          email: email || 'demo@correo.com',
-          fotoPerfil: '',
-        };
-
-        // Guardar mínimos para que otras pantallas lean bien
-        await AsyncStorage.multiSet([
-          ['nombre', demoUser.nombre],
-          ['dpi', demoUser.dpi],
-          ['telefono', demoUser.telefono],
-          ['tipo', demoUser.rol],
-          ['fotoPerfil', demoUser.fotoPerfil],
-        ]);
-        await OfflineStorage.saveUserData(demoUser);
-
-        // Entrar a la app usando el rol mapeado
-        signIn(normalizeRole(demoUser.rol));
+        const userData = await OfflineStorage.getUserData();
+        if (userData?.email === email) {
+          Alert.alert(t('ui.offline'), t('alerts.offlineSignedIn'));
+          signIn(normalizeRole(userData.rol));
+          return;
+        }
+        Alert.alert('Error', t('alerts.needOnlineFirst'));
         return;
-      } catch (e) {
-        Alert.alert('Demo', 'No se pudo completar el inicio de sesión de demostración.');
+      } catch (error) {
+        Alert.alert('Error', t('alerts.cannotOffline'));
         return;
       }
     }
 
-    /** ============================================
-     *  LOGIN REAL (RESTORE): descomenta para activar
-     *  ============================================
-     *
-     * setSubmitted(true);
-     * if (!email.trim() || !password.trim()) {
-     *   alert(t('alerts.fillAll'));
-     *   return;
-     * }
-     *
-     * // Guardar/quitar email recordado
-     * try {
-     *   await AsyncStorage.setItem('remember_me', remember ? 'true' : 'false');
-     *   if (remember) await AsyncStorage.setItem('remember_email', email);
-     *   else await AsyncStorage.removeItem('remember_email');
-     * } catch {}
-     *
-     * // Modo offline: permitir solo si ya hay sesión previa guardada
-     * if (!isConnected) {
-     *   try {
-     *     const userData = await OfflineStorage.getUserData();
-     *     if (userData?.email === email) {
-     *       Alert.alert(t('ui.offline'), t('alerts.offlineSignedIn'));
-     *       signIn(normalizeRole(userData.rol));
-     *       return;
-     *     }
-     *     Alert.alert('Error', t('alerts.needOnlineFirst'));
-     *     return;
-     *   } catch {
-     *     Alert.alert('Error', t('alerts.cannotOffline'));
-     *     return;
-     *   }
-     * }
-     *
-     * // 🔑 Intento de login online real
-     * try {
-     *   const payload = { email: email.trim().toLowerCase(), password: String(password) };
-     *   const { data: user } = await axios.post('http://localhost:3001/api/auth/login', payload);
-     *   if (!user?.rol) {
-     *     Alert.alert('Error', t('alerts.missingRole'));
-     *     return;
-     *   }
-     *   const safeSet = async (k, v) => { if (v !== undefined && v !== null) await AsyncStorage.setItem(k, String(v)); };
-     *   await safeSet('nombre', user.nombre);
-     *   await safeSet('dpi', user.dpi);
-     *   await safeSet('telefono', user.telefono);
-     *   await safeSet('tipo', user.rol);
-     *   await safeSet('fotoPerfil', user.fotoPerfil);
-     *   await OfflineStorage.saveUserData(user);
-     *   signIn(normalizeRole(user.rol));
-     * } catch (error) {
-     *   const serverMsg =
-     *     error?.response?.data?.message ||
-     *     error?.response?.data?.error ||
-     *     error?.message ||
-     *     'Error';
-     *   console.error('Error de login:', error?.response || error);
-     *   Alert.alert(t('alerts.loginErrorTitle'), serverMsg);
-     * }
-     */
+    // Online login attempt
+    try {
+      const payload = { 
+        email: email.trim().toLowerCase(), 
+        password: String(password) 
+      };
+
+      const { data: user } = await axios.post('http://localhost:3001/api/auth/login', payload);
+
+      if (!user?.rol) {
+        Alert.alert('Error', t('alerts.missingRole'));
+        return;
+      }
+
+      // Store user data and token
+      await AsyncStorage.multiSet([
+        ['token', user.token],
+        ['nombre', user.nombre || ''],
+        ['dpi', user.dpi || ''],
+        ['telefono', user.telefono || ''],
+        ['tipo', user.rol || ''],
+        ['fotoPerfil', user.fotoPerfil || '']
+      ]);
+
+      // Save user data for offline access
+      await OfflineStorage.saveUserData(user);
+      
+      // Sign in with normalized role
+      signIn(normalizeRole(user.rol));
+
+    } catch (error) {
+      const serverMsg = 
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        'Error desconocido';
+
+      console.error('Error de login:', error?.response || error);
+      Alert.alert(t('alerts.loginErrorTitle'), serverMsg);
+    }
   };
 
   const gotoOrAlert = (routeName, fallbackText) => {

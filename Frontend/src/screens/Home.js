@@ -5,7 +5,6 @@ import {
 import { Ionicons, AntDesign } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import { useOffline } from '../context/OfflineContext';
@@ -21,8 +20,9 @@ const PALETTE = {
   cream:     '#FFF7DA',
 };
 
-// 🔥 CAMBIO: URL del backend - ACTUALIZA CON TU IP LOCAL
-const API_BASE_URL = 'http://localhost:3001'; // Cambia "localhost" por tu IP local si usas dispositivo físico
+// Cambia esta URL a tu IP local cuando pruebes en dispositivo físico
+// Ejemplo: const API_BASE_URL = 'http://192.168.1.100:3001';
+const API_BASE_URL = 'http://localhost:3001';
 
 export default function Home({ navigation, route }) {
   const [activo, setActivo] = useState(true);
@@ -33,7 +33,7 @@ export default function Home({ navigation, route }) {
   const { isConnected } = useOffline();
   const { t } = useTranslation('Home');
 
-  // === Permisos de notificación ===
+  // === permisos de notificación ===
   useEffect(() => {
     const solicitarPermisoNotificaciones = async () => {
       const yaPreguntado = await AsyncStorage.getItem('notificacionesPermitidas');
@@ -56,38 +56,41 @@ export default function Home({ navigation, route }) {
     solicitarPermisoNotificaciones();
   }, [t]);
 
-  // 🔥 CAMBIO: Función para obtener alertas REALES del backend
   const fetchAlertas = async () => {
     setLoading(true);
     try {
       let alertasData = [];
 
-      // Si hay conexión, obtener alertas del backend
+      // Intentar obtener alertas del backend si hay conexión
       if (isConnected) {
         try {
-          const response = await axios.get(`${API_BASE_URL}/api/alertas`);
-          console.log('Alertas del backend:', response.data);
-          
-          // Mapear las alertas del backend al formato esperado por la UI
-          alertasData = response.data.map(alerta => ({
-            alerta_id: alerta.alerta_id,
-            nombre: alerta.caso?.descripcion || t('placeholders.noName'), // Usar descripción del caso como nombre
-            descripcion: alerta.descripcion,
-            comunidad: t('placeholders.noCommunity'), // Por ahora sin comunidad en el modelo
-            edad: null, // No está en el modelo actual de Alertas
-            estado: alerta.estado, // 'Pendiente', 'Atendida', 'Escalada', 'Cerrada'
-            tipo_alerta: alerta.tipo_alerta, // 'Médica', 'Nutricional', 'Psicosocial', 'Urgente'
-            prioridad: alerta.prioridad, // 'Baja', 'Media', 'Alta', 'Crítica'
-            fecha_alerta: alerta.fecha_alerta,
-            observaciones: alerta.observaciones,
-            pendingSync: false
-          }));
+          const token = await AsyncStorage.getItem('token');
+          const response = await fetch(`${API_BASE_URL}/api/alertas`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token && { 'Authorization': `Bearer ${token}` })
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            alertasData = Array.isArray(data) ? data.map(alerta => ({
+              alerta_id: alerta.alerta_id,
+              nombre: alerta.nombre_paciente || t('placeholders.noName'),
+              descripcion: alerta.descripcion,
+              comunidad: alerta.comunidad || t('placeholders.noCommunity'),
+              edad: alerta.edad_paciente,
+              estado: alerta.estado || 'Pendiente',
+              tipo_alerta: alerta.tipo_alerta || 'Nutricional',
+              prioridad: alerta.prioridad || 'Media',
+              pendingSync: false,
+            })) : [];
+          } else {
+            console.warn('Error al obtener alertas del servidor:', response.status);
+          }
         } catch (error) {
-          console.error('Error al obtener alertas del backend:', error);
-          Alert.alert(
-            t('errors.loadingAlertsTitle') || 'Error',
-            t('errors.loadingAlertsMessage') || 'No se pudieron cargar las alertas del servidor'
-          );
+          console.warn('Error de red al obtener alertas:', error.message);
         }
       }
 
@@ -105,65 +108,41 @@ export default function Home({ navigation, route }) {
         pendingSync: true,
       }));
 
-      // Combinar alertas del servidor con alertas locales pendientes
+      // Combinar alertas del servidor y locales
       const todas = [...alertasData, ...localAlertas];
-      
-      // Filtrar según el tab activo (Activas o Cerradas)
-      const filtradas = todas.filter((a) => 
-        activo ? a.estado !== 'Cerrada' : a.estado === 'Cerrada'
-      );
-      
-      setAlertas(filtradas);
+      setAlertas(todas.filter((a) => (activo ? a.estado !== 'Cerrada' : a.estado === 'Cerrada')));
     } catch (error) {
-      console.error('Error general en fetchAlertas:', error);
+      console.error('Error general al cargar alertas:', error);
+      Alert.alert(
+        t('errors.loadTitle') || 'Error',
+        t('errors.loadMessage') || 'No se pudieron cargar las alertas'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { 
-    fetchAlertas(); 
-  }, [activo, isConnected]);
-
-  useEffect(() => { 
-    if (route.params?.refresh) {
-      fetchAlertas(); 
-    }
-  }, [route.params?.refresh]);
-
-  // Función para obtener el color según el estado
-  const getEstadoColor = (estado) => {
-    switch(estado) {
-      case 'Pendiente': return PALETTE.tangerine;
-      case 'Atendida': return '#2E7D32'; // Verde
-      case 'Escalada': return '#D32F2F'; // Rojo
-      case 'Cerrada': return '#1565C0'; // Azul
-      default: return PALETTE.tangerine;
-    }
-  };
+  useEffect(() => { fetchAlertas(); }, [activo, isConnected]);
+  useEffect(() => { if (route.params?.refresh) fetchAlertas(); }, [route.params?.refresh]);
 
   const renderAlertItem = (a) => (
-    <TouchableOpacity 
-      key={a.alerta_id} 
-      style={styles.card(theme, isDarkMode)}
-      onPress={() => navigation.navigate('EditarAlerta', { alerta: a })}
-    >
+    <TouchableOpacity key={a.alerta_id} style={styles.card(theme, isDarkMode)}>
       <AntDesign name="exclamationcircle" size={28} color={PALETTE.blush} style={{ marginRight: 10 }} />
       <View style={{ flex: 1 }}>
         <Text style={[styles.alertName, { color: theme.text }]}>
-          {a.nombre}
-          {a.pendingSync && <Text style={styles.pendingBadge}> {t('badges.unsynced')}</Text>}
+          {a.nombre}{a.pendingSync && <Text style={styles.pendingBadge}> {t('badges.unsynced')}</Text>}
         </Text>
-        <Text style={[styles.alertDesc, { color: theme.secondaryText }]}>
-          {a.descripcion}
+        <Text style={[styles.alertDesc, { color: theme.secondaryText }]}>{a.descripcion}</Text>
+        <Text style={[styles.alertComunidad, { color: theme.secondaryText }]}>
+          {a.comunidad}{a.edad ? ` • ${a.edad} ${t('units.years')}` : ''}
         </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-          <Text style={[styles.alertComunidad, { color: theme.secondaryText }]}>
-            {a.tipo_alerta} • {a.prioridad}
-          </Text>
-        </View>
       </View>
-      <Text style={[styles.alertStatus, { color: getEstadoColor(a.estado) }]}>
+      <Text
+        style={[
+          styles.alertStatus,
+          { color: a.estado === 'Pendiente' ? PALETTE.tangerine : a.estado === 'Atendida' ? '#2E7D32' : '#1565C0' }
+        ]}
+      >
         {a.estado}
       </Text>
     </TouchableOpacity>
@@ -178,69 +157,63 @@ export default function Home({ navigation, route }) {
             source={isDarkMode
               ? require('../styles/logos/LogoDARK.png')
               : require('../styles/logos/LogoBRIGHT.png')}
-            style={{ width: 45, height: 45, marginRight: 8 }}
-            resizeMode="contain"
+            style={styles.logo}
           />
-          <Text style={[styles.title, { color: theme.text }]}>{t('screens.home.title')}</Text>
+          <View>
+            <Text style={[styles.topTitle, { color: theme.text }]}>{t('top.title')}</Text>
+            <Text style={[styles.topSubtitle, { color: isDarkMode ? theme.secondaryText : '#6698CC' }]}>
+              {t('top.subtitle')}
+            </Text>
+          </View>
         </View>
-
-        <View style={styles.rightIcons}>
-          <TouchableOpacity onPress={toggleDarkMode} style={{ marginRight: 12 }}>
-            <Ionicons name={isDarkMode ? 'sunny' : 'moon'} size={24} color={theme.text} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Configuracion')}>
-            <Ionicons name="settings-outline" size={24} color={theme.text} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* ===== Tabs (Activas / Cerradas) ===== */}
-      <View style={[styles.tabsContainer, { backgroundColor: theme.inputBackground }]}>
-        <TouchableOpacity
-          onPress={() => setActivo(true)}
-          style={[styles.tab, activo && { backgroundColor: PALETTE.tangerine, borderRadius: 8 }]}
-        >
-          <Text style={[styles.tabText, { color: activo ? '#FFF' : theme.secondaryText }]}>
-            {t('tabs.active')}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setActivo(false)}
-          style={[styles.tab, !activo && { backgroundColor: PALETTE.sea, borderRadius: 8 }]}
-        >
-          <Text style={[styles.tabText, { color: !activo ? '#FFF' : theme.secondaryText }]}>
-            {t('tabs.closed')}
-          </Text>
+        <TouchableOpacity style={styles.toggleButton} onPress={toggleDarkMode}>
+          <Ionicons name={isDarkMode ? 'sunny-outline' : 'moon-outline'} size={22} color={theme.text} />
         </TouchableOpacity>
       </View>
 
-      {/* ===== Lista de Alertas ===== */}
-      {loading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color={PALETTE.tangerine} />
-          <Text style={[styles.loadingText, { color: theme.secondaryText }]}>
-            {t('loading.alerts')}
-          </Text>
-        </View>
-      ) : alertas.length === 0 ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 30 }}>
-          <Ionicons name="checkmark-circle-outline" size={80} color={theme.secondaryText} />
-          <Text style={[styles.emptyText, { color: theme.text }]}>
-            {activo ? t('empty.noActiveAlerts') : t('empty.noClosedAlerts')}
-          </Text>
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 16, paddingTop: 12 }}>
-          {alertas.map(renderAlertItem)}
-        </ScrollView>
-      )}
+      <ScrollView contentContainerStyle={styles.container}>
+        {/* Indicador de conexión cuando está offline */}
+        {!isConnected && (
+          <View style={styles.offlineBanner}>
+            <Ionicons name="cloud-offline-outline" size={16} color="#fff" />
+            <Text style={styles.offlineText}>
+              {t('offline.banner') || 'Modo sin conexión'}
+            </Text>
+          </View>
+        )}
 
-      {/* ===== Botón flotante "Nueva Alerta" ===== */}
+        {loading ? (
+          <ActivityIndicator size="large" color={PALETTE.tangerine} style={{ marginVertical: 20 }} />
+        ) : alertas.length === 0 ? (
+          <Text style={[styles.noAlertsText, { color: theme.secondaryText }]}>
+            {activo ? t('empty.active') : t('empty.inactive')}
+          </Text>
+        ) : (
+          <>
+            {alertas.map(renderAlertItem)}
+            {/* Botón "Ver más" moderno */}
+            <View style={styles.verMasContainer}>
+              <TouchableOpacity
+                style={styles.verMasButton}
+                onPress={() => console.log('Ver más')}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="add-circle-outline" size={18} color="#fff" />
+                <Text style={styles.verMasText}>{t('seeMore')}</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </ScrollView>
+
+      {/* === FAB: Nuevo Paciente === */}
       <TouchableOpacity
-        style={[styles.fabButton, { backgroundColor: PALETTE.blush }]}
-        onPress={() => navigation.navigate('RegisterAlertas')}
+        style={styles.fab}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate('PacienteForm')}
       >
-        <Ionicons name="add" size={28} color="#FFF" />
+        <Ionicons name="person-add-outline" size={22} color="#fff" />
+        <Text style={styles.fabText}>{t('fab.newPatient')}</Text>
       </TouchableOpacity>
 
       <BottomNav navigation={navigation} />
@@ -248,75 +221,110 @@ export default function Home({ navigation, route }) {
   );
 }
 
+const RADIUS = 16;
+
 const styles = StyleSheet.create({
+  container: { padding: 20, flexGrow: 1, paddingBottom: 100 },
+
   topBar: {
-    paddingTop: 50,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  titleRow: { flexDirection: 'row', alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: '700' },
-  rightIcons: { flexDirection: 'row', alignItems: 'center' },
-  tabsContainer: {
-    flexDirection: 'row',
+    height: 72,
     marginHorizontal: 16,
     marginTop: 12,
-    borderRadius: 10,
-    padding: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
+    marginBottom: 8,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderRadius: 16,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    shadowOpacity: 0.10,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+    borderColor: '#EAD8A6',
   },
-  tabText: { fontSize: 15, fontWeight: '600' },
-  card: (theme, isDark) => ({
-    backgroundColor: theme.inputBackground,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 12,
+  titleRow: { flexDirection: 'row', alignItems: 'center' },
+  logo: { width: 36, height: 36, marginRight: 10, resizeMode: 'contain' },
+  topTitle: { fontSize: 20, fontWeight: '800' },
+  topSubtitle: { marginTop: 4, fontSize: 12, fontWeight: '700' },
+  toggleButton: { padding: 6, borderRadius: 10 },
+
+  offlineBanner: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: PALETTE.sea,
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 15,
+    gap: 8,
+  },
+  offlineText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  card: (theme, isDarkMode) => ({
+    backgroundColor: theme.cardBackground || (isDarkMode ? '#1E1E1E' : '#fff'),
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: isDark ? 0.3 : 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: '#EAD8A6',
   }),
-  alertName: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
-  alertDesc: { fontSize: 14, marginBottom: 2 },
+
+  alertName: { fontSize: 16, fontWeight: '800' },
+  alertDesc: { fontSize: 14, marginVertical: 4 },
   alertComunidad: { fontSize: 12 },
-  alertStatus: { fontSize: 14, fontWeight: '600' },
-  pendingBadge: { color: PALETTE.tangerine, fontSize: 12, fontWeight: '500' },
-  fabButton: {
-    position: 'absolute',
-    bottom: 90,
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
+  alertStatus: { fontSize: 12, fontWeight: '800', padding: 5 },
+
+  pendingBadge: { fontSize: 12, fontStyle: 'italic', color: PALETTE.tangerine },
+
+  verMasContainer: { alignItems: 'center', marginTop: 6, marginBottom: 10 },
+  verMasButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: PALETTE.tangerine,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    borderRadius: 28,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    gap: 8,
   },
-  loadingText: { marginTop: 12, fontSize: 16 },
-  emptyText: { fontSize: 18, textAlign: 'center', marginTop: 16, fontWeight: '500' },
+  verMasText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+
+  noAlertsText: { textAlign: 'center', marginTop: 20, fontSize: 16 },
+
+  fab: {
+    position: 'absolute',
+    right: 18,
+    bottom: 88,
+    backgroundColor: PALETTE.tangerine,
+    paddingHorizontal: 16,
+    height: 48,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  fabText: { color: '#fff', fontWeight: '800', fontSize: 14 },
 });
