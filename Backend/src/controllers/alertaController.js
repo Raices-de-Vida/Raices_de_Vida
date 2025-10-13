@@ -93,6 +93,9 @@ exports.autoEvaluarPaciente = async (req, res) => {
     const paciente = await Paciente.findByPk(id_paciente);
     if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado' });
 
+    // Get patient's name
+    const nombrePaciente = paciente.nombre || 'Paciente sin nombre';
+
     const flags = [];
     const edad = paciente.edad || 0;
     const peso = Number(paciente.peso || 0);
@@ -133,7 +136,12 @@ exports.autoEvaluarPaciente = async (req, res) => {
       creadas.push(row);
     }
 
-    return res.json({ mensaje: `Evaluadas ${flags.length} condiciones`, flags: creadas });
+    return res.json({ 
+      mensaje: `Evaluadas ${flags.length} condiciones para ${nombrePaciente}`, 
+      nombrePaciente,
+      peso,
+      flags: creadas 
+    });
   } catch (error) {
     console.error('autoEvaluarPaciente error:', error);
     res.status(500).json({ error: 'Error en auto-evaluación' });

@@ -1,8 +1,8 @@
-const BASE_URL = 'http://localhost:8081'; 
+// services/pacientes.js - COMPLETO
+const BASE_URL = 'http://localhost:3001';
 
-async function req(path, { method = 'GET', body, token } = {}) {
+async function req(path, { method = 'GET', body} = {}) {
   const headers = { 'Content-Type': 'application/json' };
-  if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers,
@@ -17,10 +17,14 @@ async function req(path, { method = 'GET', body, token } = {}) {
   return data;
 }
 
-export async function createPaciente(payload, token) {
-  return req('/api/pacientes', { method: 'POST', body: payload, token });
+export async function createPaciente(payload) {
+  return req('/api/pacientes', { method: 'POST', body: payload});
 }
 
-export async function registrarSignos(id_paciente, signos, token) {
-  return req(`/api/pacientes/${id_paciente}/signos`, { method: 'POST', body: signos, token });
+export async function registrarSignos(id_paciente, signos) {
+  return req(`/api/pacientes/${id_paciente}/signos`, { method: 'POST', body: signos});
+}
+
+export async function autoEvaluarAlertas(id_paciente) {
+  return req(`/api/alertas/auto-evaluar/${id_paciente}`, { method: 'POST'});
 }

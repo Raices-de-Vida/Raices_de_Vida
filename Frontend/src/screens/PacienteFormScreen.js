@@ -207,15 +207,28 @@ export default function PacienteFormScreen({ navigation }) {
       return;
     }
     try {
-      const token = await AsyncStorage.getItem('token');
+      //const token = await AsyncStorage.getItem('token');
       const payload = buildPayload();
-      const resp = await createPaciente(payload, token);
+      
+      // 1. Crear paciente
+      const resp = await createPaciente(payload);
       const id = resp?.id_paciente ?? resp?.paciente?.id_paciente;
       if (!id) throw new Error('No id_paciente');
-      try { await fetch(`http://localhost:3001/api/alertas/auto-evaluar/${id}`, { method: 'POST' }); } catch {}
+      
+      // 2. Auto-evaluar alertas médicas
+      try { 
+        await autoEvaluarAlertas(id, token); 
+      } catch (evalError) {
+        console.warn('Error en auto-evaluación:', evalError);
+        // No bloqueamos el flujo si falla la auto-evaluación
+      }
+      
+      // 3. Mostrar éxito y regresar
       showSuccess(t('toast.saved'));
-      setTimeout(() => navigation.navigate('RegistrarSignos', { id_paciente: id }), 900);
+      setTimeout(() => navigation.goBack(), 900);
+      
     } catch (e) {
+      console.error('Error al crear paciente:', e);
       Alert.alert(t('errors.errorTitle'), t('errors.createFail'));
     }
   };
