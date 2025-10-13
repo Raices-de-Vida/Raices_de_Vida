@@ -7,7 +7,7 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { createPaciente } from '../services/pacientes';
+import { createPaciente, autoEvaluarAlertas } from '../services/pacientes';
 import { useTranslation } from 'react-i18next';
 
 const C = { bg:'#FFF7DA', card:'#FFFFFF', border:'#E9E2C6', text:'#1B1B1B', subtext:'#687076', primary:'#F08C21', accent:'#6698CC' };
@@ -199,39 +199,41 @@ export default function PacienteFormScreen({ navigation }) {
     usuario_registro: usuario_registro ? toIntOrNull(usuario_registro) : null,
   });
 
-  const handleSubmit = async () => {
-    setTouchedEdad(true);
-    setTouchedNac(true);
-    if (!validar()) {
-      Alert.alert(t('errors.formTitle'), t('errors.formMsg'));
-      return;
-    }
+const handleSubmit = async () => {
+  setTouchedEdad(true);
+  setTouchedNac(true);
+  if (!validar()) {
+    Alert.alert(t('errors.formTitle'), t('errors.formMsg'));
+    return;
+  }
+  
+  try {
+    const token = await AsyncStorage.getItem('token');
+    const payload = buildPayload();
+    
+    // 1. Crear paciente
+    const resp = await createPaciente(payload);
+    const id = resp?.id_paciente ?? resp?.paciente?.id_paciente;
+    if (!id) throw new Error('No id_paciente en la respuesta');
+    
+    // 2. Auto-evaluar alertas médicas
     try {
-      //const token = await AsyncStorage.getItem('token');
-      const payload = buildPayload();
-      
-      // 1. Crear paciente
-      const resp = await createPaciente(payload);
-      const id = resp?.id_paciente ?? resp?.paciente?.id_paciente;
-      if (!id) throw new Error('No id_paciente');
-      
-      // 2. Auto-evaluar alertas médicas
-      try { 
-        await autoEvaluarAlertas(id, token); 
-      } catch (evalError) {
-        console.warn('Error en auto-evaluación:', evalError);
-        // No bloqueamos el flujo si falla la auto-evaluación
-      }
-      
-      // 3. Mostrar éxito y regresar
-      showSuccess(t('toast.saved'));
-      setTimeout(() => navigation.goBack(), 900);
-      
-    } catch (e) {
-      console.error('Error al crear paciente:', e);
-      Alert.alert(t('errors.errorTitle'), t('errors.createFail'));
+      console.log('🔍 Auto-evaluando alertas para paciente:', id); // Debug
+      await autoEvaluarAlertas(id);
+    } catch (evalError) {
+      console.warn('⚠️ Error en auto-evaluación:', evalError);
+      // No bloqueamos el flujo si falla la auto-evaluación
     }
-  };
+    
+    // 3. Mostrar éxito y regresar
+    showSuccess(t('toast.saved'));
+    setTimeout(() => navigation.goBack(), 900);
+    
+  } catch (e) {
+    console.error('❌ Error al crear paciente:', e);
+    Alert.alert(t('errors.errorTitle'), t('errors.createFail') + '\n\n' + e.message);
+  }
+};
 
   const onSis = (t_) => {
     const v = onlyDigits(t_);
