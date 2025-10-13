@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   backend:
     container_name: raices_backend
@@ -14,19 +12,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    restart: always
-
-  frontend:
-    container_name: raices_frontend
-    build: ./Frontend
-    ports:
-      - "19006:19006"
-    volumes:
-      - ./Frontend:/app
-    stdin_open: true
-    tty: true
-    depends_on:
-      - backend
     restart: always
 
   db:
