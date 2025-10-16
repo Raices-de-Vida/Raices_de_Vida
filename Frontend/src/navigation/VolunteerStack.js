@@ -17,6 +17,7 @@ import RecomendacionesScreen from '../screens/RecomendacionesScreen';
 import PacienteFormScreen from '../screens/PacienteFormScreen';
 import DetallePacienteScreen from '../screens/DetallePacienteScreen';
 import ExportacionPDFScreen from '../screens/ExportacionPDFScreen';
+import GestionImagenesScreen from '../screens/GestionImagenesScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -41,6 +42,7 @@ export default function VolunteerStack() {
       <Stack.Screen name="PacienteForm" component={PacienteFormScreen} />
       <Stack.Screen name="DetallePaciente" component={DetallePacienteScreen} />
       <Stack.Screen name="ExportacionPDF" component={ExportacionPDFScreen} />
+      <Stack.Screen name="GestionImagenes" component={GestionImagenesScreen} />
     </Stack.Navigator>
   );
 }

@@ -12,6 +12,7 @@ const casoRoutes = require('./routes/casoRoutes');
 const alertaRoutes = require('./routes/alertaRoutes');
 const userInfoRoutes = require('./routes/UserInfoRoutes');
 const pacienteRoutes = require('./routes/pacienteRoutes');
+const imagenRoutes = require('./routes/imagenRoutes');
 const Paciente = require('./models/Paciente');
 const AlertaMedica = require('./models/AlertaMedica');
 const CasoCritico = require('./models/CasoCritico');
@@ -19,10 +20,16 @@ const Alerta = require('./models/Alerta');
 const User = require('./models/User');
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const cors = require('cors');
-app.use(cors({ origin: '*', credentials: true }));
+app.use(cors({ 
+  origin: ['http://localhost:8081', 'http://localhost:19006', '*'], 
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // conexión y sincronización
 (async () => {
@@ -42,6 +49,7 @@ app.use('/api/casos', casoRoutes);
 app.use('/api/alertas', alertaRoutes);
 app.use('/api/user-info', userInfoRoutes);
 app.use('/api/pacientes', pacienteRoutes);
+app.use('/api', imagenRoutes);
 
 //ruta de seed (dev)
 if (process.env.NODE_ENV !== 'production') {

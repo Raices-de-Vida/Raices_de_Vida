@@ -29,6 +29,8 @@ import enRegisterAlerta from '../locales/en/RegisterAlerta.json';
 import enRegisterCommunity from '../locales/en/RegisterCommunity.json';
 import enRegistrarSignos from '../locales/en/RegistrarSignos.json';
 import enSubirInfo from '../locales/en/SubirInfo.json';
+import enExportacionPDF from '../locales/en/ExportacionPDF.json';
+import enGestionImagenes from '../locales/en/GestionImagenes.json';
 
 /* ===== ES ===== */
 import esCommon from '../locales/es/common.json';
@@ -56,6 +58,8 @@ import esRegisterAlerta from '../locales/es/RegisterAlerta.json';
 import esRegisterCommunity from '../locales/es/RegisterCommunity.json';
 import esRegistrarSignos from '../locales/es/RegistrarSignos.json';
 import esSubirInfo from '../locales/es/SubirInfo.json';
+import esExportacionPDF from '../locales/es/ExportacionPDF.json';
+import esGestionImagenes from '../locales/es/GestionImagenes.json';
 
 export const NAMESPACES = [
   'common',
@@ -83,7 +87,9 @@ export const NAMESPACES = [
   'RegisterAlerta',
   'RegisterCommunity',
   'RegistrarSignos',
-  'SubirInfo'
+  'SubirInfo',
+  'ExportacionPDF',
+  'GestionImagenes'
 ];
 
 const resources = {
@@ -112,7 +118,9 @@ const resources = {
     RegisterAlerta: enRegisterAlerta,
     RegisterCommunity: enRegisterCommunity,
     RegistrarSignos: enRegistrarSignos,
-    SubirInfo: enSubirInfo
+    SubirInfo: enSubirInfo,
+    ExportacionPDF: enExportacionPDF,
+    GestionImagenes: enGestionImagenes
   },
   es: {
     common: esCommon,
@@ -139,7 +147,9 @@ const resources = {
     RegisterAlerta: esRegisterAlerta,
     RegisterCommunity: esRegisterCommunity,
     RegistrarSignos: esRegistrarSignos,
-    SubirInfo: esSubirInfo
+    SubirInfo: esSubirInfo,
+    ExportacionPDF: esExportacionPDF,
+    GestionImagenes: esGestionImagenes
   }
 };
 

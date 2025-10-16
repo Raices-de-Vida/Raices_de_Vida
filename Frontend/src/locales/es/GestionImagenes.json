@@ -1,0 +1,38 @@
+{
+  "top": {
+    "title": "Imágenes del Paciente"
+  },
+  "buttons": {
+    "upload": "Subir Imagen",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "cancel": "Cancelar"
+  },
+  "modal": {
+    "title": "Nueva Imagen",
+    "titlePlaceholder": "Título de la imagen",
+    "descriptionPlaceholder": "Descripción (opcional)"
+  },
+  "alerts": {
+    "permissionTitle": "Permiso Requerido",
+    "permissionMsg": "Se necesita permiso para acceder a las fotos",
+    "successTitle": "Éxito",
+    "uploadSuccess": "Imagen subida correctamente",
+    "deleteSuccess": "Imagen eliminada correctamente",
+    "errorTitle": "Error",
+    "uploadError": "No se pudo subir la imagen",
+    "deleteError": "No se pudo eliminar la imagen",
+    "titleRequired": "El título es requerido",
+    "titleTooLong": "El título no puede exceder 100 caracteres",
+    "descriptionTooLong": "La descripción no puede exceder 200 caracteres",
+    "deleteTitle": "Eliminar Imagen",
+    "deleteMsg": "¿Estás seguro de que deseas eliminar esta imagen?"
+  },
+  "info": {
+    "limitReached": "Has alcanzado el límite de 5 imágenes. Elimina una para subir otra."
+  },
+  "empty": {
+    "message": "No hay imágenes todavía. Agrega una imagen para comenzar."
+  },
+  "loading": "Cargando imágenes..."
+}

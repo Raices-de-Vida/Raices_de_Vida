@@ -54,8 +54,9 @@ docker compose up -d
 ### Iniciar Aplicación Móvil
 ```bash
 cd Frontend
-npx expo start
+npx expo start --clear
 ```
+Usa `--clear` para limpiar caché después de cambios en traducciones o configuración.
 
 ### Verificar funcionamiento
 - Backend: http://localhost:3001

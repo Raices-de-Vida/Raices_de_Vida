@@ -15,12 +15,6 @@ async function fillConsultSummaryPDF(datosPaciente) {
     
     const pages = pdfDoc.getPages();
     
-    console.log('DEBUG: Primeros 3 campos del mapa:');
-    const firstThree = Object.entries(fieldsMap).slice(0, 3);
-    firstThree.forEach(([key, config]) => {
-      console.log(`  ${key}: x=${config.x}, y=${config.y}, page=${config.page}`);
-    });
-    
     let fieldCount = 0;
     let checkboxCount = 0;
     let textCount = 0;
@@ -136,10 +130,6 @@ function drawTextInBox(page, text, config, font, boldFont) {
   const { height: pageHeight, width: pageWidth } = page.getSize();
   
   const yPosition = pageHeight - y;
-  
-  if (text === new Date().toLocaleDateString('en-US') || text.includes('Juan')) {
-    console.log(`DEBUG drawText: texto="${text.substring(0, 20)}", x=${x}, y_original=${y}, y_convertido=${yPosition}, pageHeight=${pageHeight}`);
-  }
   
   let textToDraw = String(text);
   let currentFontSize = fontSize;

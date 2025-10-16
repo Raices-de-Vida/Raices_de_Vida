@@ -1,0 +1,38 @@
+{
+  "top": {
+    "title": "Patient Images"
+  },
+  "buttons": {
+    "upload": "Upload Image",
+    "save": "Save",
+    "delete": "Delete",
+    "cancel": "Cancel"
+  },
+  "modal": {
+    "title": "New Image",
+    "titlePlaceholder": "Image title",
+    "descriptionPlaceholder": "Description (optional)"
+  },
+  "alerts": {
+    "permissionTitle": "Permission Required",
+    "permissionMsg": "Permission is needed to access photos",
+    "successTitle": "Success",
+    "uploadSuccess": "Image uploaded successfully",
+    "deleteSuccess": "Image deleted successfully",
+    "errorTitle": "Error",
+    "uploadError": "Could not upload image",
+    "deleteError": "Could not delete image",
+    "titleRequired": "Title is required",
+    "titleTooLong": "Title cannot exceed 100 characters",
+    "descriptionTooLong": "Description cannot exceed 200 characters",
+    "deleteTitle": "Delete Image",
+    "deleteMsg": "Are you sure you want to delete this image?"
+  },
+  "info": {
+    "limitReached": "You have reached the limit of 5 images. Delete one to upload another."
+  },
+  "empty": {
+    "message": "No images yet. Add an image to get started."
+  },
+  "loading": "Loading images..."
+}

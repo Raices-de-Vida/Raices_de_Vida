@@ -13,6 +13,7 @@ const Signos = require('./SignosVitalesHistorial');
 const CirugiaPaciente = require('./CirugiaPaciente');
 const HistorialMedico = require('./HistorialMedico');
 const AlertaMedica = require('./AlertaMedica');
+const ImagenPaciente = require('./ImagenPaciente');
 
 User.belongsTo(Ong, {
   foreignKey: 'id_referencia',
@@ -75,6 +76,9 @@ Paciente.hasMany(AlertaMedica, { foreignKey: 'id_paciente', as: 'alertasMedicas'
 AlertaMedica.belongsTo(Paciente, { foreignKey: 'id_paciente', as: 'paciente' });
 
 AlertaMedica.belongsTo(Alerta, { foreignKey: 'id_alerta', as: 'alerta' });
+
+Paciente.hasMany(ImagenPaciente, { foreignKey: 'id_paciente', as: 'imagenes' });
+ImagenPaciente.belongsTo(Paciente, { foreignKey: 'id_paciente', as: 'paciente' });
 
 Paciente.belongsTo(Familia,   { foreignKey: 'id_familia',   as: 'familia' });
 Paciente.belongsTo(Comunidad, { foreignKey: 'id_comunidad', as: 'comunidad' });

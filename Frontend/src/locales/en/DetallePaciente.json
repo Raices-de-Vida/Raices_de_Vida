@@ -45,7 +45,11 @@
     "obesity2": "Obesity II",
     "obesity3": "Obesity III"
   },
-  "buttons": { "save": "Save", "exportPDF": "Export to PDF" },
+  "buttons": { 
+    "save": "Save", 
+    "exportPDF": "Export to PDF",
+    "manageImages": "Images"
+  },
   "badges": { "manual": "Manual", "simulated": "SIMULATED" },
   "alerts": {
     "saved": { "title": "Saved", "updated": "Changes updated" },

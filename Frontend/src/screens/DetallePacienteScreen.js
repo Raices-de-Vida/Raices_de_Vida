@@ -211,13 +211,20 @@ export default function DetallePacienteScreen({ route, navigation }) {
       </View>
 
       {/* Botón de exportación a PDF */}
-      <View style={styles.exportContainer}>
+      <View style={styles.actionsContainer}>
         <TouchableOpacity
-          style={styles.exportBtn}
+          style={[styles.actionBtn, styles.exportBtn]}
           onPress={() => navigation.navigate('ExportacionPDF', { paciente })}
         >
           <Ionicons name="download-outline" size={18} color="#fff" />
-          <Text style={styles.exportBtnText}>{t('buttons.exportPDF')}</Text>
+          <Text style={styles.actionBtnText}>{t('buttons.exportPDF')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.imagesBtn]}
+          onPress={() => navigation.navigate('GestionImagenes', { paciente })}
+        >
+          <Ionicons name="images-outline" size={18} color="#fff" />
+          <Text style={styles.actionBtnText}>{t('buttons.manageImages')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -498,9 +505,11 @@ const styles = StyleSheet.create({
   inlineEditRow:{ flexDirection:'row', columnGap:14, marginBottom:12 },
   editField:{ flex:1 },
   editInput:{ borderWidth:1, borderColor:'#E5E7EB', borderRadius:10, paddingHorizontal:10, paddingVertical:6, marginTop:4 },
-  exportContainer:{ paddingHorizontal:16, marginBottom:8 },
-  exportBtn:{ flexDirection:'row', alignItems:'center', justifyContent:'center', paddingVertical:10, paddingHorizontal:16, backgroundColor:'#F08C21', borderRadius:12, columnGap:8 },
-  exportBtnText:{ color:'#fff', fontWeight:'700', fontSize:14 }
+  actionsContainer:{ flexDirection:'row', paddingHorizontal:16, marginBottom:8, gap:10 },
+  actionBtn:{ flex:1, flexDirection:'row', alignItems:'center', justifyContent:'center', paddingVertical:10, paddingHorizontal:12, borderRadius:12, columnGap:6 },
+  exportBtn:{ backgroundColor:'#F08C21' },
+  imagesBtn:{ backgroundColor:'#6698CC' },
+  actionBtnText:{ color:'#fff', fontWeight:'700', fontSize:13 }
 });
 
 styles.groupHeader = {

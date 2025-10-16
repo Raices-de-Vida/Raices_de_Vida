@@ -9,7 +9,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
 const PALETTE = { butter: '#F2D88F', cream: '#FFF7DA', sea: '#6698CC', tangerine: '#F08C21' };
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function ExportacionPDFScreen({ route, navigation }) {
   const { paciente } = route.params;
