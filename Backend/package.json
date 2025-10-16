@@ -41,21 +41,20 @@
         ]
     },
     "dependencies": {
-        "@react-native-async-storage/async-storage": "^2.1.2",
-        "@react-native-community/netinfo": "^9.5.0",
         "bcryptjs": "^3.0.2",
         "cors": "^2.8.5",
         "dotenv": "^16.4.7",
         "express": "^5.1.0",
         "jsonwebtoken": "^9.0.2",
+        "pdf-lib": "^1.17.1",
         "pg": "^8.14.1",
         "sequelize": "^6.37.7"
     },
     "devDependencies": {
+        "express-rate-limit": "^7.1.5",
         "jest": "^30.0.4",
         "nodemon": "^3.0.2",
         "sqlite3": "^5.1.7",
-        "supertest": "^7.1.3",
-        "express-rate-limit": "^7.1.5"
+        "supertest": "^7.1.3"
     }
 }

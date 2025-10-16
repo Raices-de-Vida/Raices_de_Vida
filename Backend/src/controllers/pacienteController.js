@@ -5,6 +5,7 @@ const Signos = require('../models/SignosVitalesHistorial');
 const CirugiaPaciente = require('../models/CirugiaPaciente');
 const HistorialMedico = require('../models/HistorialMedico');
 const AlertaMedica = require('../models/AlertaMedica');
+const { fillConsultSummaryPDF } = require('../services/pdfService');
 
 exports.createPaciente = async (req, res) => {
   try {
@@ -317,7 +318,6 @@ exports.setManualFlag = async (req, res) => {
   }
 };
 
-// POST /:id/alertas-medicas/cerrar  (cierra todas las alertas abiertas para el paciente)
 exports.closeAllFlags = async (req, res) => {
   try {
     const { id } = req.params;
@@ -333,3 +333,157 @@ exports.closeAllFlags = async (req, res) => {
     res.status(500).json({ error: 'Error al cerrar alertas' });
   }
 };
+
+//genera PDF del formulario Patient Consult Summary
+exports.exportarPDF = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    //datos completos del paciente
+    const paciente = await Paciente.findByPk(id, {
+      include: [
+        { model: Consulta, as: 'consultas', order: [['fecha', 'DESC']], limit: 1 },
+        { model: Signos, as: 'signos', order: [['fecha_toma', 'DESC']], limit: 1 },
+        { model: CirugiaPaciente, as: 'cirugias' },
+        { model: HistorialMedico, as: 'historial' },
+        { model: AlertaMedica, as: 'alertasMedicas', order: [['fecha_alerta', 'DESC']] }
+      ]
+    });
+    
+    if (!paciente) {
+      return res.status(404).json({ error: 'Paciente no encontrado' });
+    }
+    
+    //prep datos para el PDF
+    const datosPaciente = mapearDatosPaciente(paciente);
+    const pdfBuffer = await fillConsultSummaryPDF(datosPaciente);
+    const filename = `Patient_Consult_${paciente.nombre}_${paciente.apellido || ''}_${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('Error exportarPDF:', err);
+    res.status(500).json({ error: 'Error al generar PDF', details: err.message });
+  }
+};
+
+/**
+ * Mapea los datos del modelo Sequelize al formato esperado por el servicio PDF
+ */
+function mapearDatosPaciente(paciente) {
+  const p = paciente.toJSON();
+  const ultimaConsulta = p.consultas?.[0] || {};
+  const ultimosSignos = p.signos?.[0] || {};
+  const historial = p.historial?.[0] || {};
+  const cirugias = p.cirugias || [];
+  
+  //calc edad si hay fecha de nacimiento
+  let edad = p.edad;
+  if (p.fecha_nacimiento) {
+    const hoy = new Date();
+    const nacimiento = new Date(p.fecha_nacimiento);
+    edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+      edad--;
+    }
+  }
+  
+  return {
+    //info básica
+    date: new Date().toLocaleDateString('en-US'),
+    language: p.idioma || 'Spanish',
+    patient_name: `${p.nombre} ${p.apellido || ''}`.trim(),
+    phone: p.telefono || 'N/A',
+    town: p.comunidad_pueblo || 'N/A',
+    dob: p.fecha_nacimiento ? new Date(p.fecha_nacimiento).toLocaleDateString('en-US') : 'N/A',
+    age: edad ? `${edad} años` : 'N/A',
+    gender: p.genero === 'M' ? 'M' : p.genero === 'F' ? 'F' : 'N/A',
+    
+    //tipo de consulta
+    consult_type: ultimaConsulta.tipo_consulta || 'Other',
+    chief_complaint: ultimaConsulta.motivo_consulta || ultimaConsulta.queja_principal || 'N/A',
+    
+    //signos vitales
+    vitals: {
+      bp: ultimosSignos.presion_arterial_sistolica && ultimosSignos.presion_arterial_diastolica
+        ? `${ultimosSignos.presion_arterial_sistolica}/${ultimosSignos.presion_arterial_diastolica}`
+        : p.presion_arterial_sistolica && p.presion_arterial_diastolica
+        ? `${p.presion_arterial_sistolica}/${p.presion_arterial_diastolica}`
+        : 'N/A',
+      hr: ultimosSignos.frecuencia_cardiaca || p.frecuencia_cardiaca || 'N/A',
+      spo2: ultimosSignos.saturacion_oxigeno || p.saturacion_oxigeno ? `${ultimosSignos.saturacion_oxigeno || p.saturacion_oxigeno}%` : 'N/A',
+      bs: ultimosSignos.glucosa || p.glucosa || 'N/A',
+      weight: p.peso ? `${p.peso} kg` : 'N/A',
+      height: p.estatura ? `${p.estatura} cm` : 'N/A',
+      temp: ultimosSignos.temperatura || p.temperatura ? `${ultimosSignos.temperatura || p.temperatura}°C` : 'N/A',
+    },
+    
+    //alergias
+    allergies: p.tiene_alergias && p.alergias ? p.alergias : 'NKA',
+    
+    //vitaminas y medicamentos
+    vitamins: p.recibio_vitaminas ? '1' : '0',
+    albendazole: p.recibio_desparasitante ? '1' : '0',
+    
+    //uso actual y pasado
+    current: {
+      tobacco: p.consume_tabaco ? 'Y' : 'N',
+      alcohol: p.consume_alcohol ? 'Y' : 'N',
+      drugs: p.consume_drogas ? 'Y' : 'N',
+    },
+    past: {
+      tobacco: historial.historial_tabaco ? 'Y' : 'N',
+      alcohol: historial.historial_alcohol ? 'Y' : 'N',
+      drugs: historial.historial_drogas ? 'Y' : 'N',
+    },
+    
+    //info reproductiva (para mujeres)
+    lmp: p.fecha_ultima_menstruacion ? new Date(p.fecha_ultima_menstruacion).toLocaleDateString('en-US') : 'N/A',
+    menopause: p.menopausia ? 'Yes' : 'No',
+    gravida: p.embarazos_totales || '0',
+    para: p.partos || '0',
+    miscarriage: p.abortos_espontaneos || '0',
+    abortion: p.abortos_inducidos || '0',
+    control_method: p.metodo_anticonceptivo || 'None',
+    
+    //historia clínica
+    history: ultimaConsulta.historia_enfermedad_actual || p.observaciones_generales || 'N/A',
+    medical_dx: historial.diagnosticos_previos || historial.condiciones_cronicas || 'N/A',
+    surgeries: cirugias.length > 0
+      ? cirugias.map(c => `${c.tipo_cirugia} (${new Date(c.fecha_cirugia).toLocaleDateString('en-US')})`).join(', ')
+      : 'N/A',
+    meds: p.medicamentos_actuales || historial.medicamentos_habituales || 'N/A',
+    
+    //examen físico
+    physical_exam: {
+      heart: ultimaConsulta.examen_corazon || 'Normal',
+      lungs: ultimaConsulta.examen_pulmones || 'Normal',
+      abdomen: ultimaConsulta.examen_abdomen || 'Normal',
+      gyn: ultimaConsulta.examen_ginecologico || 'N/A',
+    },
+    
+    //impresión y plan
+    impression: ultimaConsulta.diagnostico || ultimaConsulta.impresion_diagnostica || 'N/A',
+    plan: ultimaConsulta.plan_tratamiento || ultimaConsulta.recomendaciones || 'N/A',
+    rx_notes: ultimaConsulta.prescripciones || ultimaConsulta.notas_rx || 'N/A',
+    
+    //consulta adicional
+    further_consult: ultimaConsulta.requiere_seguimiento || '',
+    
+    //proveedor e intérprete
+    provider: ultimaConsulta.nombre_medico || 'N/A',
+    interpreter: ultimaConsulta.interprete || 'N/A',
+    
+    //Página 2 - Notas quirúrgicas
+    surgical_notes: ultimaConsulta.notas_quirurgicas || cirugias.length > 0
+      ? cirugias.map(c => `${c.tipo_cirugia}: ${c.notas || 'Sin notas'}`).join('\n\n')
+      : 'N/A',
+    fasting: ultimaConsulta.en_ayunas ? 'Y' : 'N',
+    taken_med: ultimaConsulta.tomo_medicamentos ? 'Y' : 'N',
+    rx_slips_attached: ultimaConsulta.recetas_adjuntas || false,
+  };
+}

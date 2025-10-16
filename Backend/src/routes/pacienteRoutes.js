@@ -28,4 +28,7 @@ router.get('/flags-summary', /*authenticate,*/ ctrl.getFlagsSummary);
 router.post('/:id/alertas-medicas/manual', /*authenticate,*/ ctrl.setManualFlag);
 router.post('/:id/alertas-medicas/cerrar', /*authenticate,*/ ctrl.closeAllFlags);
 
+// Exportación a PDF
+router.get('/:id/exportar-pdf', /*authenticate,*/ ctrl.exportarPDF);
+
 module.exports = router;

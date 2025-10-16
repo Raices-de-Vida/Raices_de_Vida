@@ -210,6 +210,17 @@ export default function DetallePacienteScreen({ route, navigation }) {
         ))}
       </View>
 
+      {/* Botón de exportación a PDF */}
+      <View style={styles.exportContainer}>
+        <TouchableOpacity
+          style={styles.exportBtn}
+          onPress={() => navigation.navigate('ExportacionPDF', { paciente })}
+        >
+          <Ionicons name="download-outline" size={18} color="#fff" />
+          <Text style={styles.exportBtnText}>{t('buttons.exportPDF')}</Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView contentContainerStyle={{padding:16, paddingBottom:90}}>
         {tab==='resumen' && (
           <>
@@ -486,7 +497,10 @@ const styles = StyleSheet.create({
   saveBtnTxt:{ color:'#fff', fontWeight:'800', fontSize:12 },
   inlineEditRow:{ flexDirection:'row', columnGap:14, marginBottom:12 },
   editField:{ flex:1 },
-  editInput:{ borderWidth:1, borderColor:'#E5E7EB', borderRadius:10, paddingHorizontal:10, paddingVertical:6, marginTop:4 }
+  editInput:{ borderWidth:1, borderColor:'#E5E7EB', borderRadius:10, paddingHorizontal:10, paddingVertical:6, marginTop:4 },
+  exportContainer:{ paddingHorizontal:16, marginBottom:8 },
+  exportBtn:{ flexDirection:'row', alignItems:'center', justifyContent:'center', paddingVertical:10, paddingHorizontal:16, backgroundColor:'#F08C21', borderRadius:12, columnGap:8 },
+  exportBtnText:{ color:'#fff', fontWeight:'700', fontSize:14 }
 });
 
 styles.groupHeader = {

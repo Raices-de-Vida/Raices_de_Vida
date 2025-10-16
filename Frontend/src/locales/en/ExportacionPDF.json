@@ -1,0 +1,24 @@
+{
+  "top": {
+    "title": "Export to PDF"
+  },
+  "preview": {
+    "title": "Consult Summary Form",
+    "description": "The Patient Consult Summary form will be generated with all patient data"
+  },
+  "buttons": {
+    "exportPDF": "Generate PDF",
+    "generating": "Generating...",
+    "share": "Share",
+    "ok": "OK"
+  },
+  "alerts": {
+    "successTitle": "PDF Generated",
+    "successMsg": "The document has been successfully created",
+    "errorTitle": "Error",
+    "sharingNotAvailable": "Sharing is not available on this device"
+  },
+  "info": {
+    "message": "The generated PDF will include all patient information in the official Patient Consult Summary form format"
+  }
+}

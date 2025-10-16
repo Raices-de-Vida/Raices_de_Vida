@@ -1,4 +1,3 @@
-// src/context/AuthContext.js 
 import React, { createContext, useState, useEffect } from 'react';
 import OfflineStorage from '../services/OfflineStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,12 +11,12 @@ export function AuthProvider({ children }) {
   const signIn = async (newRole) => {
     setRole(newRole);
     setLoading(false);
-    await AsyncStorage.setItem('userRole', newRole); // ← opcional si usas persistencia
+    await AsyncStorage.setItem('userRole', newRole);
   };
 
   const signOut = async () => {
     await OfflineStorage.clearAll();
-    await AsyncStorage.clear(); // ← este es el agregado necesario
+    await AsyncStorage.clear();
     setRole(null);
   };
 

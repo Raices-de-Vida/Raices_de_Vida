@@ -1,0 +1,24 @@
+{
+  "top": {
+    "title": "Exportar a PDF"
+  },
+  "preview": {
+    "title": "Formulario de Consulta",
+    "description": "Se generará el formulario Patient Consult Summary con todos los datos del paciente"
+  },
+  "buttons": {
+    "exportPDF": "Generar PDF",
+    "generating": "Generando...",
+    "share": "Compartir",
+    "ok": "OK"
+  },
+  "alerts": {
+    "successTitle": "PDF Generado",
+    "successMsg": "El documento ha sido creado exitosamente",
+    "errorTitle": "Error",
+    "sharingNotAvailable": "La función de compartir no está disponible en este dispositivo"
+  },
+  "info": {
+    "message": "El PDF generado incluirá toda la información del paciente en el formato oficial del formulario Patient Consult Summary"
+  }
+}

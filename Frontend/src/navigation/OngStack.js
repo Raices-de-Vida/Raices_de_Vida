@@ -21,6 +21,7 @@ import DatosAyudaScreen from '../screens/DatosAyudaScreen';
 import PacienteFormScreen from '../screens/PacienteFormScreen';
 import RegistrarSignosScreen from '../screens/RegistrarSignosScreen';
 import DetallePacienteScreen from '../screens/DetallePacienteScreen';
+import ExportacionPDFScreen from '../screens/ExportacionPDFScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -56,6 +57,7 @@ export default function OngStack() {
       <Stack.Screen name="PacienteForm" component={PacienteFormScreen} />
       <Stack.Screen name="RegistrarSignos" component={RegistrarSignosScreen} />
       <Stack.Screen name="DetallePaciente" component={DetallePacienteScreen} />
+      <Stack.Screen name="ExportacionPDF" component={ExportacionPDFScreen} />
     </Stack.Navigator>
   );
 }
