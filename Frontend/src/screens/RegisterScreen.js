@@ -71,6 +71,7 @@ export default function RegisterScreen({ navigation }) {
         rol: tipoUsuario,
         tipo_referencia: tipoUsuario,
         id_referencia: 1,
+        fecha_registro: new Date().toISOString(),
       });
 
       await AsyncStorage.setItem('nombre',   user.nombre ?? `${firstName} ${lastName}`);
