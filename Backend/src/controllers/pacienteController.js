@@ -431,23 +431,24 @@ function mapearDatosPaciente(paciente) {
     
     //uso actual y pasado
     current: {
-      tobacco: p.consume_tabaco ? 'Y' : 'N',
-      alcohol: p.consume_alcohol ? 'Y' : 'N',
-      drugs: p.consume_drogas ? 'Y' : 'N',
+      tobacco: p.tabaco_actual ? 'Y' : 'N',
+      alcohol: p.alcohol_actual ? 'Y' : 'N',
+      drugs: p.drogas_actual ? 'Y' : 'N',
     },
     past: {
-      tobacco: historial.historial_tabaco ? 'Y' : 'N',
-      alcohol: historial.historial_alcohol ? 'Y' : 'N',
-      drugs: historial.historial_drogas ? 'Y' : 'N',
+      tobacco: p.tabaco_pasado ? 'Y' : 'N',
+      alcohol: p.alcohol_pasado ? 'Y' : 'N',
+      drugs: p.drogas_pasado ? 'Y' : 'N',
     },
     
     //info reproductiva (para mujeres)
-    lmp: p.fecha_ultima_menstruacion ? new Date(p.fecha_ultima_menstruacion).toLocaleDateString('en-US') : 'N/A',
+    lmp: p.ultima_menstruacion ? new Date(p.ultima_menstruacion).toLocaleDateString('en-US') : 'N/A',
     menopause: p.menopausia ? 'Yes' : 'No',
-    gravida: p.embarazos_totales || '0',
+    gravida: p.gestaciones || '0',
     para: p.partos || '0',
     miscarriage: p.abortos_espontaneos || '0',
     abortion: p.abortos_inducidos || '0',
+    uses_birth_control: p.usa_anticonceptivos || false,
     control_method: p.metodo_anticonceptivo || 'None',
     
     //historia clínica
@@ -456,7 +457,7 @@ function mapearDatosPaciente(paciente) {
     surgeries: cirugias.length > 0
       ? cirugias.map(c => `${c.tipo_cirugia} (${new Date(c.fecha_cirugia).toLocaleDateString('en-US')})`).join(', ')
       : 'N/A',
-    meds: p.medicamentos_actuales || historial.medicamentos_habituales || 'N/A',
+    meds: historial.medicamentos_habituales || 'N/A',
     
     //examen físico
     physical_exam: {
@@ -467,23 +468,42 @@ function mapearDatosPaciente(paciente) {
     },
     
     //impresión y plan
-    impression: ultimaConsulta.diagnostico || ultimaConsulta.impresion_diagnostica || 'N/A',
-    plan: ultimaConsulta.plan_tratamiento || ultimaConsulta.recomendaciones || 'N/A',
-    rx_notes: ultimaConsulta.prescripciones || ultimaConsulta.notas_rx || 'N/A',
+    impression: ultimaConsulta.impresion || 'N/A',
+    plan: ultimaConsulta.plan || 'N/A',
+    rx_notes: ultimaConsulta.rx_notes || 'N/A',
     
     //consulta adicional
-    further_consult: ultimaConsulta.requiere_seguimiento || '',
+    further_consult: ultimaConsulta.further_consult || '',
+    further_consult_other_text: ultimaConsulta.further_consult_other_text || '',
+    
+    //tipo de consulta
+    consult_other_text: ultimaConsulta.consult_other_text || '',
     
     //proveedor e intérprete
-    provider: ultimaConsulta.nombre_medico || 'N/A',
+    provider: ultimaConsulta.provider || 'N/A',
     interpreter: ultimaConsulta.interprete || 'N/A',
     
-    //Página 2 - Notas quirúrgicas
-    surgical_notes: ultimaConsulta.notas_quirurgicas || cirugias.length > 0
+    //Página 2 - Surgical Consult Summary (nuevos campos)
+    surgical_date: ultimaConsulta.fecha ? new Date(ultimaConsulta.fecha).toLocaleDateString('en-US') : '',
+    surgical_history: ultimaConsulta.surgical_history || '',
+    surgical_exam: {
+      heart: ultimaConsulta.surgical_exam_heart || '',
+      lungs: ultimaConsulta.surgical_exam_lungs || '',
+      abdomen: ultimaConsulta.surgical_exam_abdomen || '',
+      gyn: ultimaConsulta.surgical_exam_gyn || '',
+    },
+    surgical_impression: ultimaConsulta.surgical_impression || '',
+    surgical_plan: ultimaConsulta.surgical_plan || '',
+    surgical_meds: ultimaConsulta.surgical_meds || '',
+    surgical_consult: ultimaConsulta.surgical_consult || '',
+    surgical_consult_other_text: ultimaConsulta.surgical_consult_other_text || '',
+    surgical_surgeon: ultimaConsulta.surgical_surgeon || '',
+    surgical_interpreter: ultimaConsulta.surgical_interpreter || '',
+    surgical_notes: ultimaConsulta.surgical_notes || cirugias.length > 0
       ? cirugias.map(c => `${c.tipo_cirugia}: ${c.notas || 'Sin notas'}`).join('\n\n')
       : 'N/A',
-    fasting: ultimaConsulta.en_ayunas ? 'Y' : 'N',
-    taken_med: ultimaConsulta.tomo_medicamentos ? 'Y' : 'N',
-    rx_slips_attached: ultimaConsulta.recetas_adjuntas || false,
+    fasting: ultimaConsulta.paciente_en_ayuno ? 'Y' : 'N',
+    taken_med: ultimaConsulta.medicamentos_tomados ? 'Y' : 'N',
+    rx_slips_attached: ultimaConsulta.rx_slips_attached || false,
   };
 }

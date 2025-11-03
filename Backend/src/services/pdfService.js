@@ -68,10 +68,14 @@ function extractValueByKey(data, key) {
     'age': data.age,
     'gender_m': (data.gender === 'M' || data.gender === 'Male') ? true : false,
     'gender_f': (data.gender === 'F' || data.gender === 'Female') ? true : false,
+    
+    // Consult Type con texto para "Other"
     'consult_diabetes': data.consult_type?.toLowerCase().includes('diabetes') || false,
     'consult_htn': data.consult_type?.toLowerCase().includes('htn') || false,
     'consult_respiratory': data.consult_type?.toLowerCase().includes('respiratory') || false,
     'consult_other': data.consult_type?.toLowerCase().includes('other') || false,
+    'consult_other_text': data.consult_other_text || '',
+    
     'chief_complaint': data.chief_complaint,
     'vitals_bp': data.vitals?.bp,
     'vitals_hr': data.vitals?.hr,
@@ -80,22 +84,50 @@ function extractValueByKey(data, key) {
     'vitals_weight': data.vitals?.weight,
     'vitals_height': data.vitals?.height,
     'vitals_temp': data.vitals?.temp,
-    'allergies': data.allergies,
+    
+    // Allergies con checkbox NKA
+    'allergies_nka': (!data.allergies || data.allergies === 'NKA' || data.allergies === 'N/A') ? true : false,
+    'allergies': (data.allergies && data.allergies !== 'NKA' && data.allergies !== 'N/A') ? data.allergies : '',
+    
     'vitamins': data.vitamins,
     'albendazole': data.albendazole,
-    'current_tobacco': data.current?.tobacco,
-    'current_alcohol': data.current?.alcohol,
-    'current_drugs': data.current?.drugs,
-    'past_tobacco': data.past?.tobacco,
-    'past_alcohol': data.past?.alcohol,
-    'past_drugs': data.past?.drugs,
+    
+    // Current: tobacco, alcohol, drugs con círculos Y/N + texto para detalles
+    'current_tobacco_yes': (data.current?.tobacco === 'Y' || data.current?.tobacco === 'Yes') ? true : false,
+    'current_tobacco_no': (data.current?.tobacco === 'N' || data.current?.tobacco === 'No') ? true : false,
+    'current_tobacco_details': data.current?.tobacco_details || '',
+    'current_alcohol_yes': (data.current?.alcohol === 'Y' || data.current?.alcohol === 'Yes') ? true : false,
+    'current_alcohol_no': (data.current?.alcohol === 'N' || data.current?.alcohol === 'No') ? true : false,
+    'current_alcohol_details': data.current?.alcohol_details || '',
+    'current_drugs_yes': (data.current?.drugs === 'Y' || data.current?.drugs === 'Yes') ? true : false,
+    'current_drugs_no': (data.current?.drugs === 'N' || data.current?.drugs === 'No') ? true : false,
+    'current_drugs_details': data.current?.drugs_details || '',
+    
+    // Past: tobacco, alcohol, drugs con círculos Y/N + texto para detalles
+    'past_tobacco_yes': (data.past?.tobacco === 'Y' || data.past?.tobacco === 'Yes') ? true : false,
+    'past_tobacco_no': (data.past?.tobacco === 'N' || data.past?.tobacco === 'No') ? true : false,
+    'past_tobacco_details': data.past?.tobacco_details || '',
+    'past_alcohol_yes': (data.past?.alcohol === 'Y' || data.past?.alcohol === 'Yes') ? true : false,
+    'past_alcohol_no': (data.past?.alcohol === 'N' || data.past?.alcohol === 'No') ? true : false,
+    'past_alcohol_details': data.past?.alcohol_details || '',
+    'past_drugs_yes': (data.past?.drugs === 'Y' || data.past?.drugs === 'Yes') ? true : false,
+    'past_drugs_no': (data.past?.drugs === 'N' || data.past?.drugs === 'No') ? true : false,
+    'past_drugs_details': data.past?.drugs_details || '',
+    
     'lmp': data.lmp,
-    'menopause': data.menopause,
+    // Menopause - solo 1 checkbox: Yes = X, No = null
+    'menopause': (data.menopause === 'Yes' || data.menopause === 'Y' || data.menopause === true) ? true : false,
+    
     'gravida': data.gravida,
     'para': data.para,
     'miscarriage': data.miscarriage,
     'abortion': data.abortion,
-    'control_method': data.control_method,
+    
+    // Control Method con checkboxes N/Y
+    'control_method_yes': data.uses_birth_control ? true : false,
+    'control_method_no': !data.uses_birth_control ? true : false,
+    'control_method': data.control_method && data.control_method !== 'None' && data.control_method !== 'Ninguno' ? data.control_method : '',
+    
     'history': data.history,
     'medical_dx': data.medical_dx,
     'surgeries': data.surgeries,
@@ -107,17 +139,43 @@ function extractValueByKey(data, key) {
     'impression': data.impression,
     'plan': data.plan,
     'rx_notes': data.rx_notes,
+    
+    // Further Consult con texto para "Other"
     'further_consult_gensurg': data.further_consult?.toLowerCase().includes('gen') || false,
     'further_consult_gyn': data.further_consult?.toLowerCase().includes('gyn') || false,
     'further_consult_other': data.further_consult?.toLowerCase().includes('other') || false,
+    'further_consult_other_text': data.further_consult_other_text || '',
+    
     'provider': data.provider,
     'interpreter': data.interpreter,
+    
+    // Página 2 - Surgical Consult Summary (nuevos campos)
+    'surgical_date': data.surgical_date || '',
+    'surgical_history': data.surgical_history || '',
+    'surgical_exam': data.surgical_exam || '',
+    'surgical_impression': data.surgical_impression || '',
+    'surgical_plan': data.surgical_plan || '',
+    'surgical_meds': data.surgical_meds || '',
+    'surgical_consult_gensurg': data.surgical_consult?.toLowerCase().includes('gen') || false,
+    'surgical_consult_gyn': data.surgical_consult?.toLowerCase().includes('gyn') || false,
+    'surgical_consult_other': data.surgical_consult?.toLowerCase().includes('other') || false,
+    'surgical_consult_other_text': data.surgical_consult_other_text || '',
+    'surgical_surgeon': data.surgical_surgeon || '',
+    'surgical_interpreter': data.surgical_interpreter || '',
     'surgical_notes': data.surgical_notes,
+    
+    // Checkboxes con círculos (página 0 - primera hoja)
     'fasting_yes': (data.fasting === 'Y' || data.fasting === 'Yes') ? true : false,
     'fasting_no': (data.fasting === 'N' || data.fasting === 'No') ? true : false,
-    'taken_med_yes': (data.taken_med === 'Y' || data.taken_med === 'Yes') ? true : false,
-    'taken_med_no': (data.taken_med === 'N' || data.taken_med === 'No') ? true : false,
-    'rx_slips_attached': data.rx_slips_attached || false,
+    
+    // Taken med - separado para BP y BS
+    'taken_med_bp_yes': (data.taken_med_bp === 'Y' || data.taken_med_bp === 'Yes') ? true : false,
+    'taken_med_bp_no': (data.taken_med_bp === 'N' || data.taken_med_bp === 'No') ? true : false,
+    'taken_med_bs_yes': (data.taken_med_bs === 'Y' || data.taken_med_bs === 'Yes') ? true : false,
+    'taken_med_bs_no': (data.taken_med_bs === 'N' || data.taken_med_bs === 'No') ? true : false,
+    
+    'rx_slips_attached_yes': data.rx_slips_attached ? true : false,
+    'rx_slips_attached_no': !data.rx_slips_attached ? true : false,
   };
   
   return mappings[key];
@@ -126,35 +184,38 @@ function extractValueByKey(data, key) {
 function drawTextInBox(page, text, config, font, boldFont) {
   if (!text || text === 'N/A') return;
   
-  const { x, y, width, height, fontSize = 10, maxLines = 1, align = 'left', wrap = false, rotate = 0 } = config;
-  const { height: pageHeight, width: pageWidth } = page.getSize();
+  const { 
+    x, y, width, height, 
+    fontSize = 10, 
+    maxLines = 1, 
+    maxChars = null,
+    lineHeight = 1.2,
+    align = 'left', 
+    wrap = false, 
+    rotate = 0 
+  } = config;
   
+  const { height: pageHeight, width: pageWidth } = page.getSize();
   const yPosition = pageHeight - y;
   
+  // Aplicar restricción de caracteres
   let textToDraw = String(text);
-  let currentFontSize = fontSize;
-  const minFontSize = 6;
-  
-  let lines = [];
-  let fitsInBox = false;
-  
-  while (currentFontSize >= minFontSize && !fitsInBox) {
-    if (wrap) {
-      lines = wrapText(textToDraw, font, currentFontSize, width);
-    } else {
-      lines = [textToDraw];
-    }
-    
-    const totalHeight = lines.length * (currentFontSize + 2);
-    
-    if (lines.length <= maxLines && totalHeight <= height) {
-      fitsInBox = true;
-    } else {
-      currentFontSize -= 0.5;
-    }
+  if (maxChars && textToDraw.length > maxChars) {
+    textToDraw = textToDraw.substring(0, maxChars - 3) + '...';
   }
   
-  if (!fitsInBox || lines.length > maxLines) {
+  // NO reducir fontSize - mantener tamaño fijo
+  const currentFontSize = fontSize;
+  
+  let lines = [];
+  if (wrap) {
+    lines = wrapText(textToDraw, font, currentFontSize, width);
+  } else {
+    lines = [textToDraw];
+  }
+  
+  // Limitar al número máximo de líneas
+  if (lines.length > maxLines) {
     lines = lines.slice(0, maxLines);
     if (lines.length > 0) {
       const lastLine = lines[lines.length - 1];
@@ -169,7 +230,8 @@ function drawTextInBox(page, text, config, font, boldFont) {
     }
   }
   
-  const actualLineHeight = currentFontSize + 2;
+  // Calcular interlineado
+  const actualLineHeight = currentFontSize * lineHeight;
   
   lines.forEach((line, index) => {
     const lineY = yPosition - (index * actualLineHeight);
@@ -206,10 +268,6 @@ function drawTextInBox(page, text, config, font, boldFont) {
       console.error(`Error dibujando texto en (${lineX}, ${lineY}):`, error.message);
     }
   });
-  
-  if (lines.length > maxLines || currentFontSize < fontSize * 0.7) {
-    console.log(`Campo ajustado: tamaño ${fontSize}->${currentFontSize.toFixed(1)}, ${lines.length}/${maxLines} lineas`);
-  }
 }
 
 function wrapText(text, font, size, maxWidth) {
@@ -243,36 +301,64 @@ function wrapText(text, font, size, maxWidth) {
 function drawCheckbox(page, config, checked, font) {
   if (!checked) return;
   
-  const { x, y, width = 12, height = 12, rotate = 0 } = config;
+  const { x, y, width = 12, height = 12, rotate = 0, style = 'x' } = config;
   const { height: pageHeight, width: pageWidth } = page.getSize();
   
   const yPosition = pageHeight - y;
   
-  const checkSize = Math.min(width, height) * 0.8;
-  const checkX = x + (width - font.widthOfTextAtSize('X', checkSize)) / 2;
-  const checkY = yPosition - (height / 2) - (checkSize / 4);
-  
   try {
-    if (rotate === 180) {
-      page.drawText('X', {
-        x: pageWidth - checkX,
-        y: pageHeight - checkY,
-        size: checkSize,
-        font,
-        color: rgb(0, 0, 0),
-        rotate: { type: 'degrees', angle: 180 },
-      });
+    if (style === 'circle') {
+      // Dibujar círculo VACÍO con bordes delgados (no relleno)
+      const centerX = x + (width / 2);
+      const centerY = yPosition - (height / 2);
+      const radius = Math.min(width, height) * 0.35;
+      
+      if (rotate === 180) {
+        page.drawCircle({
+          x: pageWidth - centerX,
+          y: pageHeight - centerY,
+          size: radius,
+          borderColor: rgb(0, 0, 0),
+          borderWidth: 1,
+          opacity: 1,
+        });
+      } else {
+        page.drawCircle({
+          x: centerX,
+          y: centerY,
+          size: radius,
+          borderColor: rgb(0, 0, 0),
+          borderWidth: 1,
+          opacity: 1,
+        });
+      }
     } else {
-      page.drawText('X', {
-        x: checkX,
-        y: checkY,
-        size: checkSize,
-        font,
-        color: rgb(0, 0, 0),
-      });
+      // Dibujar X (comportamiento por defecto)
+      const checkSize = Math.min(width, height) * 0.8;
+      const checkX = x + (width - font.widthOfTextAtSize('X', checkSize)) / 2;
+      const checkY = yPosition - (height / 2) - (checkSize / 4);
+      
+      if (rotate === 180) {
+        page.drawText('X', {
+          x: pageWidth - checkX,
+          y: pageHeight - checkY,
+          size: checkSize,
+          font,
+          color: rgb(0, 0, 0),
+          rotate: { type: 'degrees', angle: 180 },
+        });
+      } else {
+        page.drawText('X', {
+          x: checkX,
+          y: checkY,
+          size: checkSize,
+          font,
+          color: rgb(0, 0, 0),
+        });
+      }
     }
   } catch (error) {
-    console.error(`Error dibujando checkbox en (${checkX}, ${checkY}):`, error.message);
+    console.error(`Error dibujando checkbox en (${x}, ${y}):`, error.message);
   }
 }
 

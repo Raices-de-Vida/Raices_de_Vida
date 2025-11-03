@@ -1,39 +1,39 @@
 {
   "date": {
     "page": 0, "x": 73,  "y": 63,  "width": 120, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "fontSize": 10, "maxLines": 1, "maxChars": 15, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "language": {
     "page": 0, "x": 445, "y": 63,  "width": 100, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "fontSize": 10, "maxLines": 1, "maxChars": 20, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "patient_name": {
     "page": 0, "x": 123, "y": 90,  "width": 320, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "fontSize": 10, "maxLines": 1, "maxChars": 50, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "phone": {
     "page": 0, "x": 450, "y": 90,  "width": 150, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "fontSize": 10, "maxLines": 1, "maxChars": 20, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "town": {
     "page": 0, "x": 123, "y": 112, "width": 260, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "fontSize": 10, "maxLines": 1, "maxChars": 40, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "dob": {
-    "page": 0, "x": 440,  "y": 212, "width": 100, "height": 9,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "page": 0, "x": 437,  "y": 112, "width": 100, "height": 9,
+    "fontSize": 8, "maxLines": 1, "maxChars": 12, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "age": {
     "page": 0, "x": 440, "y": 112, "width": 80, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "fontSize": 10, "maxLines": 1, "maxChars": 10, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "gender_m": {
-    "page": 0, "x": 530, "y": 100, "width": 20, "height": 20,
-    "fontSize": 12, "type": "checkbox", "unit": "pt_top_left"
+    "page": 0, "x": 528, "y": 100, "width": 20, "height": 20,
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
   },
   "gender_f": {
-    "page": 0, "x": 552, "y": 100, "width": 20, "height": 20,
-    "fontSize": 12, "type": "checkbox", "unit": "pt_top_left"
+    "page": 0, "x": 551, "y": 100, "width": 20, "height": 20,
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
   },
   "consult_diabetes": {
     "page": 0, "x": 130,  "y": 133, "width": 12, "height": 12,
@@ -51,188 +51,308 @@
     "page": 0, "x": 366, "y": 133, "width": 12, "height": 12,
     "fontSize": 12, "type": "checkbox", "unit": "pt_top_left"
   },
+  "consult_other_text": {
+    "page": 0, "x": 420, "y": 139, "width": 160, "height": 14,
+    "fontSize": 9, "maxLines": 1, "maxChars": 25, "align": "left", "wrap": false, "unit": "pt_top_left"
+  },
   "chief_complaint": {
     "page": 0, "x": 142, "y": 161, "width": 400, "height": 48,
-    "fontSize": 10, "maxLines": 4, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "fontSize": 10, "maxLines": 4, "maxChars": 250, "lineHeight": 1.3, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "vitals_bp": {
     "page": 0, "x": 105,  "y": 189, "width": 60, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "fontSize": 10, "maxLines": 1, "maxChars": 10, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "vitals_hr": {
     "page": 0, "x": 181, "y": 189, "width": 50, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "fontSize": 10, "maxLines": 1, "maxChars": 6, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "vitals_spo2": {
     "page": 0, "x": 250, "y": 189, "width": 50, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "fontSize": 10, "maxLines": 1, "maxChars": 6, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "vitals_bs": {
     "page": 0, "x": 300, "y": 189, "width": 50, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "fontSize": 10, "maxLines": 1, "maxChars": 6, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "vitals_weight": {
     "page": 0, "x": 410,  "y": 189, "width": 80, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "fontSize": 10, "maxLines": 1, "maxChars": 12, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "vitals_height": {
     "page": 0, "x": 480, "y": 189, "width": 80, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "fontSize": 10, "maxLines": 1, "maxChars": 12, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "vitals_temp": {
     "page": 0, "x": 554, "y": 189, "width": 60, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "fontSize": 10, "maxLines": 1, "maxChars": 8, "align": "left", "wrap": false, "unit": "pt_top_left"
+  },
+  "allergies_nka": {
+    "page": 0, "x": 99, "y": 225, "width": 12, "height": 12,
+    "fontSize": 12, "type": "checkbox", "unit": "pt_top_left"
   },
   "allergies": {
-    "page": 0, "x": 100, "y": 232, "width": 400, "height": 14,
-    "fontSize": 9, "maxLines": 1, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "page": 0, "x": 181, "y": 232, "width": 400, "height": 14,
+    "fontSize": 9, "maxLines": 1, "maxChars": 80, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "vitamins": {
-    "page": 0, "x": 150, "y": 252, "width": 40, "height": 14,
+    "page": 0, "x": 420, "y": 232, "width": 40, "height": 14,
     "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "albendazole": {
-    "page": 0, "x": 320, "y": 252, "width": 40, "height": 14,
+    "page": 0, "x": 556, "y": 232, "width": 40, "height": 14,
     "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
-  "current_tobacco": {
-    "page": 0, "x": 120, "y": 272, "width": 60, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+  "current_tobacco_yes": {
+    "page": 0, "x": 180, "y": 241, "width": 20, "height": 20,
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
   },
-  "current_alcohol": {
-    "page": 0, "x": 200, "y": 272, "width": 60, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+  "current_tobacco_no": {
+    "page": 0, "x": 160, "y": 241, "width": 20, "height": 20,
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
   },
-  "current_drugs": {
-    "page": 0, "x": 280, "y": 272, "width": 60, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+  "current_tobacco_details": {
+    "page": 0, "x": 206, "y": 254, "width": 90, "height": 14,
+    "fontSize": 8, "maxLines": 1, "maxChars": 20, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
-  "past_tobacco": {
-    "page": 0, "x": 120, "y": 292, "width": 60, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+  "current_alcohol_yes": {
+    "page": 0, "x": 335, "y": 241, "width": 20, "height": 20,
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
   },
-  "past_alcohol": {
-    "page": 0, "x": 200, "y": 292, "width": 60, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+  "current_alcohol_no": {
+    "page": 0, "x": 315, "y": 241, "width": 20, "height": 20,
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
   },
-  "past_drugs": {
-    "page": 0, "x": 280, "y": 292, "width": 60, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+  "current_alcohol_details": {
+    "page": 0, "x": 365, "y": 254, "width": 90, "height": 14,
+    "fontSize": 8, "maxLines": 1, "maxChars": 20, "align": "left", "wrap": false, "unit": "pt_top_left"
+  },
+  "current_drugs_yes": {
+    "page": 0, "x": 492, "y": 241, "width": 20, "height": 20,
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
+  },
+  "current_drugs_no": {
+    "page": 0, "x": 473, "y": 241, "width": 20, "height": 20,
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
+  },
+  "current_drugs_details": {
+    "page": 0, "x": 520, "y": 254, "width": 40, "height": 14,
+    "fontSize": 8, "maxLines": 1, "maxChars": 10, "align": "left", "wrap": false, "unit": "pt_top_left"
+  },
+  "past_tobacco_yes": {
+    "page": 0, "x": 154, "y": 262, "width": 20, "height": 20,
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
+  },
+  "past_tobacco_no": {
+    "page": 0, "x": 134, "y": 262, "width": 20, "height": 20,
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
+  },
+  "past_tobacco_details": {
+    "page": 0, "x": 182, "y": 275, "width": 90, "height": 14,
+    "fontSize": 8, "maxLines": 1, "maxChars": 20, "align": "left", "wrap": false, "unit": "pt_top_left"
+  },
+  "past_alcohol_yes": {
+    "page": 0, "x": 335, "y": 262, "width": 20, "height": 20,
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
+  },
+  "past_alcohol_no": {
+    "page": 0, "x": 315, "y": 262, "width": 20, "height": 20,
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
+  },
+  "past_alcohol_details": {
+    "page": 0, "x": 365, "y": 275, "width": 90, "height": 14,
+    "fontSize": 8, "maxLines": 1, "maxChars": 20, "align": "left", "wrap": false, "unit": "pt_top_left"
+  },
+  "past_drugs_yes": {
+    "page": 0, "x": 492, "y": 262, "width": 20, "height": 20,
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
+  },
+  "past_drugs_no": {
+    "page": 0, "x": 473, "y": 262, "width": 20, "height": 20,
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
+  },
+  "past_drugs_details": {
+    "page": 0, "x": 520, "y": 275, "width": 40, "height": 14,
+    "fontSize": 8, "maxLines": 1, "maxChars": 10, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "lmp": {
-    "page": 0, "x": 80,  "y": 312, "width": 80, "height": 14,
-    "fontSize": 9, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "page": 0, "x": 68,  "y": 305, "width": 80, "height": 14,
+    "fontSize": 8, "maxLines": 1, "maxChars": 18, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "menopause": {
-    "page": 0, "x": 180, "y": 312, "width": 70, "height": 14,
-    "fontSize": 9, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "page": 0, "x": 143, "y": 297, "width": 12, "height": 12,
+    "fontSize": 9, "type": "checkbox", "unit": "pt_top_left"
   },
   "gravida": {
-    "page": 0, "x": 270, "y": 312, "width": 40, "height": 14,
-    "fontSize": 9, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "page": 0, "x": 255, "y": 305, "width": 40, "height": 14,
+    "fontSize": 9, "maxLines": 1, "maxChars": 4, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "para": {
-    "page": 0, "x": 320, "y": 312, "width": 40, "height": 14,
-    "fontSize": 9, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "page": 0, "x": 290, "y": 305, "width": 40, "height": 14,
+    "fontSize": 9, "maxLines": 1, "maxChars": 4, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "miscarriage": {
-    "page": 0, "x": 370, "y": 312, "width": 40, "height": 14,
-    "fontSize": 9, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "page": 0, "x": 335, "y": 305, "width": 40, "height": 14,
+    "fontSize": 9, "maxLines": 1, "maxChars": 4, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "abortion": {
-    "page": 0, "x": 420, "y": 312, "width": 40, "height": 14,
-    "fontSize": 9, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "page": 0, "x": 385, "y": 305, "width": 40, "height": 14,
+    "fontSize": 9, "maxLines": 1, "maxChars": 4, "align": "left", "wrap": false, "unit": "pt_top_left"
+  },
+  "control_method_yes": {
+    "page": 0, "x": 473, "y": 292, "width": 20, "height": 20,
+    "fontSize": 9, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
+  },
+  "control_method_no": {
+    "page": 0, "x": 455, "y": 292, "width": 20, "height": 20,
+    "fontSize": 9, "type": "checkbox", "style": "circle", "unit": "pt_top_left"
   },
   "control_method": {
-    "page": 0, "x": 150, "y": 332, "width": 200, "height": 14,
-    "fontSize": 9, "maxLines": 1, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "page": 0, "x": 545, "y": 305, "width": 90, "height": 14,
+    "fontSize": 9, "maxLines": 1, "maxChars": 15, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "history": {
-    "page": 0, "x": 80,  "y": 372, "width": 460, "height": 52,
-    "fontSize": 9, "maxLines": 4, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "page": 0, "x": 40,  "y": 356, "width": 460, "height": 52,
+    "fontSize": 9, "maxLines": 2, "maxChars": 200, "lineHeight": 1.4, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "medical_dx": {
-    "page": 0, "x": 80,  "y": 432, "width": 460, "height": 36,
-    "fontSize": 9, "maxLines": 3, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "page": 0, "x": 105,  "y": 429, "width": 460, "height": 36,
+    "fontSize": 9, "maxLines": 1, "maxChars": 200, "lineHeight": 1.3, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "surgeries": {
-    "page": 0, "x": 80,  "y": 462, "width": 460, "height": 24,
-    "fontSize": 9, "maxLines": 2, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "page": 0, "x": 100,  "y": 450, "width": 460, "height": 24,
+    "fontSize": 9, "maxLines": 1, "maxChars": 200, "lineHeight": 1.3, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "meds": {
-    "page": 0, "x": 80,  "y": 492, "width": 460, "height": 24,
-    "fontSize": 9, "maxLines": 2, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "page": 0, "x": 80,  "y": 472, "width": 460, "height": 24,
+    "fontSize": 9, "maxLines": 1, "maxChars": 200, "lineHeight": 1.3, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "physical_exam_heart": {
-    "page": 0, "x": 100, "y": 522, "width": 200, "height": 14,
-    "fontSize": 9, "maxLines": 1, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "page": 0, "x": 80, "y": 522, "width": 200, "height": 14,
+    "fontSize": 9, "maxLines": 1, "maxChars": 40, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "physical_exam_lungs": {
-    "page": 0, "x": 320, "y": 522, "width": 200, "height": 14,
-    "fontSize": 9, "maxLines": 1, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "page": 0, "x": 350, "y": 522, "width": 200, "height": 14,
+    "fontSize": 9, "maxLines": 1, "maxChars": 40, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "physical_exam_abdomen": {
-    "page": 0, "x": 100, "y": 542, "width": 200, "height": 14,
-    "fontSize": 9, "maxLines": 1, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "page": 0, "x": 100, "y": 545, "width": 200, "height": 14,
+    "fontSize": 9, "maxLines": 1, "maxChars": 40, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "physical_exam_gyn": {
-    "page": 0, "x": 320, "y": 542, "width": 200, "height": 14,
-    "fontSize": 9, "maxLines": 1, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "page": 0, "x": 340, "y": 545, "width": 200, "height": 14,
+    "fontSize": 9, "maxLines": 1, "maxChars": 40, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "impression": {
-    "page": 0, "x": 120, "y": 582, "width": 400, "height": 36,
-    "fontSize": 9, "maxLines": 3, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "page": 0, "x": 110, "y": 589, "width": 400, "height": 36,
+    "fontSize": 9, "maxLines": 2, "maxChars": 400, "lineHeight": 1.3, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "plan": {
-    "page": 0, "x": 180, "y": 632, "width": 360, "height": 40,
-    "fontSize": 9, "maxLines": 3, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "page": 0, "x": 182, "y": 632, "width": 360, "height": 40,
+    "fontSize": 9, "maxLines": 2, "maxChars": 400, "lineHeight": 1.3, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "rx_notes": {
-    "page": 0, "x": 100, "y": 682, "width": 440, "height": 30,
-    "fontSize": 9, "maxLines": 2, "align": "left", "wrap": true, "unit": "pt_top_left"
+    "page": 0, "x": 100, "y": 675, "width": 440, "height": 30,
+    "fontSize": 9, "maxLines": 1, "maxChars": 200, "lineHeight": 1.3, "align": "left", "wrap": true, "unit": "pt_top_left"
   },
   "further_consult_gensurg": {
-    "page": 0, "x": 150, "y": 712, "width": 12, "height": 12,
+    "page": 0, "x": 138, "y": 717, "width": 12, "height": 12,
     "fontSize": 12, "type": "checkbox", "unit": "pt_top_left"
   },
   "further_consult_gyn": {
-    "page": 0, "x": 240, "y": 712, "width": 12, "height": 12,
+    "page": 0, "x": 225, "y": 717, "width": 12, "height": 12,
     "fontSize": 12, "type": "checkbox", "unit": "pt_top_left"
   },
   "further_consult_other": {
-    "page": 0, "x": 310, "y": 712, "width": 12, "height": 12,
+    "page": 0, "x": 287, "y": 717, "width": 12, "height": 12,
     "fontSize": 12, "type": "checkbox", "unit": "pt_top_left"
   },
+  "further_consult_other_text": {
+    "page": 0, "x": 343, "y": 726, "width": 240, "height": 14,
+    "fontSize": 9, "maxLines": 1, "maxChars": 35, "align": "left", "wrap": false, "unit": "pt_top_left"
+  },
   "provider": {
-    "page": 0, "x": 100, "y": 742, "width": 200, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
+    "page": 0, "x": 95, "y": 752, "width": 200, "height": 14,
+    "fontSize": 10, "maxLines": 1, "maxChars": 35, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "interpreter": {
-    "page": 0, "x": 320, "y": 742, "width": 200, "height": 14,
-    "fontSize": 10, "maxLines": 1, "align": "left", "wrap": false, "unit": "pt_top_left"
-  },
-  "surgical_notes": { 
-    "page": 1, "x": 576, "y": 241, "width": 460, "height": 200, 
-    "fontSize": 9, "maxLines": 15, "align": "left", "wrap": true, "rotate": 180, "unit": "px_top_left" 
+    "page": 0, "x": 385, "y": 752, "width": 200, "height": 14,
+    "fontSize": 10, "maxLines": 1, "maxChars": 35, "align": "left", "wrap": false, "unit": "pt_top_left"
   },
   "fasting_yes": { 
-    "page": 1, "x": 656, "y": 842, "width": 12, "height": 12, 
-    "fontSize": 12, "type": "checkbox", "rotate": 180, "unit": "px_top_left" 
+    "page": 0, "x": 335, "y": 191, "width": 15, "height": 15, 
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left" 
   },
   "fasting_no": { 
-    "page": 1, "x": 568, "y": 842, "width": 12, "height": 12, 
-    "fontSize": 12, "type": "checkbox", "rotate": 180, "unit": "px_top_left" 
+    "page": 0, "x": 320, "y": 191, "width": 15, "height": 15, 
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left" 
   },
-  "taken_med_yes": { 
-    "page": 1, "x": 656, "y": 883, "width": 12, "height": 12, 
-    "fontSize": 12, "type": "checkbox", "rotate": 180, "unit": "px_top_left" 
+  "taken_med_bp_yes": { 
+    "page": 0, "x": 135, "y": 191, "width": 15, "height": 15, 
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left" 
   },
-  "taken_med_no": { 
-    "page": 1, "x": 568, "y": 883, "width": 12, "height": 12, 
-    "fontSize": 12, "type": "checkbox", "rotate": 180, "unit": "px_top_left" 
+  "taken_med_bp_no": { 
+    "page": 0, "x": 150, "y": 191, "width": 15, "height": 15, 
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left" 
   },
-  "rx_slips_attached": { 
-    "page": 1, "x": 704, "y": 921, "width": 12, "height": 12, 
-    "fontSize": 12, "type": "checkbox", "rotate": 180, "unit": "px_top_left" 
+  "taken_med_bs_yes": { 
+    "page": 0, "x": 350, "y": 204, "width": 15, "height": 15, 
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left" 
+  },
+  "taken_med_bs_no": { 
+    "page": 0, "x": 335, "y": 204, "width": 15, "height": 15, 
+    "fontSize": 12, "type": "checkbox", "style": "circle", "unit": "pt_top_left" 
+  },
+  "surgical_date": {
+    "page": 1, "x": 63, "y": 57, "width": 120, "height": 14,
+    "fontSize": 10, "maxLines": 1, "maxChars": 15, "align": "left", "wrap": false, "rotate": 180, "unit": "px_top_left"
+  },
+  "surgical_history": {
+    "page": 1, "x": 180, "y": 83, "width": 460, "height": 50,
+    "fontSize": 9, "maxLines": 3, "maxChars": 200, "lineHeight": 1.3, "align": "left", "wrap": true, "rotate": 180, "unit": "px_top_left"
+  },
+  "surgical_exam": {
+    "page": 1, "x": 20, "y": 168, "width": 460, "height": 28,
+    "fontSize": 9, "maxLines": 2, "maxChars": 200, "lineHeight": 1.3, "align": "left", "wrap": true, "rotate": 180, "unit": "px_top_left"
+  },
+  "surgical_impression": {
+    "page": 1, "x": 100, "y": 205, "width": 460, "height": 36,
+    "fontSize": 9, "maxLines": 2, "maxChars": 180, "lineHeight": 1.3, "align": "left", "wrap": true, "rotate": 180, "unit": "px_top_left"
+  },
+  "surgical_plan": {
+    "page": 1, "x": 180, "y": 265, "width": 460, "height": 40,
+    "fontSize": 9, "maxLines": 2, "maxChars": 200, "lineHeight": 1.3, "align": "left", "wrap": true, "rotate": 180, "unit": "px_top_left"
+  },
+  "surgical_meds": {
+    "page": 1, "x": 85, "y": 322, "width": 460, "height": 30,
+    "fontSize": 9, "maxLines": 2, "maxChars": 300, "lineHeight": 1.3, "align": "left", "wrap": true, "rotate": 180, "unit": "px_top_left"
+  },
+  "surgical_consult_gensurg": {
+    "page": 1, "x": 121, "y": 340, "width": 12, "height": 12,
+    "fontSize": 12, "type": "checkbox", "rotate": 180, "unit": "px_top_left"
+  },
+  "surgical_consult_gyn": {
+    "page": 1, "x": 217, "y": 340, "width": 12, "height": 12,
+    "fontSize": 12, "type": "checkbox", "rotate": 180, "unit": "px_top_left"
+  },
+  "surgical_consult_other": {
+    "page": 1, "x": 282, "y": 340, "width": 12, "height": 12,
+    "fontSize": 12, "type": "checkbox", "rotate": 180, "unit": "px_top_left"
+  },
+  "surgical_consult_other_text": {
+    "page": 1, "x": 347, "y": 350, "width": 200, "height": 14,
+    "fontSize": 9, "maxLines": 1, "maxChars": 30, "align": "left", "wrap": false, "rotate": 180, "unit": "px_top_left"
+  },
+  "surgical_surgeon": {
+    "page": 1, "x": 80, "y": 388, "width": 220, "height": 14,
+    "fontSize": 10, "maxLines": 1, "maxChars": 35, "align": "left", "wrap": false, "rotate": 180, "unit": "px_top_left"
+  },
+  "surgical_interpreter": {
+    "page": 1, "x": 395, "y": 388, "width": 220, "height": 14,
+    "fontSize": 10, "maxLines": 1, "maxChars": 35, "align": "left", "wrap": false, "rotate": 180, "unit": "px_top_left"
+  },
+  "surgical_notes": { 
+    "page": 1, "x": 20, "y": 420, "width": 460, "height": 200, 
+    "fontSize": 9, "maxLines": 15, "maxChars": 2000, "lineHeight": 1.2, "align": "left", "wrap": true, "rotate": 180, "unit": "px_top_left" 
   }
 }
