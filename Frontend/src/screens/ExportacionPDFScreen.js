@@ -1,6 +1,6 @@
 // src/screens/ExportacionPDFScreen.js
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
@@ -33,38 +33,55 @@ export default function ExportacionPDFScreen({ route, navigation }) {
         throw new Error('Error al generar el PDF');
       }
 
-      // Obtener el blob del PDF
-      const blob = await response.blob();
-      
-      // Convertir blob a base64 para React Native
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      reader.onloadend = async () => {
-        const base64data = reader.result.split(',')[1];
+      if (Platform.OS === 'web') {
+        // SOLUCIÓN WEB: Descargar directamente
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Patient_Consult_${paciente.nombre}_${paciente.apellido || ''}_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
         
-        // Guardar el archivo temporalmente
-        const filename = `Patient_Consult_${paciente.nombre}_${paciente.apellido || ''}_${new Date().toISOString().split('T')[0]}.pdf`;
-        const fileUri = `${FileSystem.documentDirectory}${filename}`;
-        
-        await FileSystem.writeAsStringAsync(fileUri, base64data, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-
         Alert.alert(
           t('alerts.successTitle'),
-          t('alerts.successMsg'),
-          [
-            { 
-              text: t('buttons.share'), 
-              onPress: () => shareFile(fileUri) 
-            },
-            { 
-              text: t('buttons.ok'), 
-              style: 'cancel' 
-            }
-          ]
+          'PDF descargado exitosamente'
         );
-      };
+      } else {
+        // SOLUCIÓN MÓVIL: FileReader + FileSystem
+        const blob = await response.blob();
+        
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = async () => {
+          const base64data = reader.result.split(',')[1];
+          
+          // Guardar el archivo temporalmente
+          const filename = `Patient_Consult_${paciente.nombre}_${paciente.apellido || ''}_${new Date().toISOString().split('T')[0]}.pdf`;
+          const fileUri = `${FileSystem.documentDirectory}${filename}`;
+          
+          await FileSystem.writeAsStringAsync(fileUri, base64data, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+
+          Alert.alert(
+            t('alerts.successTitle'),
+            t('alerts.successMsg'),
+            [
+              { 
+                text: t('buttons.share'), 
+                onPress: () => shareFile(fileUri) 
+              },
+              { 
+                text: t('buttons.ok'), 
+                style: 'cancel' 
+              }
+            ]
+          );
+        };
+      }
     } catch (error) {
       console.error('Error al exportar PDF:', error);
       Alert.alert(t('alerts.errorTitle'), error.message);

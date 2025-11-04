@@ -48,12 +48,21 @@
   "buttons": { 
     "save": "Guardar", 
     "exportPDF": "Exportar a PDF",
-    "manageImages": "Imágenes"
+    "manageImages": "Imágenes",
+    "reclassify": "Reclasificar",
+    "reclassifyTooltip": "Recalcular severidad basada en signos vitales"
   },
   "badges": { "manual": "Manual", "simulated": "SIMULADO" },
   "alerts": {
     "saved": { "title": "Guardado", "updated": "Cambios actualizados" },
-    "offline": { "title": "Offline", "queued": "Cambios en cola para sincronizar." }
+    "offline": { "title": "Offline", "queued": "Cambios en cola para sincronizar." },
+    "reclassify": {
+      "title": "Severidad Reclasificada",
+      "noChange": "La severidad se mantiene en",
+      "changed": "Severidad actualizada de {{old}} a {{new}}",
+      "calculating": "Calculando severidad...",
+      "error": "Error al reclasificar severidad"
+    }
   },
   "errors": { "notFound": "Paciente no encontrado" },
   "common": { "other": "Otro", "specify": "Especificar", "freeText": "Texto libre" },

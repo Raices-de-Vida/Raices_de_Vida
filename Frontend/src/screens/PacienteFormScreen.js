@@ -4,17 +4,21 @@ import {
   ScrollView, KeyboardAvoidingView, Platform, StyleSheet, Animated
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { createPaciente, autoEvaluarAlertas } from '../services/pacientes';
 import { useTranslation } from 'react-i18next';
 
+// Importación condicional de DateTimePicker (solo funciona en móvil)
+let DateTimePicker = null;
+if (Platform.OS !== 'web') {
+  DateTimePicker = require('@react-native-community/datetimepicker').default;
+}
+
 const C = { bg:'#FFF7DA', card:'#FFFFFF', border:'#E9E2C6', text:'#1B1B1B', subtext:'#687076', primary:'#F08C21', accent:'#6698CC' };
 
-// Los valores que envías al backend se mantienen en ES; las etiquetas se traducen con i18n.
-const ESTADOS = ['Activo', 'Inactivo', 'Derivado', 'Fallecido'];
-const METODOS = ['Ninguno', 'Pastillas', 'Inyección', 'DIU', 'Condón', 'Natural', 'Otro'];
+const TIPOS_CONSULTA = ['Diabetes', 'HTN', 'Respiratory', 'Other'];
+const FURTHER_CONSULTS = ['GenSurg', 'GYN', 'Other'];
 
 const onlyDigits = (s) => (s || '').replace(/\D+/g, '');
 const toIntOrNull = (v) => (v === '' ? null : parseInt(v, 10));
@@ -36,6 +40,90 @@ const dmyToISO = (dmy) => {
   return Number.isNaN(dt.getTime()) ? null : `${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
 };
 const parseISODate = (iso) => { if (!iso) return new Date(); const [y,m,d]=iso.split('-').map((x)=>parseInt(x,10)); const dt = new Date(y, m-1, d); return Number.isNaN(dt.getTime()) ? new Date() : dt; };
+
+// Límites de caracteres según pdfFieldsMap.json
+const LIMITS = {
+  date: 15,
+  language: 20,
+  patient_name: 50,
+  phone: 20,
+  town: 40,
+  dob: 12,
+  age: 10,
+  consult_other_text: 25,
+  chief_complaint: 250,
+  vitals_bp: 10,
+  vitals_hr: 6,
+  vitals_spo2: 6,
+  vitals_bs: 6,
+  vitals_weight: 12,
+  vitals_height: 12,
+  vitals_temp: 8,
+  allergies: 80,
+  current_tobacco_details: 20,
+  current_alcohol_details: 20,
+  current_drugs_details: 10,
+  past_tobacco_details: 20,
+  past_alcohol_details: 20,
+  past_drugs_details: 10,
+  lmp: 18,
+  gravida: 4,
+  para: 4,
+  miscarriage: 4,
+  abortion: 4,
+  control_method: 15,
+  history: 200,
+  medical_dx: 200,
+  surgeries: 200,
+  meds: 200,
+  physical_exam_heart: 40,
+  physical_exam_lungs: 40,
+  physical_exam_abdomen: 40,
+  physical_exam_gyn: 40,
+  impression: 400,
+  plan: 400,
+  rx_notes: 200,
+  further_consult_other_text: 35,
+  provider: 35,
+  interpreter: 35,
+  surgical_history: 200,
+  surgical_exam: 200,
+  surgical_impression: 180,
+  surgical_plan: 200,
+  surgical_meds: 300,
+  surgical_consult_other_text: 30,
+  surgical_surgeon: 35,
+  surgical_interpreter: 35,
+  surgical_notes: 2000
+};
+
+// ===== COMPONENTE REUTILIZABLE (FUERA DEL RENDER PRINCIPAL) =====
+const CharLimitedInput = ({ value, onChangeText, limit, multiline = false, placeholder = '', rows = 1 }) => {
+  const pct = limit ? (value.length / limit) * 100 : 0;
+  const color = pct < 70 ? '#4CAF50' : pct < 90 ? '#FFA726' : '#EF5350';
+  
+  return (
+    <View>
+      <TextInput
+        style={[styles.input, multiline && { height: Math.max(40, rows * 22), textAlignVertical: 'top', paddingTop: 10 }]}
+        value={value}
+        onChangeText={(text) => {
+          if (limit && text.length > limit) return;
+          onChangeText(text);
+        }}
+        placeholder={placeholder}
+        placeholderTextColor={C.subtext}
+        multiline={multiline}
+        numberOfLines={multiline ? rows : 1}
+      />
+      {limit && (
+        <Text style={[styles.charCount, { color }]}>
+          {value.length}/{limit}
+        </Text>
+      )}
+    </View>
+  );
+};
 
 export default function PacienteFormScreen({ navigation }) {
   const { t } = useTranslation('PacienteForm');
@@ -61,802 +149,994 @@ export default function PacienteFormScreen({ navigation }) {
   };
 
   // DatePicker
-  const [showDatePicker, setShowDatePicker] = useState(null); // 'reg' | 'nac' | 'signos' | 'ultMen' | 'ultAct'
-
-  // General
+  const [showDatePicker, setShowDatePicker] = useState(null); // 'reg' | 'nac' | 'ultMen' | 'surgical'
+  
+  // ===== ESTADOS - ORDEN DEL PDF =====
+  
+  // 1) Header Info (página 0, líneas 63-112)
   const [fecha_registro, setFechaRegistro] = useState('');
-  const [idioma, setIdioma] = useState('Español'); // valor guardado en ES
+  const [dateTypingReg, setDateTypingReg] = useState('');
+  const [idioma, setIdioma] = useState('Español');
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [telefono, setTelefono] = useState('');
   const [comunidad_pueblo, setComunidad] = useState('');
-  const [genero, setGenero] = useState('F'); // 'M' | 'F'
-  const [modoEdad, setModoEdad] = useState(false);
+  const [modoEdad, setModoEdad] = useState(false); // false = fecha_nacimiento, true = edad
   const [fecha_nacimiento, setFechaNac] = useState('');
+  const [dateTypingNac, setDateTypingNac] = useState('');
   const [edad, setEdad] = useState('');
-
+  const [genero, setGenero] = useState('F');
   const [touchedEdad, setTouchedEdad] = useState(false);
   const [touchedNac, setTouchedNac] = useState(false);
-
-  // Signos
-  const [presion_sis, setPresionSis] = useState('');
-  const [presion_dia, setPresionDia] = useState('');
+  
+  // 2) Consultation Type (página 0, línea 133-139)
+  const [tipo_consulta, setTipoConsulta] = useState('');
+  const [consult_other_text, setConsultOtherText] = useState('');
+  
+  // 3) Chief Complaint (página 0, línea 161)
+  const [chief_complaint, setChiefComplaint] = useState('');
+  
+  // 4) Vitals + Flags (página 0, línea 189-232)
+  const [presion_sistolica, setPresionSis] = useState('');
+  const [presion_diastolica, setPresionDia] = useState('');
   const [frecuencia_cardiaca, setFC] = useState('');
-  const [saturacion, setSatO2] = useState('');
+  const [saturacion_oxigeno, setSatO2] = useState('');
   const [glucosa, setGlucosa] = useState('');
   const [peso, setPeso] = useState('');
   const [estatura, setEstatura] = useState('');
   const [temperatura, setTemp] = useState('');
-  const [fecha_signos_vitales, setFechaSignos] = useState('');
-
-  // Alergias
-  const [tieneAlergias, setTieneAlergias] = useState(false);
+  const [medicamento_bp_tomado, setMedicamentoBP] = useState(false);
+  const [medicamento_bs_tomado, setMedicamentoBS] = useState(false);
+  const [paciente_en_ayuno, setPacienteAyuno] = useState(false);
+  
+  // 5) Allergies + Preventive Meds (página 0, línea 225-232)
+  const [tiene_alergias, setTieneAlergias] = useState(false);
   const [alergias, setAlergias] = useState('');
-
-  // Hábitos
+  const [vitamins, setVitamins] = useState('');
+  const [albendazole, setAlbendazole] = useState('');
+  
+  // 6) Current Habits (página 0, línea 241-258)
   const [tabaco_actual, setTabacoA] = useState(false);
   const [tabaco_actual_cantidad, setTabacoACant] = useState('');
   const [alcohol_actual, setAlcoholA] = useState(false);
   const [alcohol_actual_cantidad, setAlcoholACant] = useState('');
   const [drogas_actual, setDrogasA] = useState(false);
   const [drogas_actual_cantidad, setDrogasACant] = useState('');
-
+  
+  // 7) Past Habits (página 0, línea 262-279)
   const [tabaco_pasado, setTabacoP] = useState(false);
   const [tabaco_pasado_cantidad, setTabacoPCant] = useState('');
   const [alcohol_pasado, setAlcoholP] = useState(false);
   const [alcohol_pasado_cantidad, setAlcoholPCant] = useState('');
   const [drogas_pasado, setDrogasP] = useState(false);
   const [drogas_pasado_cantidad, setDrogasPCant] = useState('');
-
-  // Salud reproductiva
-  const [ultima_menstruacion, setUltM] = useState('');
+  
+  // 8) Reproductive Health (página 0, línea 292-319)
+  const [ultima_menstruacion, setUltimaMenstruacion] = useState('');
+  const [dateTypingLMP, setDateTypingLMP] = useState('');
   const [menopausia, setMenopausia] = useState(false);
-  const [gestaciones, setGest] = useState('');
+  const [gestaciones, setGestaciones] = useState('');
   const [partos, setPartos] = useState('');
-  const [abortos_espontaneos, setAEsp] = useState('');
-  const [abortos_inducidos, setAInd] = useState('');
-  const [usa_anticonceptivos, setUsaAnti] = useState(false);
-  const [metodo_anticonceptivo, setMetodo] = useState('Ninguno');
+  const [abortos_espontaneos, setAbortosEsp] = useState('');
+  const [abortos_inducidos, setAbortosInd] = useState('');
+  const [usa_anticonceptivos, setUsaAnticonceptivos] = useState(false);
+  const [metodo_anticonceptivo, setMetodoAnticonceptivo] = useState('');
+  
+  // 9) Clinical History (página 0, línea 356-495)
+  const [historia_enfermedad_actual, setHistoriaEnfermedad] = useState('');
+  const [diagnosticos_previos, setDiagnosticosPrevios] = useState('');
+  const [cirugias_previas, setCirugiasPrevias] = useState('');
+  const [medicamentos_actuales, setMedicamentosActuales] = useState('');
+  
+  // 10) Physical Exam (página 0, línea 522-567)
+  const [examen_corazon, setExamenCorazon] = useState('');
+  const [examen_pulmones, setExamenPulmones] = useState('');
+  const [examen_abdomen, setExamenAbdomen] = useState('');
+  const [examen_ginecologico, setExamenGinecologico] = useState('');
+  
+  // 11) Assessment & Plan (página 0, línea 589-705)
+  const [impresion, setImpresion] = useState('');
+  const [plan, setPlan] = useState('');
+  const [rx_notes, setRxNotes] = useState('');
+  
+  // 12) Further Consultation (página 0, línea 717-740)
+  const [further_consult, setFurtherConsult] = useState('');
+  const [further_consult_other_text, setFurtherConsultOtherText] = useState('');
+  
+  // 13) Provider & Interpreter (página 0, línea 752)
+  const [provider, setProvider] = useState('');
+  const [interprete, setInterprete] = useState('');
+  
+  // 14) Surgical Section (página 1)
+  const [mostrarQuirurgica, setMostrarQuirurgica] = useState(false);
+  const [surgical_date, setSurgicalDate] = useState('');
+  const [dateTypingSurg, setDateTypingSurg] = useState('');
+  const [surgical_history, setSurgicalHistory] = useState('');
+  const [surgical_exam, setSurgicalExam] = useState('');
+  const [surgical_impression, setSurgicalImpression] = useState('');
+  const [surgical_plan, setSurgicalPlan] = useState('');
+  const [surgical_meds, setSurgicalMeds] = useState('');
+  const [surgical_consult, setSurgicalConsult] = useState('');
+  const [surgical_consult_other_text, setSurgicalConsultOtherText] = useState('');
+  const [surgical_surgeon, setSurgicalSurgeon] = useState('');
+  const [surgical_interpreter, setSurgicalInterpreter] = useState('');
+  const [surgical_notes, setSurgicalNotes] = useState('');
+  const [rx_slips_attached, setRxSlipsAttached] = useState(false);
+  
+  // Auto-formateo de fechas
+  useEffect(() => setDateTypingReg(isoToDMY(fecha_registro)), [fecha_registro]);
+  useEffect(() => setDateTypingNac(isoToDMY(fecha_nacimiento)), [fecha_nacimiento]);
+  useEffect(() => setDateTypingLMP(isoToDMY(ultima_menstruacion)), [ultima_menstruacion]);
+  useEffect(() => setDateTypingSurg(isoToDMY(surgical_date)), [surgical_date]);
+  
+  // Inicializar fecha de registro
+  useEffect(() => {
+    if (!fecha_registro) {
+      const hoy = new Date();
+      const iso = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+      setFechaRegistro(iso);
+    }
+  }, []);
 
-  const [estado_paciente, setEstado] = useState('Activo');
-  const [fecha_ultima_actualizacion, setFechaUltAct] = useState('');
-  const [observaciones_generales, setObs] = useState('');
-  const [id_comunidad, setIdComunidad] = useState('');
-  const [id_familia, setIdFamilia] = useState('');
-  const [usuario_registro, setUsuarioRegistro] = useState('');
-
-  // Errores
-  const [errors, setErrors] = useState({});
-  const setRangeError = (key, msg) => setErrors((e) => ({ ...e, [key]: msg || undefined }));
-
-  // Validaciones clave
-  const telefonoValido = telefono === '' || telefono.length === 8;
-  const edadValida = !modoEdad || (edad !== '' && edad.length <= 2);
-  const fechaONedadOK = modoEdad ? edadValida : /^\d{4}-\d{2}-\d{2}$/.test(fecha_nacimiento || '');
-
+  // Validación
   const validar = () => {
+    // Campos obligatorios básicos
     if (!idioma || !nombre || !genero) return false;
-    if (!fechaONedadOK) return false;
-    if (!telefonoValido) return false;
-    if (!comunidad_pueblo.trim()) return false;
-    if (!peso || !estatura) return false;
-    if (presion_sis !== '' && presion_dia !== '' && Number(presion_sis) <= Number(presion_dia)) return false;
-    if (Object.values(errors).some(Boolean)) return false;
+    
+    // Debe tener edad O fecha de nacimiento
+    if (!modoEdad && !fecha_nacimiento) return false;
+    if (modoEdad && !edad) return false;
+    
+    // Si hay consulta, validar campos requeridos
+    if (tipo_consulta && chief_complaint) {
+      if (!historia_enfermedad_actual || !examen_corazon || !impresion) return false;
+    }
+    
     return true;
   };
 
-  const buildPayload = () => ({
-    fecha_registro: fecha_registro || null,
-    idioma, nombre,
-    apellido: apellido || null,
-    telefono: telefono || null,
-    comunidad_pueblo: comunidad_pueblo || null,
-    fecha_nacimiento: modoEdad ? null : (fecha_nacimiento || null),
-    edad: modoEdad ? toIntOrNull(edad) : null,
-    genero,
-
-    presion_arterial_sistolica: toIntOrNull(presion_sis),
-    presion_arterial_diastolica: toIntOrNull(presion_dia),
-    frecuencia_cardiaca: toIntOrNull(frecuencia_cardiaca),
-    saturacion_oxigeno: toFloatOrNull(saturacion),
-    glucosa: toFloatOrNull(glucosa),
-    peso: toFloatOrNull(peso),
-    estatura: toFloatOrNull(estatura),
-    temperatura: toFloatOrNull(temperatura),
-    fecha_signos_vitales: fecha_signos_vitales || null,
-
-    tiene_alergias: !!tieneAlergias,
-    alergias: tieneAlergias ? (alergias || null) : null,
-
-    tabaco_actual: !!tabaco_actual,
-    tabaco_actual_cantidad: tabaco_actual ? (tabaco_actual_cantidad || null) : null,
-    alcohol_actual: !!alcohol_actual,
-    alcohol_actual_cantidad: alcohol_actual ? (alcohol_actual_cantidad || null) : null,
-    drogas_actual: !!drogas_actual,
-    drogas_actual_cantidad: drogas_actual ? (drogas_actual_cantidad || null) : null,
-
-    tabaco_pasado: !!tabaco_pasado,
-    tabaco_pasado_cantidad: tabaco_pasado ? (tabaco_pasado_cantidad || null) : null,
-    alcohol_pasado: !!alcohol_pasado,
-    alcohol_pasado_cantidad: alcohol_pasado ? (alcohol_pasado_cantidad || null) : null,
-    drogas_pasado: !!drogas_pasado,
-    drogas_pasado_cantidad: drogas_pasado ? (drogas_pasado_cantidad || null) : null,
-
-    ultima_menstruacion: genero === 'F' ? (ultima_menstruacion || null) : null,
-    menopausia: genero === 'F' ? !!menopausia : null,
-    gestaciones: genero === 'F' ? toIntOrNull(gestaciones) : null,
-    partos: genero === 'F' ? toIntOrNull(partos) : null,
-    abortos_espontaneos: genero === 'F' ? toIntOrNull(abortos_espontaneos) : null,
-    abortos_inducidos: genero === 'F' ? toIntOrNull(abortos_inducidos) : null,
-    usa_anticonceptivos: genero === 'F' ? !!usa_anticonceptivos : null,
-    metodo_anticonceptivo: genero === 'F' ? metodo_anticonceptivo : 'Ninguno',
-
-    estado_paciente,
-    fecha_ultima_actualizacion: fecha_ultima_actualizacion || null,
-    observaciones_generales: observaciones_generales || null,
-    id_comunidad: id_comunidad ? toIntOrNull(id_comunidad) : null,
-    id_familia: id_familia ? toIntOrNull(id_familia) : null,
-    usuario_registro: usuario_registro ? toIntOrNull(usuario_registro) : null,
-  });
-
-const handleSubmit = async () => {
-  setTouchedEdad(true);
-  setTouchedNac(true);
-  if (!validar()) {
-    Alert.alert(t('errors.formTitle'), t('errors.formMsg'));
-    return;
-  }
-  
-  try {
-    const token = await AsyncStorage.getItem('token');
-    const payload = buildPayload();
+  // Construir payload
+  const buildPayload = () => {
+    const pacienteData = {
+      fecha_registro: fecha_registro || null,
+      idioma,
+      nombre,
+      apellido,
+      telefono: telefono || null,
+      comunidad_pueblo: comunidad_pueblo || null,
+      fecha_nacimiento: modoEdad ? null : (fecha_nacimiento || null),
+      edad: modoEdad ? toIntOrNull(edad) : null,
+      genero,
+      presion_arterial_sistolica: toIntOrNull(presion_sistolica),
+      presion_arterial_diastolica: toIntOrNull(presion_diastolica),
+      frecuencia_cardiaca: toIntOrNull(frecuencia_cardiaca),
+      saturacion_oxigeno: toFloatOrNull(saturacion_oxigeno),
+      glucosa: toFloatOrNull(glucosa),
+      peso: toFloatOrNull(peso),
+      estatura: toFloatOrNull(estatura),
+      temperatura: toFloatOrNull(temperatura),
+      tiene_alergias,
+      alergias: tiene_alergias ? alergias : null,
+      tabaco_actual,
+      tabaco_actual_cantidad: tabaco_actual ? tabaco_actual_cantidad : null,
+      alcohol_actual,
+      alcohol_actual_cantidad: alcohol_actual ? alcohol_actual_cantidad : null,
+      drogas_actual,
+      drogas_actual_cantidad: drogas_actual ? drogas_actual_cantidad : null,
+      tabaco_pasado,
+      tabaco_pasado_cantidad: tabaco_pasado ? tabaco_pasado_cantidad : null,
+      alcohol_pasado,
+      alcohol_pasado_cantidad: alcohol_pasado ? alcohol_pasado_cantidad : null,
+      drogas_pasado,
+      drogas_pasado_cantidad: drogas_pasado ? drogas_pasado_cantidad : null,
+      ultima_menstruacion: ultima_menstruacion || null,
+      menopausia,
+      gestaciones: toIntOrNull(gestaciones),
+      partos: toIntOrNull(partos),
+      abortos_espontaneos: toIntOrNull(abortos_espontaneos),
+      abortos_inducidos: toIntOrNull(abortos_inducidos),
+      usa_anticonceptivos,
+      metodo_anticonceptivo: usa_anticonceptivos ? metodo_anticonceptivo : null,
+      estado_paciente: 'Activo'
+    };
     
-    // 1. Crear paciente
-    const resp = await createPaciente(payload);
-    const id = resp?.id_paciente ?? resp?.paciente?.id_paciente;
-    if (!id) throw new Error('No id_paciente en la respuesta');
-    
-    // 2. Auto-evaluar alertas médicas
-    try {
-      console.log('🔍 Auto-evaluando alertas para paciente:', id); // Debug
-      await autoEvaluarAlertas(id);
-    } catch (evalError) {
-      console.warn('⚠️ Error en auto-evaluación:', evalError);
-      // No bloqueamos el flujo si falla la auto-evaluación
+    // Datos de consulta (solo si hay tipo_consulta Y chief_complaint)
+    if (tipo_consulta && chief_complaint) {
+      return {
+        ...pacienteData,
+        tipo_consulta,
+        ...(tipo_consulta === 'Other' && consult_other_text ? { consult_other_text } : {}),
+        chief_complaint,
+        paciente_en_ayuno,
+        medicamento_bp_tomado,
+        medicamento_bs_tomado,
+        vitamins: toIntOrNull(vitamins),
+        albendazole: toIntOrNull(albendazole),
+        historia_enfermedad_actual,
+        diagnosticos_previos,
+        cirugias_previas,
+        medicamentos_actuales,
+        examen_corazon,
+        examen_pulmones,
+        examen_abdomen,
+        examen_ginecologico,
+        impresion,
+        plan,
+        rx_notes,
+        further_consult,
+        ...(further_consult === 'Other' && further_consult_other_text ? { further_consult_other_text } : {}),
+        provider,
+        interprete,
+        ...(mostrarQuirurgica ? {
+          surgical_date: surgical_date || null,
+          surgical_history,
+          surgical_exam,
+          surgical_impression,
+          surgical_plan,
+          surgical_meds,
+          surgical_consult,
+          ...(surgical_consult === 'Other' && surgical_consult_other_text ? { surgical_consult_other_text } : {}),
+          surgical_surgeon,
+          surgical_interpreter,
+          surgical_notes,
+          rx_slips_attached
+        } : {})
+      };
     }
     
-    // 3. Mostrar éxito y regresar
-    showSuccess(t('toast.saved'));
-    setTimeout(() => navigation.goBack(), 900);
+    return pacienteData;
+  };
+
+  // Guardar
+  const guardar = async () => {
+    if (!validar()) {
+      Alert.alert(t('errors.incomplete'));
+      return;
+    }
     
-  } catch (e) {
-    console.error('❌ Error al crear paciente:', e);
-    Alert.alert(t('errors.errorTitle'), t('errors.createFail') + '\n\n' + e.message);
-  }
-};
-
-  const onSis = (t_) => {
-    const v = onlyDigits(t_);
-    setPresionSis(v);
-    if (v === '') return setRangeError('presion_sis', undefined);
-    const n = parseInt(v, 10);
-    if (n < 60 || n > 250) setRangeError('presion_sis', t('ranges.sis'));
-    else setRangeError('presion_sis', undefined);
-  };
-  const onDia = (t_) => {
-    const v = onlyDigits(t_);
-    setPresionDia(v);
-    if (v === '') return setRangeError('presion_dia', undefined);
-    const n = parseInt(v, 10);
-    if (n < 30 || n > 150) setRangeError('presion_dia', t('ranges.dia'));
-    else setRangeError('presion_dia', undefined);
-  };
-  const onFC = (t_) => {
-    const v = onlyDigits(t_);
-    setFC(v);
-    if (v === '') return setRangeError('fc', undefined);
-    const n = parseInt(v, 10);
-    if (n < 30 || n > 220) setRangeError('fc', t('ranges.hr'));
-    else setRangeError('fc', undefined);
-  };
-  const onSpO2 = (t_) => {
-    const v = onlyDigits(t_).slice(0,3);
-    setSatO2(v);
-    if (v === '') return setRangeError('spo2', undefined);
-    const n = parseInt(v, 10);
-    if (n < 50 || n > 100) setRangeError('spo2', t('ranges.spo2'));
-    else setRangeError('spo2', undefined);
-  };
-  const onGluc = (t_) => {
-    const v = onlyDigits(t_);
-    setGlucosa(v);
-    if (v === '') return setRangeError('glu', undefined);
-    const n = parseInt(v, 10);
-    if (n < 20 || n > 600) setRangeError('glu', t('ranges.glu'));
-    else setRangeError('glu', undefined);
-  };
-  const onTemp = (t_) => {
-    const v = t_.replace(/[^0-9.,]/g, '').replace(',', '.');
-    const parts = v.split('.');
-    const norm = parts[0].slice(0,2) + (parts[1] ? '.' + parts[1].slice(0,1) : '');
-    setTemp(norm);
-    if (norm === '') return setRangeError('temp', undefined);
-    const n = parseFloat(norm);
-    if (!(n >= 30 && n <= 43)) setRangeError('temp', t('ranges.temp'));
-    else setRangeError('temp', undefined);
-  };
-  const onPeso = (t_) => {
-    const v = t_.replace(/[^0-9.,]/g, '').replace(',', '.');
-    const parts = v.split('.');
-    const norm = parts[0].slice(0,3) + (parts[1] ? '.' + parts[1].slice(0,1) : '');
-    setPeso(norm);
-    if (norm === '') return setRangeError('peso', undefined);
-    const n = parseFloat(norm);
-    if (!(n >= 1 && n <= 300)) setRangeError('peso', t('ranges.weight'));
-    else setRangeError('peso', undefined);
-  };
-  const onEst = (t_) => {
-    const v = t_.replace(/[^0-9.,]/g, '').replace(',', '.');
-    const parts = v.split('.');
-    const norm = parts[0].slice(0,3) + (parts[1] ? '.' + parts[1].slice(0,1) : '');
-    setEstatura(norm);
-    if (norm === '') return setRangeError('est', undefined);
-    const n = parseFloat(norm);
-    if (!(n >= 30 && n <= 250)) setRangeError('est', t('ranges.height'));
-    else setRangeError('est', undefined);
+    try {
+      const payload = buildPayload();
+      const token = await AsyncStorage.getItem('token');
+      const resp = await createPaciente(payload, token);
+      
+      if (resp && resp.id_paciente) {
+        showSuccess(t('toast.saved'));
+        
+        // Auto-evaluar alertas si hay signos vitales
+        if (presion_sistolica || presion_diastolica || frecuencia_cardiaca || saturacion_oxigeno || glucosa || temperatura) {
+          try {
+            await autoEvaluarAlertas(resp.id_paciente, token);
+          } catch (e) {
+            console.warn('Error auto-evaluar:', e);
+          }
+        }
+        
+        setTimeout(() => navigation.goBack(), 1400);
+      }
+    } catch (err) {
+      console.error('Error guardar:', err);
+      Alert.alert(t('errors.createFail'));
+    }
   };
 
-  const [dateTypingReg, setDateTypingReg] = useState('');
-  const [dateTypingNac, setDateTypingNac] = useState('');
-  const [dateTypingSV, setDateTypingSV] = useState('');
-  const [dateTypingUlt, setDateTypingUlt] = useState('');
-  const [dateTypingUA, setDateTypingUA] = useState('');
-
-  useEffect(() => setDateTypingReg(isoToDMY(fecha_registro)), [fecha_registro]);
-  useEffect(() => setDateTypingNac(isoToDMY(fecha_nacimiento)), [fecha_nacimiento]);
-  useEffect(() => setDateTypingSV(isoToDMY(fecha_signos_vitales)), [fecha_signos_vitales]);
-  useEffect(() => setDateTypingUlt(isoToDMY(ultima_menstruacion)), [ultima_menstruacion]);
-  useEffect(() => setDateTypingUA(isoToDMY(fecha_ultima_actualizacion)), [fecha_ultima_actualizacion]);
-
-  const maskDMY = (raw) => {
-    const d = onlyDigits(raw).slice(0,8);
-    if (d.length <= 2) return d;
-    if (d.length <= 4) return `${d.slice(0,2)}/${d.slice(2)}`;
-    return `${d.slice(0,2)}/${d.slice(2,4)}/${d.slice(4)}`;
+  // Manejo de fecha con DateTimePicker (solo móvil)
+  const onDateChange = (event, selectedDate) => {
+    setShowDatePicker(null);
+    if (event.type === 'dismissed' || !selectedDate) return;
+    const iso = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth()+1).padStart(2,'0')}-${String(selectedDate.getDate()).padStart(2,'0')}`;
+    if (showDatePicker === 'reg') setFechaRegistro(iso);
+    if (showDatePicker === 'nac') { setFechaNac(iso); setTouchedNac(true); }
+    if (showDatePicker === 'ultMen') setUltimaMenstruacion(iso);
+    if (showDatePicker === 'surgical') setSurgicalDate(iso);
   };
-
-  // helpers de etiqueta traducida
-  const labelEstado = (e) => t(`options.states.${e}`);
-  const labelMetodo = (m) => t(`options.methods.${m}`);
 
   return (
-    <View style={{ flex:1, backgroundColor: C.bg }}>
-      {/* Top bar */}
-      <View style={styles.topBar}>
-        <View style={styles.topLeft}>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()} activeOpacity={0.85}>
-            <Ionicons name="arrow-back" size={22} color={C.text} />
-          </TouchableOpacity>
-          <View>
-            <Text style={styles.topTitle}>{t('top.title')}</Text>
-            <Text style={styles.topSubtitle}>{t('top.subtitle')}</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Animated.View style={[styles.container, { opacity: fade, transform: [{ translateY: slide }] }]}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+          {/* Header con botón de regresar */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color="#FFF" />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.title}>{t('top.title')}</Text>
+              <Text style={styles.subtitle}>{t('top.subtitle')}</Text>
+            </View>
           </View>
-        </View>
-      </View>
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{flex:1}}>
-        <ScrollView contentContainerStyle={{ padding:16, paddingBottom:140 }} keyboardShouldPersistTaps="handled">
-          <Animated.View style={{ opacity: fade, transform:[{translateY: slide}] }}>
+          {/* 1) HEADER INFO */}
+          <Card title="Información del Paciente">
+            <Field label={t('fields.dateReg')}>
+              <MaskedDateInput
+                value={dateTypingReg}
+                onChangeText={(txt) => {
+                  setDateTypingReg(txt);
+                  const iso = dmyToISO(txt);
+                  if (iso) setFechaRegistro(iso);
+                }}
+                onCalendarPress={Platform.OS !== 'web' ? () => setShowDatePicker('reg') : null}
+                onBlur={() => {
+                  if (!fecha_registro || !dmyToISO(dateTypingReg)) {
+                    const hoy = new Date();
+                    const iso = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+                    setFechaRegistro(iso);
+                  }
+                }}
+                placeholder="DD/MM/AAAA"
+              />
+            </Field>
 
-            {/* Identificación */}
-            <Card title={t('cards.id')}>
-              <Field label={t('fields.dateReg')}>
-                <MaskedDateInput
-                  value={dateTypingReg}
-                  placeholder={t('placeholders.ddmmyyyy')}
-                  onChangeText={(t_)=>{
-                    const m = maskDMY(t_);
-                    setDateTypingReg(m);
-                    if (m.length === 10) {
-                      const iso = dmyToISO(m);
-                      if (iso) setFechaRegistro(iso);
-                    }
-                    if (m.length === 0) setFechaRegistro('');
-                  }}
-                  onCalendarPress={()=>setShowDatePicker('reg')}
-                />
-              </Field>
+            <Field label={t('fields.language')}>
+              <Picker selectedValue={idioma} onValueChange={setIdioma} style={styles.picker}>
+                <Picker.Item label="Español" value="Español" />
+                <Picker.Item label="Inglés" value="Inglés" />
+                <Picker.Item label="K'iche'" value="K'iche'" />
+                <Picker.Item label="Kaqchikel" value="Kaqchikel" />
+                <Picker.Item label="Q'eqchi'" value="Q'eqchi'" />
+                <Picker.Item label="Mam" value="Mam" />
+              </Picker>
+            </Field>
 
-              <Field label={t('fields.language')}>
-                <View style={styles.pickerWrap}>
-                  <Picker selectedValue={idioma} onValueChange={setIdioma}>
-                    {/* sin Kaqchikel */}
-                    <Picker.Item label={t('options.languages.es')} value="Español" />
-                    <Picker.Item label={t('options.languages.kich')} value="K'iche'" />
-                    <Picker.Item label={t('options.languages.qeq')} value="Q'eqchi'" />
-                    <Picker.Item label={t('options.languages.other')} value="Otro" />
-                  </Picker>
-                </View>
-              </Field>
+            <Field label={t('fields.firstName')}>
+              <CharLimitedInput value={nombre} onChangeText={setNombre} limit={LIMITS.patient_name} placeholder="Nombres" />
+            </Field>
 
-              <Field label={t('fields.firstName')}>
-                <TextInput
-                  value={nombre} onChangeText={setNombre}
-                  style={[styles.input, !nombre.trim() && styles.err]}
-                  placeholder={t('placeholders.firstName')} placeholderTextColor="#A2A7AE"
-                />
-                {!nombre.trim() && <Text style={styles.errText}>{t('errors.requiredField')}</Text>}
-              </Field>
+            <Field label={t('fields.lastName')}>
+              <CharLimitedInput value={apellido} onChangeText={setApellido} limit={LIMITS.patient_name} placeholder="Apellidos" />
+            </Field>
 
-              <Field label={t('fields.lastName')}>
-                <TextInput
-                  value={apellido} onChangeText={setApellido}
-                  style={styles.input}
-                  placeholder={t('placeholders.lastName')} placeholderTextColor="#A2A7AE"
-                />
-              </Field>
+            <Field label={t('fields.phone')}>
+              <CharLimitedInput
+                value={telefono}
+                onChangeText={(txt) => setTelefono(onlyDigits(txt))}
+                limit={LIMITS.phone}
+                placeholder="12345678"
+              />
+            </Field>
 
-              <Field label={t('fields.gender')}>
-                <View style={styles.pickerWrap}>
-                  <Picker selectedValue={genero} onValueChange={setGenero}>
-                    <Picker.Item label={t('options.genders.F')} value="F" />
-                    <Picker.Item label={t('options.genders.M')} value="M" />
-                  </Picker>
-                </View>
-              </Field>
+            <Field label={t('fields.community')}>
+              <CharLimitedInput value={comunidad_pueblo} onChangeText={setComunidad} limit={LIMITS.town} placeholder="Comunidad o pueblo" />
+            </Field>
 
-              <Text style={styles.label}>{t('fields.useDate')} / {t('fields.useAge')}</Text>
-              <View style={styles.radioRow}>
-                <Radio label={t('fields.useDate')} checked={!modoEdad} onPress={()=>{ setModoEdad(false); setTouchedEdad(false); }} />
-                <Radio label={t('fields.useAge')} checked={modoEdad} onPress={()=>{ setModoEdad(true); setTouchedNac(false); }} />
+            <Field label={t('fields.gender')}>
+              <View style={{ flexDirection: 'row', gap: 16 }}>
+                <Radio label="F" checked={genero === 'F'} onPress={() => setGenero('F')} />
+                <Radio label="M" checked={genero === 'M'} onPress={() => setGenero('M')} />
               </View>
+            </Field>
 
-              {modoEdad ? (
-                <Field label={t('fields.ageYears')}>
-                  <TextInput
-                    value={edad}
-                    onChangeText={(t_) => setEdad(onlyDigits(t_).slice(0,2))}
-                    onBlur={()=>setTouchedEdad(true)}
-                    keyboardType="numeric" maxLength={2}
-                    style={[styles.input, touchedEdad && !(edad !== '' && edad.length <= 2) && styles.err]}
-                    placeholder={t('placeholders.ageSample')} placeholderTextColor="#A2A7AE"
-                  />
-                  {touchedEdad && !(edad !== '' && edad.length <= 2) && (
-                    <Text style={styles.errText}>1–2</Text>
-                  )}
-                </Field>
-              ) : (
-                <Field label={t('fields.birthdate')}>
-                  <MaskedDateInput
-                    value={dateTypingNac}
-                    placeholder={t('placeholders.ddmmyyyy')}
-                    onChangeText={(t_)=>{
-                      const m = maskDMY(t_);
-                      setDateTypingNac(m);
-                      if (m.length === 10) {
-                        const iso = dmyToISO(m);
-                        if (iso) setFechaNac(iso);
-                      }
-                      if (m.length === 0) setFechaNac('');
-                    }}
-                    onBlur={()=>setTouchedNac(true)}
-                    error={touchedNac && !/^\d{4}-\d{2}-\d{2}$/.test(fecha_nacimiento || '')}
-                    onCalendarPress={()=>setShowDatePicker('nac')}
-                  />
-                  {touchedNac && !/^\d{4}-\d{2}-\d{2}$/.test(fecha_nacimiento || '') && (
-                    <Text style={styles.errText}>{t('errors.invalidDate')}</Text>
-                  )}
-                </Field>
-              )}
+            <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
+              <TouchableOpacity onPress={() => setModoEdad(false)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={[styles.radio, !modoEdad && styles.radioActive]} />
+                <Text style={styles.label}>{t('fields.useDate')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setModoEdad(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={[styles.radio, modoEdad && styles.radioActive]} />
+                <Text style={styles.label}>{t('fields.useAge')}</Text>
+              </TouchableOpacity>
+            </View>
 
-              <Field label={t('fields.phone')}>
-                <TextInput
-                  value={telefono}
-                  onChangeText={(t_)=> setTelefono(onlyDigits(t_).slice(0,8))}
-                  keyboardType="phone-pad" maxLength={8}
-                  style={[styles.input, (!telefonoValido && telefono!=='') && styles.err]}
-                  placeholder={t('placeholders.phone')} placeholderTextColor="#A2A7AE"
-                />
-                {(!telefonoValido && telefono!=='') && <Text style={styles.errText}>{t('errors.phone8')}</Text>}
-              </Field>
-
-              <Field label={t('fields.community')}>
-                <TextInput
-                  value={comunidad_pueblo} onChangeText={setComunidad}
-                  style={[styles.input, !comunidad_pueblo.trim() && styles.err]}
-                  placeholder={t('placeholders.community')} placeholderTextColor="#A2A7AE"
-                />
-                {!comunidad_pueblo.trim() && <Text style={styles.errText}>{t('errors.requiredField')}</Text>}
-              </Field>
-            </Card>
-
-            {/* Signos */}
-            <Card title={t('cards.vitals')}>
-              <FieldRow>
-                <Field label={t('fields.sysBP')}>
-                  <TextInput value={presion_sis} onChangeText={onSis} keyboardType="numeric" style={[styles.input, errors.presion_sis && styles.err]} maxLength={3}/>
-                  {errors.presion_sis && <Text style={styles.errText}>{errors.presion_sis}</Text>}
-                </Field>
-                <Field label={t('fields.diaBP')}>
-                  <TextInput value={presion_dia} onChangeText={onDia} keyboardType="numeric" style={[styles.input, errors.presion_dia && styles.err]} maxLength={3}/>
-                  {errors.presion_dia && <Text style={styles.errText}>{errors.presion_dia}</Text>}
-                </Field>
-              </FieldRow>
-
-              <FieldRow>
-                <Field label={t('fields.heartRate')}>
-                  <TextInput value={frecuencia_cardiaca} onChangeText={onFC} keyboardType="numeric" style={[styles.input, errors.fc && styles.err]} maxLength={3}/>
-                  {errors.fc && <Text style={styles.errText}>{errors.fc}</Text>}
-                </Field>
-                <Field label={t('fields.spo2')}>
-                  <TextInput value={saturacion} onChangeText={onSpO2} keyboardType="numeric" style={[styles.input, errors.spo2 && styles.err]} maxLength={3}/>
-                  {errors.spo2 && <Text style={styles.errText}>{errors.spo2}</Text>}
-                </Field>
-              </FieldRow>
-
-              <FieldRow>
-                <Field label={t('fields.glucose')}>
-                  <TextInput value={glucosa} onChangeText={onGluc} keyboardType="numeric" style={[styles.input, errors.glu && styles.err]} maxLength={3}/>
-                  {errors.glu && <Text style={styles.errText}>{errors.glu}</Text>}
-                </Field>
-                <Field label={t('fields.temperature')}>
-                  <TextInput value={temperatura} onChangeText={onTemp} keyboardType="decimal-pad" style={[styles.input, errors.temp && styles.err]} maxLength={4}/>
-                  {errors.temp && <Text style={styles.errText}>{errors.temp}</Text>}
-                </Field>
-              </FieldRow>
-
-              <FieldRow>
-                <Field label={t('fields.weight')}>
-                  <TextInput value={peso} onChangeText={onPeso} keyboardType="decimal-pad" style={[styles.input, errors.peso && styles.err]} maxLength={5}/>
-                  {errors.peso && <Text style={styles.errText}>{errors.peso}</Text>}
-                </Field>
-                <Field label={t('fields.height')}>
-                  <TextInput value={estatura} onChangeText={onEst} keyboardType="decimal-pad" style={[styles.input, errors.est && styles.err]} maxLength={6}/>
-                  {errors.est && <Text style={styles.errText}>{errors.est}</Text>}
-                </Field>
-              </FieldRow>
-
-              <Field label={t('fields.vitalsDate')}>
-                <MaskedDateInput
-                  value={dateTypingSV}
-                  placeholder={t('placeholders.ddmmyyyy')}
-                  onChangeText={(t_)=>{
-                    const m = maskDMY(t_);
-                    setDateTypingSV(m);
-                    if (m.length === 10) {
-                      const iso = dmyToISO(m);
-                      if (iso) setFechaSignos(iso);
-                    }
-                    if (m.length === 0) setFechaSignos('');
+            {modoEdad ? (
+              <Field label={t('fields.ageYears')}>
+                <CharLimitedInput
+                  value={edad}
+                  onChangeText={(txt) => {
+                    setEdad(onlyDigits(txt));
+                    setTouchedEdad(true);
                   }}
-                  onCalendarPress={()=>setShowDatePicker('signos')}
+                  limit={LIMITS.age}
+                  placeholder="35"
                 />
               </Field>
-            </Card>
+            ) : (
+              <Field label={t('fields.birthdate')}>
+                <MaskedDateInput
+                  value={dateTypingNac}
+                  onChangeText={(txt) => {
+                    setDateTypingNac(txt);
+                    const iso = dmyToISO(txt);
+                    if (iso) {
+                      setFechaNac(iso);
+                      setTouchedNac(true);
+                    }
+                  }}
+                  onCalendarPress={Platform.OS !== 'web' ? () => setShowDatePicker('nac') : null}
+                  error={touchedNac && !fecha_nacimiento}
+                  placeholder="DD/MM/AAAA"
+                />
+              </Field>
+            )}
+          </Card>
 
-            {/* Alergias */}
-            <Card title={t('cards.allergies')}>
-              <Toggle label={t('fields.hasAllergies')} value={tieneAlergias} onChange={setTieneAlergias} />
-              {tieneAlergias && (
-                <Field label={t('fields.whatAllergies')}>
-                  <TextInput value={alergias} onChangeText={setAlergias}
-                    style={[styles.input, styles.textArea]} placeholder={t('placeholders.allergies')} placeholderTextColor="#A2A7AE" multiline />
-                </Field>
-              )}
-            </Card>
+          {/* 2) CONSULTATION TYPE */}
+          <Card title="Tipo de Consulta">
+            <Field label={t('fields.consultType')}>
+              <Picker selectedValue={tipo_consulta} onValueChange={setTipoConsulta} style={styles.picker}>
+                <Picker.Item label="-- Seleccionar --" value="" />
+                {TIPOS_CONSULTA.map((tipo) => (
+                  <Picker.Item key={tipo} label={tipo} value={tipo} />
+                ))}
+              </Picker>
+            </Field>
 
-            {/* Hábitos */}
-            <Card title={t('cards.habitsCurrent')}>
-              <Toggle label={t('fields.tobacco')} value={tabaco_actual} onChange={setTabacoA} />
-              {tabaco_actual && (
-                <Field label={t('fields.qtyFreq')}>
-                  <TextInput value={tabaco_actual_cantidad} onChangeText={setTabacoACant}
-                    style={styles.input} placeholder={t('placeholders.qtyCigs')} placeholderTextColor="#A2A7AE" />
-                </Field>
-              )}
-              <Toggle label={t('fields.alcohol')} value={alcohol_actual} onChange={setAlcoholA} />
-              {alcohol_actual && (
-                <Field label={t('fields.qtyFreq')}>
-                  <TextInput value={alcohol_actual_cantidad} onChangeText={setAlcoholACant}
-                    style={styles.input} placeholder={t('placeholders.qtyAlcohol')} placeholderTextColor="#A2A7AE" />
-                </Field>
-              )}
-              <Toggle label={t('fields.drugs')} value={drogas_actual} onChange={setDrogasA} />
-              {drogas_actual && (
-                <Field label={t('fields.drugsDetail')}>
-                  <TextInput value={drogas_actual_cantidad} onChangeText={setDrogasACant}
-                    style={styles.input} placeholder={t('placeholders.drugsDetail')} placeholderTextColor="#A2A7AE" />
-                </Field>
-              )}
-            </Card>
-
-            <Card title={t('cards.habitsPast')}>
-              <Toggle label={`${t('fields.tobacco')} ${t('fields.pastSuffix')}`} value={tabaco_pasado} onChange={setTabacoP} />
-              {tabaco_pasado && (
-                <Field label={t('fields.qtyFreqPast')}>
-                  <TextInput value={tabaco_pasado_cantidad} onChangeText={setTabacoPCant}
-                    style={styles.input} placeholder={t('placeholders.drugsDetail')} placeholderTextColor="#A2A7AE" />
-                </Field>
-              )}
-              <Toggle label={`${t('fields.alcohol')} ${t('fields.pastSuffix')}`} value={alcohol_pasado} onChange={setAlcoholP} />
-              {alcohol_pasado && (
-                <Field label={t('fields.qtyFreqPast')}>
-                  <TextInput value={alcohol_pasado_cantidad} onChangeText={setAlcoholPCant}
-                    style={styles.input} placeholder={t('placeholders.drugsDetail')} placeholderTextColor="#A2A7AE" />
-                </Field>
-              )}
-              <Toggle label={`${t('fields.drugs')} ${t('fields.pastSuffix')}`} value={drogas_pasado} onChange={setDrogasP} />
-              {drogas_pasado && (
-                <Field label={t('fields.drugsDetail')}>
-                  <TextInput value={drogas_pasado_cantidad} onChangeText={setDrogasPCant}
-                    style={styles.input} placeholder={t('placeholders.drugsDetail')} placeholderTextColor="#A2A7AE" />
-                </Field>
-              )}
-            </Card>
-
-            {/* Salud reproductiva (solo F) */}
-            {genero === 'F' && (
-              <Card title={t('cards.reproductive')}>
-                <Field label={t('fields.lastMenstruation')}>
-                  <MaskedDateInput
-                    value={dateTypingUlt}
-                    placeholder={t('placeholders.ddmmyyyy')}
-                    onChangeText={(t_)=>{
-                      const m = maskDMY(t_);
-                      setDateTypingUlt(m);
-                      if (m.length === 10) {
-                        const iso = dmyToISO(m);
-                        if (iso) setUltM(iso);
-                      }
-                      if (m.length === 0) setUltM('');
-                    }}
-                    onCalendarPress={()=>setShowDatePicker('ultMen')}
-                  />
-                </Field>
-
-                <Toggle label={t('fields.menopause')} value={menopausia} onChange={setMenopausia} />
-
-                <FieldRow>
-                  <Field label={t('fields.pregnancies')}>
-                    <TextInput value={gestaciones} onChangeText={(t_)=>setGest(onlyDigits(t_))} keyboardType="numeric" style={styles.input} maxLength={3}/>
-                  </Field>
-                  <Field label={t('fields.births')}>
-                    <TextInput value={partos} onChangeText={(t_)=>setPartos(onlyDigits(t_))} keyboardType="numeric" style={styles.input} maxLength={3}/>
-                  </Field>
-                </FieldRow>
-
-                <FieldRow>
-                  <Field label={t('fields.spontaneousAbortions')}>
-                    <TextInput value={abortos_espontaneos} onChangeText={(t_)=>setAEsp(onlyDigits(t_))} keyboardType="numeric" style={styles.input} maxLength={3}/>
-                  </Field>
-                  <Field label={t('fields.inducedAbortions')}>
-                    <TextInput value={abortos_inducidos} onChangeText={(t_)=>setAInd(onlyDigits(t_))} keyboardType="numeric" style={styles.input} maxLength={3}/>
-                  </Field>
-                </FieldRow>
-
-                <Toggle label={t('fields.useContraceptives')} value={usa_anticonceptivos} onChange={setUsaAnti} />
-                {usa_anticonceptivos && (
-                  <Field label={t('fields.method')}>
-                    <View style={styles.pickerWrap}>
-                      <Picker selectedValue={metodo_anticonceptivo} onValueChange={setMetodo}>
-                        {METODOS.map(m => <Picker.Item key={m} label={labelMetodo(m)} value={m} />)}
-                      </Picker>
-                    </View>
-                  </Field>
-                )}
-              </Card>
+            {tipo_consulta === 'Other' && (
+              <Field label="Especificar">
+                <CharLimitedInput value={consult_other_text} onChangeText={setConsultOtherText} limit={LIMITS.consult_other_text} placeholder="Ej: Respiratory Issues" />
+              </Field>
             )}
 
-            {/* Estado / Relaciones */}
-            <Card title={t('cards.stateRelations')}>
-              <Field label={t('fields.patientState')}>
-                <View style={styles.pickerWrap}>
-                  <Picker selectedValue={estado_paciente} onValueChange={setEstado}>
-                    {ESTADOS.map(e => <Picker.Item key={e} label={labelEstado(e)} value={e} />)}
-                  </Picker>
-                </View>
-              </Field>
-
-              <Field label={t('fields.lastUpdate')}>
-                <MaskedDateInput
-                  value={dateTypingUA}
-                  placeholder={t('placeholders.ddmmyyyy')}
-                  onChangeText={(t_)=>{
-                    const m = maskDMY(t_);
-                    setDateTypingUA(m);
-                    if (m.length === 10) {
-                      const iso = dmyToISO(m);
-                      if (iso) setFechaUltAct(iso);
-                    }
-                    if (m.length === 0) setFechaUltAct('');
-                  }}
-                  onCalendarPress={()=>setShowDatePicker('ultAct')}
+            {tipo_consulta && (
+              <Field label={t('fields.chiefComplaint')}>
+                <CharLimitedInput
+                  value={chief_complaint}
+                  onChangeText={setChiefComplaint}
+                  limit={LIMITS.chief_complaint}
+                  multiline
+                  rows={4}
+                  placeholder="Queja principal del paciente"
                 />
               </Field>
+            )}
+          </Card>
 
-              <Field label={t('fields.notes')}>
-                <TextInput value={observaciones_generales} onChangeText={setObs}
-                  style={[styles.input, styles.textArea]} placeholder={t('placeholders.notes')}
-                  placeholderTextColor="#A2A7AE" multiline />
-              </Field>
-
+          {/* 3) VITALS + FLAGS */}
+          {tipo_consulta && chief_complaint && (
+            <Card title="Signos Vitales">
               <FieldRow>
-                <Field label={t('fields.communityId')}>
-                  <TextInput value={id_comunidad} onChangeText={(t_)=>setIdComunidad(onlyDigits(t_))}
-                    keyboardType="numeric" style={styles.input} placeholder={t('placeholders.optional')} placeholderTextColor="#A2A7AE" />
+                <Field label="BP (mmHg)">
+                  <CharLimitedInput value={presion_sistolica} onChangeText={(txt) => setPresionSis(onlyDigits(txt))} limit={3} placeholder="120" />
                 </Field>
-                <Field label={t('fields.familyId')}>
-                  <TextInput value={id_familia} onChangeText={(t_)=>setIdFamilia(onlyDigits(t_))}
-                    keyboardType="numeric" style={styles.input} placeholder={t('placeholders.optional')} placeholderTextColor="#A2A7AE" />
+                <View style={{ justifyContent: 'center', paddingTop: 24 }}>
+                  <Text style={{ fontSize: 16, color: C.text }}>/</Text>
+                </View>
+                <Field label=" ">
+                  <CharLimitedInput value={presion_diastolica} onChangeText={(txt) => setPresionDia(onlyDigits(txt))} limit={3} placeholder="80" />
                 </Field>
               </FieldRow>
 
-              <Field label={t('fields.userId')}>
-                <TextInput value={usuario_registro} onChangeText={(t_)=>setUsuarioRegistro(onlyDigits(t_))}
-                  keyboardType="numeric" style={styles.input} placeholder={t('placeholders.optional')} placeholderTextColor="#A2A7AE" />
+              <Toggle label="Tomó medicamento BP?" value={medicamento_bp_tomado} onChange={setMedicamentoBP} />
+              <Toggle label="Tomó medicamento BS?" value={medicamento_bs_tomado} onChange={setMedicamentoBS} />
+
+              <FieldRow>
+                <Field label="HR (bpm)">
+                  <CharLimitedInput value={frecuencia_cardiaca} onChangeText={(txt) => setFC(onlyDigits(txt))} limit={LIMITS.vitals_hr} placeholder="75" />
+                </Field>
+                <Field label="SpO₂ (%)">
+                  <CharLimitedInput value={saturacion_oxigeno} onChangeText={(txt) => setSatO2(txt)} limit={LIMITS.vitals_spo2} placeholder="98" />
+                </Field>
+              </FieldRow>
+
+              <FieldRow>
+                <Field label="Glucosa (mg/dL)">
+                  <CharLimitedInput value={glucosa} onChangeText={(txt) => setGlucosa(txt)} limit={LIMITS.vitals_bs} placeholder="95" />
+                </Field>
+                <Field label="Temperatura (°C)">
+                  <CharLimitedInput value={temperatura} onChangeText={(txt) => setTemp(txt)} limit={LIMITS.vitals_temp} placeholder="36.8" />
+                </Field>
+              </FieldRow>
+
+              <Toggle label="Paciente en ayuno?" value={paciente_en_ayuno} onChange={setPacienteAyuno} />
+
+              <FieldRow>
+                <Field label="Peso (kg)">
+                  <CharLimitedInput value={peso} onChangeText={(txt) => setPeso(txt)} limit={LIMITS.vitals_weight} placeholder="70" />
+                </Field>
+                <Field label="Estatura (cm)">
+                  <CharLimitedInput value={estatura} onChangeText={(txt) => setEstatura(txt)} limit={LIMITS.vitals_height} placeholder="170" />
+                </Field>
+              </FieldRow>
+            </Card>
+          )}
+
+          {/* 4) ALLERGIES + PREVENTIVE MEDS */}
+          {tipo_consulta && chief_complaint && (
+            <Card title="Alergias y Medicamentos Preventivos">
+              <Toggle label={t('fields.hasAllergies')} value={tiene_alergias} onChange={setTieneAlergias} />
+              {tiene_alergias && (
+                <Field label={t('fields.whatAllergies')}>
+                  <CharLimitedInput value={alergias} onChangeText={setAlergias} limit={LIMITS.allergies} placeholder="Penicilina, etc." />
+                </Field>
+              )}
+
+              <FieldRow>
+                <Field label="Vitaminas (#)">
+                  <CharLimitedInput value={vitamins} onChangeText={(txt) => setVitamins(onlyDigits(txt))} limit={2} placeholder="2" />
+                </Field>
+                <Field label="Albendazol (#)">
+                  <CharLimitedInput value={albendazole} onChangeText={(txt) => setAlbendazole(onlyDigits(txt))} limit={2} placeholder="1" />
+                </Field>
+              </FieldRow>
+            </Card>
+          )}
+
+          {/* 5) CURRENT HABITS */}
+          {tipo_consulta && chief_complaint && (
+            <Card title="Hábitos Actuales">
+              <Toggle label="Tabaco" value={tabaco_actual} onChange={setTabacoA} />
+              {tabaco_actual && (
+                <Field label="Cantidad/Frecuencia">
+                  <CharLimitedInput value={tabaco_actual_cantidad} onChangeText={setTabacoACant} limit={LIMITS.current_tobacco_details} placeholder="1 pack/day" />
+                </Field>
+              )}
+
+              <Toggle label="Alcohol" value={alcohol_actual} onChange={setAlcoholA} />
+              {alcohol_actual && (
+                <Field label="Cantidad/Frecuencia">
+                  <CharLimitedInput value={alcohol_actual_cantidad} onChangeText={setAlcoholACant} limit={LIMITS.current_alcohol_details} placeholder="2 beers/week" />
+                </Field>
+              )}
+
+              <Toggle label="Drogas" value={drogas_actual} onChange={setDrogasA} />
+              {drogas_actual && (
+                <Field label="Tipo/Frecuencia">
+                  <CharLimitedInput value={drogas_actual_cantidad} onChangeText={setDrogasACant} limit={LIMITS.current_drugs_details} placeholder="Tipo" />
+                </Field>
+              )}
+            </Card>
+          )}
+
+          {/* 6) PAST HABITS */}
+          {tipo_consulta && chief_complaint && (
+            <Card title="Hábitos Pasados">
+              <Toggle label="Tabaco (pasado)" value={tabaco_pasado} onChange={setTabacoP} />
+              {tabaco_pasado && (
+                <Field label="Cantidad/Frecuencia (pasado)">
+                  <CharLimitedInput value={tabaco_pasado_cantidad} onChangeText={setTabacoPCant} limit={LIMITS.past_tobacco_details} placeholder="1 pack/day x 5yrs" />
+                </Field>
+              )}
+
+              <Toggle label="Alcohol (pasado)" value={alcohol_pasado} onChange={setAlcoholP} />
+              {alcohol_pasado && (
+                <Field label="Cantidad/Frecuencia (pasado)">
+                  <CharLimitedInput value={alcohol_pasado_cantidad} onChangeText={setAlcoholPCant} limit={LIMITS.past_alcohol_details} placeholder="3 beers/week" />
+                </Field>
+              )}
+
+              <Toggle label="Drogas (pasado)" value={drogas_pasado} onChange={setDrogasP} />
+              {drogas_pasado && (
+                <Field label="Tipo/Frecuencia (pasado)">
+                  <CharLimitedInput value={drogas_pasado_cantidad} onChangeText={setDrogasPCant} limit={LIMITS.past_drugs_details} placeholder="Tipo" />
+                </Field>
+              )}
+            </Card>
+          )}
+
+          {/* 7) REPRODUCTIVE HEALTH */}
+          {tipo_consulta && chief_complaint && genero === 'F' && (
+            <Card title="Salud Reproductiva">
+              <Field label="Última Menstruación (LMP)">
+                <MaskedDateInput
+                  value={dateTypingLMP}
+                  onChangeText={(txt) => {
+                    setDateTypingLMP(txt);
+                    const iso = dmyToISO(txt);
+                    if (iso) setUltimaMenstruacion(iso);
+                  }}
+                  onCalendarPress={Platform.OS !== 'web' ? () => setShowDatePicker('ultMen') : null}
+                  placeholder="DD/MM/AAAA"
+                />
+              </Field>
+
+              <Toggle label="Menopausia" value={menopausia} onChange={setMenopausia} />
+
+              <FieldRow>
+                <Field label="Gestaciones">
+                  <CharLimitedInput value={gestaciones} onChangeText={(txt) => setGestaciones(onlyDigits(txt))} limit={LIMITS.gravida} placeholder="0" />
+                </Field>
+                <Field label="Partos">
+                  <CharLimitedInput value={partos} onChangeText={(txt) => setPartos(onlyDigits(txt))} limit={LIMITS.para} placeholder="0" />
+                </Field>
+              </FieldRow>
+
+              <FieldRow>
+                <Field label="Abortos Espontáneos">
+                  <CharLimitedInput value={abortos_espontaneos} onChangeText={(txt) => setAbortosEsp(onlyDigits(txt))} limit={LIMITS.miscarriage} placeholder="0" />
+                </Field>
+                <Field label="Abortos Inducidos">
+                  <CharLimitedInput value={abortos_inducidos} onChangeText={(txt) => setAbortosInd(onlyDigits(txt))} limit={LIMITS.abortion} placeholder="0" />
+                </Field>
+              </FieldRow>
+
+              <Toggle label="Usa Anticonceptivos?" value={usa_anticonceptivos} onChange={setUsaAnticonceptivos} />
+              {usa_anticonceptivos && (
+                <Field label="Método">
+                  <CharLimitedInput value={metodo_anticonceptivo} onChangeText={setMetodoAnticonceptivo} limit={LIMITS.control_method} placeholder="Pastillas" />
+                </Field>
+              )}
+            </Card>
+          )}
+
+          {/* 8) CLINICAL HISTORY */}
+          {tipo_consulta && chief_complaint && (
+            <Card title="Historia Clínica">
+              <Field label="Historia de Enfermedad Actual">
+                <CharLimitedInput
+                  value={historia_enfermedad_actual}
+                  onChangeText={setHistoriaEnfermedad}
+                  limit={LIMITS.history}
+                  multiline
+                  rows={3}
+                  placeholder="Descripción de la enfermedad actual"
+                />
+              </Field>
+
+              <Field label="Diagnósticos Previos">
+                <CharLimitedInput
+                  value={diagnosticos_previos}
+                  onChangeText={setDiagnosticosPrevios}
+                  limit={LIMITS.medical_dx}
+                  multiline
+                  rows={3}
+                  placeholder="Antecedentes médicos"
+                />
+              </Field>
+
+              <Field label="Cirugías Previas">
+                <CharLimitedInput
+                  value={cirugias_previas}
+                  onChangeText={setCirugiasPrevias}
+                  limit={LIMITS.surgeries}
+                  multiline
+                  rows={3}
+                  placeholder="Cirugías realizadas"
+                />
+              </Field>
+
+              <Field label="Medicamentos Actuales">
+                <CharLimitedInput
+                  value={medicamentos_actuales}
+                  onChangeText={setMedicamentosActuales}
+                  limit={LIMITS.meds}
+                  multiline
+                  rows={3}
+                  placeholder="Medicamentos que toma actualmente"
+                />
               </Field>
             </Card>
+          )}
 
-            <Text style={styles.hint}>{t('hint')}</Text>
-          </Animated.View>
+          {/* 9) PHYSICAL EXAM */}
+          {tipo_consulta && chief_complaint && (
+            <Card title="Examen Físico">
+              <Field label="Corazón">
+                <CharLimitedInput value={examen_corazon} onChangeText={setExamenCorazon} limit={LIMITS.physical_exam_heart} placeholder="Normal" />
+              </Field>
+
+              <Field label="Pulmones">
+                <CharLimitedInput value={examen_pulmones} onChangeText={setExamenPulmones} limit={LIMITS.physical_exam_lungs} placeholder="Normal" />
+              </Field>
+
+              <Field label="Abdomen">
+                <CharLimitedInput value={examen_abdomen} onChangeText={setExamenAbdomen} limit={LIMITS.physical_exam_abdomen} placeholder="Normal" />
+              </Field>
+
+              {genero === 'F' && (
+                <Field label="Ginecológico">
+                  <CharLimitedInput value={examen_ginecologico} onChangeText={setExamenGinecologico} limit={LIMITS.physical_exam_gyn} placeholder="N/A" />
+                </Field>
+              )}
+            </Card>
+          )}
+
+          {/* 10) ASSESSMENT & PLAN */}
+          {tipo_consulta && chief_complaint && (
+            <Card title="Evaluación y Plan">
+              <Field label="Impresión">
+                <CharLimitedInput
+                  value={impresion}
+                  onChangeText={setImpresion}
+                  limit={LIMITS.impression}
+                  multiline
+                  rows={3}
+                  placeholder="Impresión diagnóstica"
+                />
+              </Field>
+
+              <Field label="Plan">
+                <CharLimitedInput
+                  value={plan}
+                  onChangeText={setPlan}
+                  limit={LIMITS.plan}
+                  multiline
+                  rows={3}
+                  placeholder="Plan de tratamiento"
+                />
+              </Field>
+
+              <Field label="Notas de Rx">
+                <CharLimitedInput
+                  value={rx_notes}
+                  onChangeText={setRxNotes}
+                  limit={LIMITS.rx_notes}
+                  multiline
+                  rows={3}
+                  placeholder="Recetas/medicamentos"
+                />
+              </Field>
+            </Card>
+          )}
+
+          {/* 11) FURTHER CONSULTATION */}
+          {tipo_consulta && chief_complaint && (
+            <Card title="Consulta Adicional">
+              <Field label="Requiere Consulta con">
+                <Picker selectedValue={further_consult} onValueChange={setFurtherConsult} style={styles.picker}>
+                  <Picker.Item label="-- Ninguna --" value="" />
+                  {FURTHER_CONSULTS.map((tipo) => (
+                    <Picker.Item key={tipo} label={tipo} value={tipo} />
+                  ))}
+                </Picker>
+              </Field>
+
+              {further_consult === 'Other' && (
+                <Field label="Especificar">
+                  <CharLimitedInput value={further_consult_other_text} onChangeText={setFurtherConsultOtherText} limit={LIMITS.further_consult_other_text} placeholder="Cardiology" />
+                </Field>
+              )}
+
+              <Field label="Proveedor/Médico">
+                <CharLimitedInput value={provider} onChangeText={setProvider} limit={LIMITS.provider} placeholder="Dr. Juan Pérez" />
+              </Field>
+
+              <Field label="Intérprete">
+                <CharLimitedInput value={interprete} onChangeText={setInterprete} limit={LIMITS.interpreter} placeholder="María López" />
+              </Field>
+            </Card>
+          )}
+
+          {/* 12) SURGICAL SECTION */}
+          {tipo_consulta && chief_complaint && (
+            <Card title="Consulta Quirúrgica">
+              <Toggle label="Incluir Sección Quirúrgica?" value={mostrarQuirurgica} onChange={setMostrarQuirurgica} />
+
+              {mostrarQuirurgica && (
+                <>
+                  <Field label="Fecha Quirúrgica">
+                    <MaskedDateInput
+                      value={dateTypingSurg}
+                      onChangeText={(txt) => {
+                        setDateTypingSurg(txt);
+                        const iso = dmyToISO(txt);
+                        if (iso) setSurgicalDate(iso);
+                      }}
+                      onCalendarPress={Platform.OS !== 'web' ? () => setShowDatePicker('surgical') : null}
+                      placeholder="DD/MM/AAAA"
+                    />
+                  </Field>
+
+                  <Field label="Historia Quirúrgica">
+                    <CharLimitedInput
+                      value={surgical_history}
+                      onChangeText={setSurgicalHistory}
+                      limit={LIMITS.surgical_history}
+                      multiline
+                      rows={3}
+                      placeholder="Antecedentes quirúrgicos"
+                    />
+                  </Field>
+
+                  <Field label="Examen Quirúrgico">
+                    <CharLimitedInput
+                      value={surgical_exam}
+                      onChangeText={setSurgicalExam}
+                      limit={LIMITS.surgical_exam}
+                      multiline
+                      rows={2}
+                      placeholder="Hallazgos del examen"
+                    />
+                  </Field>
+
+                  <Field label="Impresión Quirúrgica">
+                    <CharLimitedInput
+                      value={surgical_impression}
+                      onChangeText={setSurgicalImpression}
+                      limit={LIMITS.surgical_impression}
+                      multiline
+                      rows={2}
+                      placeholder="Impresión del cirujano"
+                    />
+                  </Field>
+
+                  <Field label="Plan Quirúrgico">
+                    <CharLimitedInput
+                      value={surgical_plan}
+                      onChangeText={setSurgicalPlan}
+                      limit={LIMITS.surgical_plan}
+                      multiline
+                      rows={2}
+                      placeholder="Plan de cirugía"
+                    />
+                  </Field>
+
+                  <Field label="Medicamentos Quirúrgicos">
+                    <CharLimitedInput
+                      value={surgical_meds}
+                      onChangeText={setSurgicalMeds}
+                      limit={LIMITS.surgical_meds}
+                      multiline
+                      rows={2}
+                      placeholder="Medicamentos relacionados"
+                    />
+                  </Field>
+
+                  <Field label="Consulta con">
+                    <Picker selectedValue={surgical_consult} onValueChange={setSurgicalConsult} style={styles.picker}>
+                      <Picker.Item label="-- Ninguna --" value="" />
+                      {FURTHER_CONSULTS.map((tipo) => (
+                        <Picker.Item key={tipo} label={tipo} value={tipo} />
+                      ))}
+                    </Picker>
+                  </Field>
+
+                  {surgical_consult === 'Other' && (
+                    <Field label="Especificar">
+                      <CharLimitedInput value={surgical_consult_other_text} onChangeText={setSurgicalConsultOtherText} limit={LIMITS.surgical_consult_other_text} placeholder="Internal Medicine" />
+                    </Field>
+                  )}
+
+                  <Field label="Cirujano">
+                    <CharLimitedInput value={surgical_surgeon} onChangeText={setSurgicalSurgeon} limit={LIMITS.surgical_surgeon} placeholder="Dr. Ana Morales" />
+                  </Field>
+
+                  <Field label="Intérprete Quirúrgico">
+                    <CharLimitedInput value={surgical_interpreter} onChangeText={setSurgicalInterpreter} limit={LIMITS.surgical_interpreter} placeholder="Carlos Ruiz" />
+                  </Field>
+
+                  <Field label="Notas Quirúrgicas">
+                    <CharLimitedInput
+                      value={surgical_notes}
+                      onChangeText={setSurgicalNotes}
+                      limit={LIMITS.surgical_notes}
+                      multiline
+                      rows={10}
+                      placeholder="Notas adicionales extensas"
+                    />
+                  </Field>
+
+                  <Toggle label="Recetas Adjuntas?" value={rx_slips_attached} onChange={setRxSlipsAttached} />
+                </>
+              )}
+            </Card>
+          )}
+
+          {/* Hint */}
+          <Text style={styles.hint}>{t('hint')}</Text>
+
+          {/* Botones */}
+          <View style={styles.footer}>
+            <TouchableOpacity style={styles.btnCancel} onPress={() => navigation.goBack()}>
+              <Text style={styles.btnCancelText}>{t('footer.cancel')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.btnSave, !validar() && styles.btnDisabled]} onPress={guardar}>
+              <Text style={styles.btnSaveText}>{t('footer.save')}</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
-      </KeyboardAvoidingView>
 
-      {/* DateTimePicker */}
-      {Platform.OS !== 'web' && showDatePicker && (
-        <DateTimePicker
-          value={
-            showDatePicker==='reg'    ? parseISODate(fecha_registro) :
-            showDatePicker==='nac'    ? parseISODate(fecha_nacimiento) :
-            showDatePicker==='signos' ? parseISODate(fecha_signos_vitales) :
-            showDatePicker==='ultMen' ? parseISODate(ultima_menstruacion) :
-            parseISODate(fecha_ultima_actualizacion)
-          }
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(event, date) => {
-            if (Platform.OS !== 'ios') setShowDatePicker(null);
-            if (event.type === "set" && date) {
-              const yyyy = date.getFullYear();
-              const mm = String(date.getMonth() + 1).padStart(2, '0');
-              const dd = String(date.getDate()).padStart(2, '0');
-              const iso = `${yyyy}-${mm}-${dd}`;
-              if (showDatePicker === 'reg') setFechaRegistro(iso);
-              if (showDatePicker === 'nac') setFechaNac(iso);
-              if (showDatePicker === 'signos') setFechaSignos(iso);
-              if (showDatePicker === 'ultMen') setUltM(iso);
-              if (showDatePicker === 'ultAct') setFechaUltAct(iso);
+        {/* DateTimePicker - SOLO MÓVIL */}
+        {showDatePicker && DateTimePicker && (
+          <DateTimePicker
+            value={
+              showDatePicker === 'reg' ? parseISODate(fecha_registro) :
+              showDatePicker === 'nac' ? parseISODate(fecha_nacimiento) :
+              showDatePicker === 'ultMen' ? parseISODate(ultima_menstruacion) :
+              showDatePicker === 'surgical' ? parseISODate(surgical_date) :
+              new Date()
             }
-          }}
-          onTouchCancel={() => setShowDatePicker(null)}
-        />
-      )}
+            mode="date"
+            display="default"
+            onChange={onDateChange}
+          />
+        )}
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.secBtn} onPress={() => navigation.goBack()} activeOpacity={0.9}>
-          <Ionicons name="close-outline" size={18} color={C.text} />
-          <Text style={styles.secTxt}>{t('footer.cancel')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.primBtn} onPress={handleSubmit} activeOpacity={0.9}>
-          <Ionicons name="save-outline" size={18} color="#fff" />
-          <Text style={styles.primTxt}>{t('footer.save')}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Toast */}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.toast,
-          { opacity: toastAnim, transform: [{ translateY: toastAnim.interpolate({ inputRange: [0,1], outputRange: [20, 0] }) }] }
-        ]}
-      >
-        <Ionicons name="checkmark-circle" size={18} color="#fff" />
-        <Text style={styles.toastTxt}>{toastMsg}</Text>
+        {/* Toast */}
+        {toastMsg ? (
+          <Animated.View style={[styles.toast, { opacity: toastAnim }]}>
+            <Ionicons name="checkmark-circle" size={20} color="#FFF" />
+            <Text style={styles.toastText}>{toastMsg}</Text>
+          </Animated.View>
+        ) : null}
       </Animated.View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
+
+// ===== COMPONENTES =====
 
 function Card({ title, children }) {
   return (
     <View style={styles.card}>
-      <View style={styles.cardHeader}><Text style={styles.cardTitle}>{title}</Text></View>
-      <View style={styles.cardBody}>{children}</View>
+      <Text style={styles.cardTitle}>{title}</Text>
+      {children}
     </View>
   );
 }
+
 function Field({ label, children }) {
   return (
-    <View style={{ marginBottom: 12 }}>
+    <View style={{ marginBottom: 16 }}>
       <Text style={styles.label}>{label}</Text>
       {children}
     </View>
   );
 }
+
 function FieldRow({ children }) {
-  return <View style={{ flexDirection:'row', gap:10 }}>{React.Children.map(children, (ch) => <View style={{ flex:1 }}>{ch}</View>)}</View>;
+  return <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>{children}</View>;
 }
+
 function Toggle({ label, value, onChange }) {
   return (
-    <TouchableOpacity onPress={() => onChange(!value)} activeOpacity={0.9} style={[styles.toggle, value && styles.toggleOn]}>
-      <View style={[styles.toggleDot, value && styles.toggleDotOn]} />
-      <Text style={[styles.toggleTxt, value && {color:'#fff'}]}>{label}</Text>
+    <TouchableOpacity onPress={() => onChange(!value)} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 10 }}>
+      <View style={[styles.toggle, value && styles.toggleActive]}>
+        {value && <Ionicons name="checkmark" size={16} color="#FFF" />}
+      </View>
+      <Text style={styles.label}>{label}</Text>
     </TouchableOpacity>
   );
 }
+
 function Radio({ label, checked, onPress }) {
   return (
-    <TouchableOpacity onPress={onPress} style={styles.radioBtn} activeOpacity={0.85}>
-      <View style={[styles.radioOuter, checked && { borderColor: C.accent }]}>{checked ? <View style={styles.radioInner}/> : null}</View>
-      <Text style={styles.radioTxt}>{label}</Text>
+    <TouchableOpacity onPress={onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <View style={[styles.radio, checked && styles.radioActive]} />
+      <Text style={styles.label}>{label}</Text>
     </TouchableOpacity>
   );
 }
+
 function MaskedDateInput({ value, onChangeText, onCalendarPress, onBlur, error, placeholder }) {
   return (
-    <View>
-      <View style={[styles.input, error && styles.err, {flexDirection:'row', alignItems:'center', justifyContent:'space-between'}]}>
-        <TextInput
-          value={value}
-          onChangeText={onChangeText}
-          onBlur={onBlur}
-          placeholder={placeholder || 'DD/MM/AAAA'}
-          placeholderTextColor="#A2A7AE"
-          keyboardType={Platform.OS === 'web' ? 'default' : 'number-pad'}
-          maxLength={10}
-          style={{ fontSize:14, color:C.text, padding:0, flex:1 }}
-        />
-        <TouchableOpacity onPress={onCalendarPress} style={{ paddingLeft:8 }}>
-          <Ionicons name="calendar-outline" size={18} color={C.accent} />
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <TextInput
+        style={[styles.input, { flex: 1 }, error && { borderColor: '#EF5350' }]}
+        value={value}
+        onChangeText={(txt) => {
+          let clean = txt.replace(/[^\d]/g, '');
+          if (clean.length >= 2) clean = clean.slice(0,2) + '/' + clean.slice(2);
+          if (clean.length >= 5) clean = clean.slice(0,5) + '/' + clean.slice(5, 9);
+          onChangeText(clean);
+        }}
+        onBlur={onBlur}
+        placeholder={placeholder || 'DD/MM/AAAA'}
+        placeholderTextColor={C.subtext}
+        maxLength={10}
+        keyboardType="numeric"
+      />
+      {onCalendarPress && (
+        <TouchableOpacity onPress={onCalendarPress} style={{ padding: 8 }}>
+          <Ionicons name="calendar-outline" size={24} color={C.primary} />
         </TouchableOpacity>
-      </View>
+      )}
     </View>
   );
 }
 
 const R = 20;
 const styles = StyleSheet.create({
-  topBar:{ height:72, marginHorizontal:16, marginTop:12, marginBottom:8, paddingHorizontal:12, borderWidth:1, borderRadius:16, flexDirection:'row', alignItems:'center', justifyContent:'space-between', backgroundColor:'#FFF', borderColor:C.border, shadowOpacity:0.08, shadowRadius:12, shadowOffset:{width:0,height:6}, elevation:2 },
-  topLeft:{ flexDirection:'row', alignItems:'center', gap:8 },
-  iconBtn:{ padding:6, marginRight:6, borderRadius:10 },
-  topTitle:{ fontSize:20, fontWeight:'800', color:C.text },
-  topSubtitle:{ fontSize:12, color:C.accent, marginTop:2, fontWeight:'600' },
-
-  card:{ backgroundColor:C.card, borderColor:C.border, borderWidth:1, borderRadius:R, marginBottom:14, shadowColor:'#000', shadowOpacity:0.05, shadowRadius:10, shadowOffset:{width:0,height:4}, elevation:1 },
-  cardHeader:{ paddingHorizontal:14, paddingTop:12, paddingBottom:8 },
-  cardTitle:{ fontSize:16, fontWeight:'800', color:C.text },
-  cardBody:{ paddingHorizontal:14, paddingBottom:14 },
-
-  label:{ fontSize:12, color:C.subtext, marginBottom:6, marginTop:6 },
-  input:{ borderWidth:1, borderColor:C.border, borderRadius:12, backgroundColor:'#fff', paddingHorizontal:12, paddingVertical:10, fontSize:14, color:C.text },
-  textArea:{ height:96, textAlignVertical:'top' },
-  pickerWrap:{ borderWidth:1, borderRadius:12, backgroundColor:'#fff', borderColor:C.border, overflow:'hidden' },
-
-  radioRow:{ flexDirection:'row', gap:16, alignItems:'center', paddingVertical:6 },
-  radioBtn:{ flexDirection:'row', alignItems:'center', gap:8 },
-  radioOuter:{ width:18, height:18, borderRadius:9, borderWidth:2, borderColor:'#B8BDC6', alignItems:'center', justifyContent:'center' },
-  radioInner:{ width:10, height:10, borderRadius:5, backgroundColor:C.accent },
-  radioTxt:{ color:C.text, fontWeight:'700' },
-
-  toggle:{ flexDirection:'row', alignItems:'center', gap:10, paddingVertical:10, paddingHorizontal:12, borderRadius:12, borderWidth:1, borderColor:C.border, backgroundColor:'#fff', marginBottom:8 },
-  toggleOn:{ backgroundColor:C.accent, borderColor:C.accent },
-  toggleDot:{ width:16, height:16, borderRadius:8, borderWidth:1, borderColor:C.border, backgroundColor:'#fff' },
-  toggleDotOn:{ backgroundColor:'#fff', borderColor:'#ffffff' },
-  toggleTxt:{ color:C.text, fontWeight:'700' },
-
-  err:{ borderColor:'#E57373', borderWidth:1.5 },
-  errText:{ color:'#D32F2F', fontSize:11, marginTop:4 },
-
-  hint:{ textAlign:'center', fontSize:12, color:C.subtext, marginTop:6, marginBottom:8 },
-
-  footer:{ position:'absolute', left:0, right:0, bottom:0, paddingHorizontal:16, paddingTop:10, paddingBottom:14, backgroundColor:'#FFFFFFE6', borderTopWidth:1, borderTopColor:C.border, flexDirection:'row', gap:10, shadowColor:'#000', shadowOpacity:0.12, shadowRadius:10, shadowOffset:{width:0, height:-2}, elevation:10 },
-  primBtn:{ flex:1, height:50, borderRadius:14, backgroundColor:C.primary, alignItems:'center', justifyContent:'center', flexDirection:'row', gap:8 },
-  primTxt:{ color:'#fff', fontWeight:'800', fontSize:15 },
-  secBtn:{ height:50, paddingHorizontal:16, borderRadius:14, backgroundColor:'#fff', alignItems:'center', justifyContent:'center', flexDirection:'row', gap:6, borderWidth:1, borderColor:C.border },
-  secTxt:{ color:C.text, fontWeight:'800', fontSize:14 },
-
-  toast:{ position:'absolute', bottom:80, alignSelf:'center', backgroundColor:'#2E7D32', paddingHorizontal:14, paddingVertical:10, borderRadius:12, flexDirection:'row', alignItems:'center', gap:8, shadowOpacity:0.15, shadowRadius:8, shadowOffset:{width:0,height:2}, elevation:4 },
-  toastTxt:{ color:'#fff', fontWeight:'800' }
+  container: { flex: 1, backgroundColor: C.bg },
+  header: { paddingTop: 50, paddingHorizontal: 24, paddingBottom: 16, backgroundColor: C.primary, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  backButton: { padding: 4 },
+  title: { fontSize: 26, fontWeight: '700', color: '#FFF', marginBottom: 4 },
+  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.9)' },
+  card: { backgroundColor: C.card, marginHorizontal: 16, marginTop: 16, borderRadius: R, padding: 20, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2, borderWidth: 1, borderColor: C.border },
+  cardTitle: { fontSize: 18, fontWeight: '700', color: C.text, marginBottom: 16 },
+  label: { fontSize: 14, fontWeight: '600', color: C.text, marginBottom: 6 },
+  input: { backgroundColor: '#FFF', borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: C.text },
+  picker: { backgroundColor: '#FFF', borderWidth: 1, borderColor: C.border, borderRadius: 8 },
+  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: C.border, backgroundColor: '#FFF' },
+  radioActive: { backgroundColor: C.primary, borderColor: C.primary },
+  toggle: { width: 24, height: 24, borderRadius: 4, borderWidth: 2, borderColor: C.border, backgroundColor: '#FFF', alignItems: 'center', justifyContent: 'center' },
+  toggleActive: { backgroundColor: C.primary, borderColor: C.primary },
+  charCount: { fontSize: 11, marginTop: 4, textAlign: 'right', fontWeight: '600' },
+  hint: { fontSize: 12, color: C.subtext, marginHorizontal: 16, marginTop: 16, fontStyle: 'italic' },
+  footer: { flexDirection: 'row', gap: 12, marginHorizontal: 16, marginTop: 24 },
+  btnCancel: { flex: 1, backgroundColor: '#E0E0E0', borderRadius: 8, paddingVertical: 14, alignItems: 'center' },
+  btnCancelText: { fontSize: 16, fontWeight: '600', color: '#555' },
+  btnSave: { flex: 1, backgroundColor: C.primary, borderRadius: 8, paddingVertical: 14, alignItems: 'center' },
+  btnSaveText: { fontSize: 16, fontWeight: '700', color: '#FFF' },
+  btnDisabled: { opacity: 0.4 },
+  toast: { position: 'absolute', bottom: 100, alignSelf: 'center', backgroundColor: '#4CAF50', borderRadius: 8, paddingHorizontal: 20, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  toastText: { color: '#FFF', fontSize: 15, fontWeight: '600' }
 });

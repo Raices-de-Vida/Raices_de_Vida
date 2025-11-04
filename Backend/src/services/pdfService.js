@@ -6,7 +6,7 @@ const fieldsMap = require('../config/pdfFieldsMap.json');
 
 async function fillConsultSummaryPDF(datosPaciente) {
   try {
-    const templatePath = path.join(__dirname, '../../..', 'Patient Consult Summary.pdf');
+    const templatePath = path.join(__dirname, '../assets', 'Patient Consult Summary.pdf');
     const existingPdfBytes = await fs.readFile(templatePath);
     
     const pdfDoc = await PDFDocument.load(existingPdfBytes);

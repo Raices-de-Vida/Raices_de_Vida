@@ -9,8 +9,74 @@ const { fillConsultSummaryPDF } = require('../services/pdfService');
 
 exports.createPaciente = async (req, res) => {
   try {
-    const paciente = await Paciente.create(req.body);
-    res.status(201).json(paciente);
+    // Separar datos de paciente y datos de consulta
+    const {
+      // Campos de consulta médica (para crear registro en Consultas)
+      tipo_consulta, consult_other_text, chief_complaint,
+      vitamins, albendazole,
+      historia_enfermedad_actual, diagnosticos_previos, cirugias_previas, medicamentos_actuales,
+      examen_corazon, examen_pulmones, examen_abdomen, examen_ginecologico,
+      impresion, plan, rx_notes, further_consult, further_consult_other_text,
+      provider, interprete,
+      paciente_en_ayuno, medicamento_bp_tomado, medicamento_bs_tomado,
+      surgical_date, surgical_history, surgical_exam, surgical_impression,
+      surgical_plan, surgical_meds, surgical_consult, surgical_consult_other_text,
+      surgical_surgeon, surgical_interpreter, surgical_notes, rx_slips_attached,
+      ...datosPaciente // Resto de campos son para Paciente
+    } = req.body;
+    
+    // Crear paciente
+    const paciente = await Paciente.create(datosPaciente);
+    
+    // Si vienen datos de consulta, crear registro de consulta
+    let consulta = null;
+    if (tipo_consulta && chief_complaint) {
+      consulta = await Consulta.create({
+        id_paciente: paciente.id_paciente,
+        idioma: datosPaciente.idioma,
+        tipo_consulta,
+        consult_other_text,
+        chief_complaint,
+        vitamins,
+        albendazole,
+        historia_enfermedad_actual,
+        diagnosticos_previos,
+        cirugias_previas,
+        medicamentos_actuales,
+        examen_corazon,
+        examen_pulmones,
+        examen_abdomen,
+        examen_ginecologico,
+        impresion,
+        plan,
+        rx_notes,
+        further_consult,
+        further_consult_other_text,
+        provider,
+        interprete,
+        paciente_en_ayuno,
+        medicamento_bp_tomado,
+        medicamento_bs_tomado,
+        surgical_date,
+        surgical_history,
+        surgical_exam,
+        surgical_impression,
+        surgical_plan,
+        surgical_meds,
+        surgical_consult,
+        surgical_consult_other_text,
+        surgical_surgeon,
+        surgical_interpreter,
+        surgical_notes,
+        rx_slips_attached
+      });
+    }
+    
+    res.status(201).json({ 
+      id_paciente: paciente.id_paciente,
+      paciente,
+      consulta
+    });
   } catch (err) {
     console.error('Error createPaciente:', err);
     res.status(400).json({ error: err.message });
@@ -89,8 +155,38 @@ exports.updatePaciente = async (req, res) => {
     const paciente = await Paciente.findByPk(req.params.id);
     if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado' });
 
-    await paciente.update(req.body);
-    res.json(paciente);
+    // Extraer datos de consulta si vienen en el body
+    const { consulta, ...datosPaciente } = req.body;
+    
+    // Actualizar datos del paciente (tabla Pacientes)
+    await paciente.update(datosPaciente);
+    
+    // Si vienen datos de consulta, actualizar o crear
+    if (consulta && Object.keys(consulta).length > 0) {
+      // Buscar la última consulta del paciente
+      const ultimaConsulta = await Consulta.findOne({
+        where: { id_paciente: req.params.id },
+        order: [['created_at', 'DESC']]
+      });
+      
+      if (ultimaConsulta) {
+        // Actualizar última consulta
+        await ultimaConsulta.update(consulta);
+      } else {
+        // Crear nueva consulta
+        await Consulta.create({
+          id_paciente: req.params.id,
+          ...consulta
+        });
+      }
+    }
+    
+    // Recargar paciente con relaciones
+    const pacienteActualizado = await Paciente.findByPk(req.params.id, {
+      include: [{ model: Consulta, as: 'consultas' }]
+    });
+    
+    res.json(pacienteActualizado);
   } catch (err) {
     console.error('Error updatePaciente:', err);
     res.status(400).json({ error: err.message });
@@ -377,121 +473,147 @@ function mapearDatosPaciente(paciente) {
   const p = paciente.toJSON();
   const ultimaConsulta = p.consultas?.[0] || {};
   const ultimosSignos = p.signos?.[0] || {};
-  const historial = p.historial?.[0] || {};
-  const cirugias = p.cirugias || [];
   
-  //calc edad si hay fecha de nacimiento
-  let edad = p.edad;
-  if (p.fecha_nacimiento) {
+  // Calcular edad si hay fecha de nacimiento
+  let edadCalculada = p.edad;
+  if (p.fecha_nacimiento && !p.edad) {
     const hoy = new Date();
     const nacimiento = new Date(p.fecha_nacimiento);
-    edad = hoy.getFullYear() - nacimiento.getFullYear();
+    edadCalculada = hoy.getFullYear() - nacimiento.getFullYear();
     const mes = hoy.getMonth() - nacimiento.getMonth();
     if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-      edad--;
+      edadCalculada--;
     }
   }
   
+  // Formatear última menstruación con espacios: "MM    DD    YYYY"
+  let lmpFormateado = '';
+  if (p.ultima_menstruacion) {
+    const fecha = new Date(p.ultima_menstruacion);
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    const anio = String(fecha.getFullYear());
+    lmpFormateado = `${mes}    ${dia}    ${anio}`;
+  }
+  
+  // Combinar examen quirúrgico si está separado en campos
+  let surgical_exam_combined = '';
+  if (typeof ultimaConsulta.surgical_exam === 'string') {
+    surgical_exam_combined = ultimaConsulta.surgical_exam;
+  } else if (ultimaConsulta.surgical_exam && typeof ultimaConsulta.surgical_exam === 'object') {
+    const parts = [];
+    if (ultimaConsulta.surgical_exam.heart) parts.push(`Heart: ${ultimaConsulta.surgical_exam.heart}`);
+    if (ultimaConsulta.surgical_exam.lungs) parts.push(`Lungs: ${ultimaConsulta.surgical_exam.lungs}`);
+    if (ultimaConsulta.surgical_exam.abdomen) parts.push(`Abdomen: ${ultimaConsulta.surgical_exam.abdomen}`);
+    if (ultimaConsulta.surgical_exam.gyn) parts.push(`Gyn: ${ultimaConsulta.surgical_exam.gyn}`);
+    surgical_exam_combined = parts.join('. ');
+  }
+  
   return {
-    //info básica
+    // Info básica
     date: new Date().toLocaleDateString('en-US'),
-    language: p.idioma || 'Spanish',
+    language: p.idioma || ultimaConsulta.idioma || 'Spanish',
     patient_name: `${p.nombre} ${p.apellido || ''}`.trim(),
-    phone: p.telefono || 'N/A',
-    town: p.comunidad_pueblo || 'N/A',
-    dob: p.fecha_nacimiento ? new Date(p.fecha_nacimiento).toLocaleDateString('en-US') : 'N/A',
-    age: edad ? `${edad} años` : 'N/A',
-    gender: p.genero === 'M' ? 'M' : p.genero === 'F' ? 'F' : 'N/A',
+    phone: p.telefono || '',
+    town: p.comunidad_pueblo || '',
     
-    //tipo de consulta
-    consult_type: ultimaConsulta.tipo_consulta || 'Other',
-    chief_complaint: ultimaConsulta.motivo_consulta || ultimaConsulta.queja_principal || 'N/A',
+    // IMPORTANTE: Preferir Age sobre DOB - solo enviar uno
+    dob: '', // Dejar vacío para que solo se imprima Age
+    age: edadCalculada ? `${edadCalculada}` : '', // Solo el número
     
-    //signos vitales
+    gender: p.genero || '',
+    
+    // Tipo de consulta
+    consult_type: ultimaConsulta.tipo_consulta || '',
+    consult_other_text: ultimaConsulta.consult_other_text || '',
+    chief_complaint: ultimaConsulta.chief_complaint || '',
+    
+    // Signos vitales (preferir snapshot del paciente sobre historial)
     vitals: {
-      bp: ultimosSignos.presion_arterial_sistolica && ultimosSignos.presion_arterial_diastolica
-        ? `${ultimosSignos.presion_arterial_sistolica}/${ultimosSignos.presion_arterial_diastolica}`
-        : p.presion_arterial_sistolica && p.presion_arterial_diastolica
-        ? `${p.presion_arterial_sistolica}/${p.presion_arterial_diastolica}`
-        : 'N/A',
-      hr: ultimosSignos.frecuencia_cardiaca || p.frecuencia_cardiaca || 'N/A',
-      spo2: ultimosSignos.saturacion_oxigeno || p.saturacion_oxigeno ? `${ultimosSignos.saturacion_oxigeno || p.saturacion_oxigeno}%` : 'N/A',
-      bs: ultimosSignos.glucosa || p.glucosa || 'N/A',
-      weight: p.peso ? `${p.peso} kg` : 'N/A',
-      height: p.estatura ? `${p.estatura} cm` : 'N/A',
-      temp: ultimosSignos.temperatura || p.temperatura ? `${ultimosSignos.temperatura || p.temperatura}°C` : 'N/A',
+      bp: p.presion_arterial_sistolica && p.presion_arterial_diastolica
+        ? `${p.presion_arterial_sistolica} / ${p.presion_arterial_diastolica}`
+        : '',
+      hr: p.frecuencia_cardiaca || '',
+      spo2: p.saturacion_oxigeno ? `${p.saturacion_oxigeno}` : '',
+      bs: p.glucosa || '',
+      weight: p.peso ? `${p.peso} kg` : '',
+      height: p.estatura ? `${p.estatura} cm` : '',
+      temp: p.temperatura ? `${p.temperatura}°C` : '',
     },
     
-    //alergias
+    // Flags médicos
+    fasting: ultimaConsulta.paciente_en_ayuno ? 'Y' : 'N',
+    taken_med_bp: ultimaConsulta.medicamento_bp_tomado ? 'Y' : 'N',
+    taken_med_bs: ultimaConsulta.medicamento_bs_tomado ? 'Y' : 'N',
+    
+    // Alergias
     allergies: p.tiene_alergias && p.alergias ? p.alergias : 'NKA',
     
-    //vitaminas y medicamentos
-    vitamins: p.recibio_vitaminas ? '1' : '0',
-    albendazole: p.recibio_desparasitante ? '1' : '0',
+    // Medicamentos preventivos
+    vitamins: ultimaConsulta.vitamins || '0',
+    albendazole: ultimaConsulta.albendazole || '0',
     
-    //uso actual y pasado
+    // Hábitos actuales
     current: {
       tobacco: p.tabaco_actual ? 'Y' : 'N',
+      tobacco_details: p.tabaco_actual_cantidad || '',
       alcohol: p.alcohol_actual ? 'Y' : 'N',
+      alcohol_details: p.alcohol_actual_cantidad || '',
       drugs: p.drogas_actual ? 'Y' : 'N',
+      drugs_details: p.drogas_actual_cantidad || '',
     },
+    
+    // Hábitos pasados
     past: {
       tobacco: p.tabaco_pasado ? 'Y' : 'N',
+      tobacco_details: p.tabaco_pasado_cantidad || '',
       alcohol: p.alcohol_pasado ? 'Y' : 'N',
+      alcohol_details: p.alcohol_pasado_cantidad || '',
       drugs: p.drogas_pasado ? 'Y' : 'N',
+      drugs_details: p.drogas_pasado_cantidad || '',
     },
     
-    //info reproductiva (para mujeres)
-    lmp: p.ultima_menstruacion ? new Date(p.ultima_menstruacion).toLocaleDateString('en-US') : 'N/A',
-    menopause: p.menopausia ? 'Yes' : 'No',
-    gravida: p.gestaciones || '0',
-    para: p.partos || '0',
-    miscarriage: p.abortos_espontaneos || '0',
-    abortion: p.abortos_inducidos || '0',
-    uses_birth_control: p.usa_anticonceptivos || false,
-    control_method: p.metodo_anticonceptivo || 'None',
+    // Info reproductiva (solo para mujeres)
+    lmp: p.genero === 'F' ? lmpFormateado : '',
+    menopause: p.genero === 'F' && p.menopausia ? 'Yes' : 'No',
+    gravida: p.genero === 'F' && p.gestaciones ? `${p.gestaciones}` : '0',
+    para: p.genero === 'F' && p.partos ? `${p.partos}` : '0',
+    miscarriage: p.genero === 'F' && p.abortos_espontaneos ? `${p.abortos_espontaneos}` : '0',
+    abortion: p.genero === 'F' && p.abortos_inducidos ? `${p.abortos_inducidos}` : '0',
+    uses_birth_control: p.genero === 'F' && p.usa_anticonceptivos,
+    control_method: p.genero === 'F' ? (p.metodo_anticonceptivo || 'Ninguno') : '',
     
-    //historia clínica
-    history: ultimaConsulta.historia_enfermedad_actual || p.observaciones_generales || 'N/A',
-    medical_dx: historial.diagnosticos_previos || historial.condiciones_cronicas || 'N/A',
-    surgeries: cirugias.length > 0
-      ? cirugias.map(c => `${c.tipo_cirugia} (${new Date(c.fecha_cirugia).toLocaleDateString('en-US')})`).join(', ')
-      : 'N/A',
-    meds: historial.medicamentos_habituales || 'N/A',
+    // Historia clínica
+    history: ultimaConsulta.historia_enfermedad_actual || '',
+    medical_dx: ultimaConsulta.diagnosticos_previos || '',
+    surgeries: ultimaConsulta.cirugias_previas || '',
+    meds: ultimaConsulta.medicamentos_actuales || '',
     
-    //examen físico
+    // Examen físico
     physical_exam: {
-      heart: ultimaConsulta.examen_corazon || 'Normal',
-      lungs: ultimaConsulta.examen_pulmones || 'Normal',
-      abdomen: ultimaConsulta.examen_abdomen || 'Normal',
-      gyn: ultimaConsulta.examen_ginecologico || 'N/A',
+      heart: ultimaConsulta.examen_corazon || '',
+      lungs: ultimaConsulta.examen_pulmones || '',
+      abdomen: ultimaConsulta.examen_abdomen || '',
+      gyn: ultimaConsulta.examen_ginecologico || '',
     },
     
-    //impresión y plan
-    impression: ultimaConsulta.impresion || 'N/A',
-    plan: ultimaConsulta.plan || 'N/A',
-    rx_notes: ultimaConsulta.rx_notes || 'N/A',
+    // Evaluación y plan
+    impression: ultimaConsulta.impresion || '',
+    plan: ultimaConsulta.plan || '',
+    rx_notes: ultimaConsulta.rx_notes || '',
     
-    //consulta adicional
+    // Consulta adicional
     further_consult: ultimaConsulta.further_consult || '',
     further_consult_other_text: ultimaConsulta.further_consult_other_text || '',
     
-    //tipo de consulta
-    consult_other_text: ultimaConsulta.consult_other_text || '',
+    // Proveedor e intérprete
+    provider: ultimaConsulta.provider || '',
+    interpreter: ultimaConsulta.interprete || '',
     
-    //proveedor e intérprete
-    provider: ultimaConsulta.provider || 'N/A',
-    interpreter: ultimaConsulta.interprete || 'N/A',
-    
-    //Página 2 - Surgical Consult Summary (nuevos campos)
-    surgical_date: ultimaConsulta.fecha ? new Date(ultimaConsulta.fecha).toLocaleDateString('en-US') : '',
+    // Página 2 - Surgical Consult Summary
+    surgical_date: ultimaConsulta.surgical_date ? new Date(ultimaConsulta.surgical_date).toLocaleDateString('en-US') : '',
     surgical_history: ultimaConsulta.surgical_history || '',
-    surgical_exam: {
-      heart: ultimaConsulta.surgical_exam_heart || '',
-      lungs: ultimaConsulta.surgical_exam_lungs || '',
-      abdomen: ultimaConsulta.surgical_exam_abdomen || '',
-      gyn: ultimaConsulta.surgical_exam_gyn || '',
-    },
+    surgical_exam: surgical_exam_combined,
     surgical_impression: ultimaConsulta.surgical_impression || '',
     surgical_plan: ultimaConsulta.surgical_plan || '',
     surgical_meds: ultimaConsulta.surgical_meds || '',
@@ -499,11 +621,105 @@ function mapearDatosPaciente(paciente) {
     surgical_consult_other_text: ultimaConsulta.surgical_consult_other_text || '',
     surgical_surgeon: ultimaConsulta.surgical_surgeon || '',
     surgical_interpreter: ultimaConsulta.surgical_interpreter || '',
-    surgical_notes: ultimaConsulta.surgical_notes || cirugias.length > 0
-      ? cirugias.map(c => `${c.tipo_cirugia}: ${c.notas || 'Sin notas'}`).join('\n\n')
-      : 'N/A',
-    fasting: ultimaConsulta.paciente_en_ayuno ? 'Y' : 'N',
-    taken_med: ultimaConsulta.medicamentos_tomados ? 'Y' : 'N',
+    surgical_notes: ultimaConsulta.surgical_notes || '',
     rx_slips_attached: ultimaConsulta.rx_slips_attached || false,
   };
 }
+
+// POST /:id/reclassify - Recalcular severidad basada en signos vitales actuales
+exports.reclassifySeverity = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const paciente = await Paciente.findByPk(id);
+    if (!paciente) {
+      return res.status(404).json({ error: 'Paciente no encontrado' });
+    }
+
+    // Obtener signos vitales actuales del paciente
+    const { presion_sistolica, presion_diastolica, glucosa, saturacion_oxigeno, temperatura } = paciente;
+    
+    // Calcular severidad basada en signos vitales
+    let severidad = 'Baja';
+    const flags = [];
+
+    // Presión arterial
+    if (presion_sistolica && presion_diastolica) {
+      if (presion_sistolica >= 180 || presion_diastolica >= 120) {
+        flags.push({ nivel: 'Crítica', desc: 'Hipertensión severa' });
+      } else if (presion_sistolica >= 160 || presion_diastolica >= 100) {
+        flags.push({ nivel: 'Alta', desc: 'Hipertensión moderada' });
+      } else if (presion_sistolica >= 140 || presion_diastolica >= 90) {
+        flags.push({ nivel: 'Media', desc: 'Hipertensión leve' });
+      } else if (presion_sistolica < 90 || presion_diastolica < 60) {
+        flags.push({ nivel: 'Alta', desc: 'Hipotensión' });
+      }
+    }
+
+    // Glucosa
+    if (glucosa) {
+      if (glucosa >= 300) {
+        flags.push({ nivel: 'Crítica', desc: 'Hiperglucemia severa' });
+      } else if (glucosa >= 200) {
+        flags.push({ nivel: 'Alta', desc: 'Hiperglucemia moderada' });
+      } else if (glucosa >= 140) {
+        flags.push({ nivel: 'Media', desc: 'Hiperglucemia leve' });
+      } else if (glucosa < 60) {
+        flags.push({ nivel: 'Alta', desc: 'Hipoglucemia' });
+      } else if (glucosa < 70) {
+        flags.push({ nivel: 'Media', desc: 'Hipoglucemia leve' });
+      }
+    }
+
+    // SpO2
+    if (saturacion_oxigeno) {
+      if (saturacion_oxigeno < 85) {
+        flags.push({ nivel: 'Crítica', desc: 'Hipoxemia severa' });
+      } else if (saturacion_oxigeno < 90) {
+        flags.push({ nivel: 'Alta', desc: 'Hipoxemia moderada' });
+      } else if (saturacion_oxigeno < 94) {
+        flags.push({ nivel: 'Media', desc: 'Saturación baja' });
+      }
+    }
+
+    // Temperatura
+    if (temperatura) {
+      if (temperatura >= 39.5) {
+        flags.push({ nivel: 'Crítica', desc: 'Fiebre alta' });
+      } else if (temperatura >= 38.5) {
+        flags.push({ nivel: 'Alta', desc: 'Fiebre moderada' });
+      } else if (temperatura >= 37.5) {
+        flags.push({ nivel: 'Media', desc: 'Febrícula' });
+      } else if (temperatura < 35) {
+        flags.push({ nivel: 'Alta', desc: 'Hipotermia' });
+      }
+    }
+
+    // Determinar severidad máxima
+    const prioridadMap = { 'Crítica': 4, 'Alta': 3, 'Media': 2, 'Baja': 1 };
+    if (flags.length > 0) {
+      severidad = flags.reduce((max, flag) => 
+        prioridadMap[flag.nivel] > prioridadMap[max] ? flag.nivel : max, 
+        'Baja'
+      );
+    }
+
+    // Guardar nueva severidad como alerta manual
+    await AlertaMedica.create({
+      id_paciente: id,
+      descripcion_medica: `Reclasificación automática de severidad (${flags.map(f => f.desc).join(', ') || 'Sin alertas'})`,
+      prioridad_medica: severidad,
+      fecha_alerta: new Date(),
+      resuelta: false
+    });
+
+    res.json({ 
+      severidad, 
+      flags,
+      mensaje: `Severidad reclasificada a: ${severidad}`
+    });
+  } catch (err) {
+    console.error('Error reclassifySeverity:', err);
+    res.status(500).json({ error: 'Error al reclasificar severidad', details: err.message });
+  }
+};
