@@ -11,13 +11,15 @@ const authRoutes = require('./routes/authRoutes');
 const casoRoutes = require('./routes/casoRoutes');
 const alertaRoutes = require('./routes/alertaRoutes');
 const userInfoRoutes = require('./routes/UserInfoRoutes');
+const statisticsRoutes = require('./routes/statisticsRoutes');
 const pacienteRoutes = require('./routes/pacienteRoutes');
 const imagenRoutes = require('./routes/imagenRoutes');
-const Paciente = require('./models/Paciente');
 const AlertaMedica = require('./models/AlertaMedica');
 const CasoCritico = require('./models/CasoCritico');
+const Paciente = require('./models/Paciente');
 const Alerta = require('./models/Alerta');
 const User = require('./models/User');
+
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -50,6 +52,7 @@ app.use('/api/alertas', alertaRoutes);
 app.use('/api/user-info', userInfoRoutes);
 app.use('/api/pacientes', pacienteRoutes);
 app.use('/api', imagenRoutes);
+app.use('/api/statistics', statisticsRoutes);
 
 //ruta de seed (dev)
 if (process.env.NODE_ENV !== 'production') {

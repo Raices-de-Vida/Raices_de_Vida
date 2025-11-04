@@ -7,7 +7,7 @@ const Consulta = sequelize.define('Consultas', {
   id_paciente: { type: DataTypes.INTEGER, allowNull: false },
   fecha: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   idioma: { type: DataTypes.STRING(100) },
-  tipo_consulta: { type: DataTypes.ENUM('Diabetes', 'HTN', 'Respiratory', 'Other'), allowNull: false },
+  tipo_consulta: { type: DataTypes.ENUM('Diabetes', 'HTN', 'Respiratory', 'Other', 'Hipertension'), allowNull: false },
   chief_complaint: { type: DataTypes.TEXT, allowNull: false },
 
   // Historia clínica
