@@ -31,8 +31,6 @@
     "expo-notifications": "~0.29.14",
     "expo-sharing": "^14.0.7",
     "i18next": "^25.5.3",
-    "instal": "^0.0.1-security",
-    "install": "^0.13.0",
     "npm": "^11.4.2",
     "react": "18.3.1",
     "react-dom": "^18.3.1",
@@ -42,6 +40,7 @@
     "react-native-picker-select": "^9.3.1",
     "react-native-safe-area-context": "4.12.0",
     "react-native-screens": "~4.4.0",
+    "react-native-svg": "15.11.2",
     "react-native-web": "~0.19.13"
   },
   "devDependencies": {

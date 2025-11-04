@@ -24,6 +24,14 @@ import DetallePacienteScreen from '../screens/DetallePacienteScreen';
 import ExportacionPDFScreen from '../screens/ExportacionPDFScreen';
 import GestionImagenesScreen from '../screens/GestionImagenesScreen';
 
+// ⬇️ NUEVO: importa la pantalla de gestión de usuarios
+import UserManagementScreen from '../screens/UserManagementScreen';
+
+// ⬇️ NUEVO: importa las 3 pantallas de gráficas
+import GraficaCasosLugar from '../screens/GraficaCasosLugar';
+import GraficaCronicosEdad from '../screens/GraficaCronicosEdad';
+import GraficaPesoEdadNinos from '../screens/GraficaPesoEdadNinos';
+
 const Stack = createNativeStackNavigator();
 
 export default function OngStack() {
@@ -36,9 +44,14 @@ export default function OngStack() {
       {/* Funcionalidades */}
       <Stack.Screen name="RegisterAlertas" component={RegisterAlertas} />
       <Stack.Screen name="EditarAlerta" component={EditarAlerta} />
-  <Stack.Screen name="SeleccionPacienteAlertas" component={SeleccionPacienteAlertas} />
-  <Stack.Screen name="GestionAlertasPaciente" component={GestionAlertasPaciente} />
+      <Stack.Screen name="SeleccionPacienteAlertas" component={SeleccionPacienteAlertas} />
+      <Stack.Screen name="GestionAlertasPaciente" component={GestionAlertasPaciente} />
       <Stack.Screen name="Graficas" component={PantallaGraficas} />
+
+      {/* ⬇️ NUEVO: rutas de las 3 gráficas */}
+      <Stack.Screen name="GraficaCasosLugar" component={GraficaCasosLugar} />
+      <Stack.Screen name="GraficaCronicosEdad" component={GraficaCronicosEdad} />
+      <Stack.Screen name="GraficaPesoEdadNinos" component={GraficaPesoEdadNinos} />
 
       {/* Configuración */}
       <Stack.Screen name="Configuracion" component={ConfiguracionScreen} />
@@ -60,6 +73,9 @@ export default function OngStack() {
       <Stack.Screen name="DetallePaciente" component={DetallePacienteScreen} />
       <Stack.Screen name="ExportacionPDF" component={ExportacionPDFScreen} />
       <Stack.Screen name="GestionImagenes" component={GestionImagenesScreen} />
+
+      {/* Ruta para la gestión de usuarios */}
+      <Stack.Screen name="GestionUsuarios" component={UserManagementScreen} />
     </Stack.Navigator>
   );
 }

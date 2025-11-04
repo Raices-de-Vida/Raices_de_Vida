@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import enCommon from '../locales/en/common.json';
 import enWelcome from '../locales/en/welcome.json';
 import enHome from '../locales/en/Home.json';
-import enGraficas from '../locales/en/Graficas.json';
+import enGraficasGenerales from '../locales/en/GraficasGenerales.json';
 import enPerfil from '../locales/en/Perfil.json';
 import enConfiguracion from '../locales/en/Configuracion.json';
 import enImportacionDatos from '../locales/en/ImportacionDatos.json';
@@ -31,12 +31,13 @@ import enRegistrarSignos from '../locales/en/RegistrarSignos.json';
 import enSubirInfo from '../locales/en/SubirInfo.json';
 import enExportacionPDF from '../locales/en/ExportacionPDF.json';
 import enGestionImagenes from '../locales/en/GestionImagenes.json';
+import enGestionUsuarios from '../locales/en/GestionUsuarios.json';
 
 /* ===== ES ===== */
 import esCommon from '../locales/es/common.json';
 import esWelcome from '../locales/es/welcome.json';
 import esHome from '../locales/es/Home.json';
-import esGraficas from '../locales/es/Graficas.json';
+import esGraficasGenerales from '../locales/es/GraficasGenerales.json';
 import esPerfil from '../locales/es/Perfil.json';
 import esConfiguracion from '../locales/es/Configuracion.json';
 import esImportacionDatos from '../locales/es/ImportacionDatos.json';
@@ -60,12 +61,13 @@ import esRegistrarSignos from '../locales/es/RegistrarSignos.json';
 import esSubirInfo from '../locales/es/SubirInfo.json';
 import esExportacionPDF from '../locales/es/ExportacionPDF.json';
 import esGestionImagenes from '../locales/es/GestionImagenes.json';
+import esGestionUsuarios from '../locales/es/GestionUsuarios.json';
 
 export const NAMESPACES = [
   'common',
   'Welcome',
   'Home',
-  'Graficas',
+  'GraficasGenerales',
   'Perfil',
   'Configuracion',
   'ImportacionDatos',
@@ -89,7 +91,8 @@ export const NAMESPACES = [
   'RegistrarSignos',
   'SubirInfo',
   'ExportacionPDF',
-  'GestionImagenes'
+  'GestionImagenes',
+  'GestionUsuarios'
 ];
 
 const resources = {
@@ -97,7 +100,7 @@ const resources = {
     common: enCommon,
     Welcome: enWelcome,
     Home: enHome,
-    Graficas: enGraficas,
+    GraficasGenerales: enGraficasGenerales,
     Perfil: enPerfil,
     Configuracion: enConfiguracion,
     ImportacionDatos: enImportacionDatos,
@@ -120,13 +123,14 @@ const resources = {
     RegistrarSignos: enRegistrarSignos,
     SubirInfo: enSubirInfo,
     ExportacionPDF: enExportacionPDF,
-    GestionImagenes: enGestionImagenes
+    GestionImagenes: enGestionImagenes,
+    GestionUsuarios: enGestionUsuarios
   },
   es: {
     common: esCommon,
     Welcome: esWelcome,
     Home: esHome,
-    Graficas: esGraficas,
+    GraficasGenerales: esGraficasGenerales,
     Perfil: esPerfil,
     Configuracion: esConfiguracion,
     ImportacionDatos: esImportacionDatos,
@@ -149,7 +153,8 @@ const resources = {
     RegistrarSignos: esRegistrarSignos,
     SubirInfo: esSubirInfo,
     ExportacionPDF: esExportacionPDF,
-    GestionImagenes: esGestionImagenes
+    GestionImagenes: esGestionImagenes,
+    GestionUsuarios: esGestionUsuarios
   }
 };
 

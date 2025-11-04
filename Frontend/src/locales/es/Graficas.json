@@ -1,12 +1,20 @@
 {
   "top": {
-    "title": "Gráficas",
-    "subtitle": "Indicadores y reportes"
+    "title": "Gráficas y Reportes",
+    "subtitle": "Indicadores y visualizaciones"
   },
   "cards": {
-    "byDept": "Casos reportados por departamento",
-    "monthlyTrend": "Tendencia mensual de casos reportados",
-    "ageGender": "Distribución por rango de edad y género",
-    "weightVsAge": "Peso vs. edad de los niños en casos reportados"
+    "casesByPlace": {
+      "title": "Casos reportados por lugar",
+      "subtitle": "Personas vistas por un doctor — cada 4 meses (municipios / comunidades)"
+    },
+    "chronicAges": {
+      "title": "Rangos de edad (crónicos)",
+      "subtitle": "Pacientes con Hipertensión y Diabetes — cantidades por rango de edad"
+    },
+    "weightVsAgeKids": {
+      "title": "Peso vs. edad (niños)",
+      "subtitle": "Relación peso–edad para población infantil"
+    }
   }
 }

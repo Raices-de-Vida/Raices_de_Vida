@@ -1,0 +1,51 @@
+{
+  "top": {
+    "title": "Gestión de usuarios",
+    "subtitle": "Búsqueda, filtros y estado"
+  },
+  "segmented": {
+    "email": "Email",
+    "id": "ID",
+    "role": "Rol"
+  },
+  "inputs": {
+    "emailPlaceholder": "usuario@ejemplo.com",
+    "idPlaceholder": "ID numérico"
+  },
+  "buttons": {
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "close": "Cerrar"
+  },
+  "list": {
+    "empty": "Sin resultados"
+  },
+  "status": {
+    "label": "Estado",
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "labels": {
+    "reference": "Referencia",
+    "nombre": "Nombre",
+    "tipoOng": "Tipo ONG",
+    "tipoVoluntario": "Tipo voluntario",
+    "institucion": "Institución",
+    "disponibilidad": "Disponibilidad",
+    "direccion": "Dirección",
+    "telefono": "Teléfono"
+  },
+  "errors": {
+    "emailInvalid": "Ingresa un email válido",
+    "idInvalid": "El ID debe ser numérico",
+    "getByEmailFailed": "No se pudo obtener el usuario por email",
+    "getByIdFailed": "No se pudo obtener el usuario por ID",
+    "getByRoleFailed": "No se pudo obtener la lista por rol",
+    "updateStatusFailed": "No se pudo actualizar el estado",
+    "detailFallback": "No se pudo cargar el detalle completo, mostrando datos básicos"
+  },
+  "future": {
+    "title": "Edición de datos (próxima iteración)",
+    "desc": "Para editar nombre, apellido, rol o referencia, agrega un endpoint PUT /user-info/:id y aquí habilitamos los inputs."
+  }
+}

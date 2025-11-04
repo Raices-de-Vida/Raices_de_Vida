@@ -15,6 +15,10 @@
     "mapGt": {
       "title": "Guatemala map",
       "subtitle": "Browse departments"
+    },
+    "userMgmt": {
+      "title": "User management",
+      "subtitle": "Manage and edit users"
     }
   }
 }

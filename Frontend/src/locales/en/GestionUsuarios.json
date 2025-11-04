@@ -1,0 +1,51 @@
+{
+  "top": {
+    "title": "User management",
+    "subtitle": "Search, filters and status"
+  },
+  "segmented": {
+    "email": "Email",
+    "id": "ID",
+    "role": "Role"
+  },
+  "inputs": {
+    "emailPlaceholder": "user@example.com",
+    "idPlaceholder": "Numeric ID"
+  },
+  "buttons": {
+    "search": "Search",
+    "filter": "Filter",
+    "close": "Close"
+  },
+  "list": {
+    "empty": "No results"
+  },
+  "status": {
+    "label": "Status",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "labels": {
+    "reference": "Reference",
+    "nombre": "Name",
+    "tipoOng": "ONG type",
+    "tipoVoluntario": "Volunteer type",
+    "institucion": "Institution",
+    "disponibilidad": "Availability",
+    "direccion": "Address",
+    "telefono": "Phone"
+  },
+  "errors": {
+    "emailInvalid": "Enter a valid email",
+    "idInvalid": "ID must be numeric",
+    "getByEmailFailed": "Could not get the user by email",
+    "getByIdFailed": "Could not get the user by ID",
+    "getByRoleFailed": "Could not get the list by role",
+    "updateStatusFailed": "Could not update status",
+    "detailFallback": "Could not load full detail, showing basic data"
+  },
+  "future": {
+    "title": "Data editing (next iteration)",
+    "desc": "To edit first/last name, role or reference, add a PUT /user-info/:id endpoint and we will enable the inputs here."
+  }
+}

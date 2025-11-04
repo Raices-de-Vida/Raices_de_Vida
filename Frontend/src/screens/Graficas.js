@@ -1,21 +1,53 @@
 // src/screens/Graficas.js
 import React from 'react';
-import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity, Image
-} from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import BottomNav from '../components/BottomNav';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
-const GRAFICAS = [
-  { id: '1', labelKey: 'cards.byDept',       icono: 'chart-bar',          ruta: 'GraficaDepartamento', color: '#ff7043' },
-  { id: '2', labelKey: 'cards.monthlyTrend', icono: 'chart-line',         ruta: 'GraficaTendencia',    color: '#66bb6a' },
-  { id: '3', labelKey: 'cards.ageGender',    icono: 'chart-pie',          ruta: 'GraficaEdadGenero',   color: '#ff7043' },
-  { id: '4', labelKey: 'cards.weightVsAge',  icono: 'chart-scatter-plot', ruta: 'GraficaPesoEdad',     color: '#66bb6a' }
+const PALETTE = { butter: '#F2D88F', cream: '#FFF7DA' };
+const BRAND = { primary: '#1E9E55', blush: '#E36888', sea: '#6698CC', green: '#2E7D32' };
+
+const CARDS = [
+  {
+    id: '1',
+    titleKey: 'cards.casesByPlace.title',
+    subKey:   'cards.casesByPlace.subtitle',
+    title: 'Casos reportados por lugar',
+    subtitle: 'Personas vistas por un doctor — cada 4 meses (municipios / comunidades)',
+    icon: 'stats-chart-outline',
+    color: BRAND.sea,
+    route: 'GraficaCasosLugar',
+    badgeBgLight: '#EAF2FB',
+    badgeBgDark:  '#203244',
+  },
+  {
+    id: '2',
+    titleKey: 'cards.chronicAges.title',
+    subKey:   'cards.chronicAges.subtitle',
+    title: 'Rangos de edad (crónicos)',
+    subtitle: 'Pacientes con Hipertensión y Diabetes — cantidades por rango de edad',
+    icon: 'pulse-outline',
+    color: BRAND.blush,
+    route: 'GraficaCronicosEdad',
+    badgeBgLight: '#FFF1DE',
+    badgeBgDark:  '#2B2A22',
+  },
+  {
+    id: '3',
+    titleKey: 'cards.weightVsAgeKids.title',
+    subKey:   'cards.weightVsAgeKids.subtitle',
+    title: 'Peso vs. edad (niños)',
+    subtitle: 'Relación peso–edad para población infantil',
+    icon: 'analytics-outline',
+    color: BRAND.green,
+    route: 'GraficaPesoEdadNinos',
+    badgeBgLight: '#E6F6EA',
+    badgeBgDark:  '#243126',
+  },
 ];
 
 export default function PantallaGraficas() {
@@ -24,48 +56,75 @@ export default function PantallaGraficas() {
   const theme = getTheme(isDarkMode);
   const { t } = useTranslation('Graficas');
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.card(theme, isDarkMode)}
-      onPress={() => navigation.navigate(item.ruta)}
-    >
-      <MaterialCommunityIcons name={item.icono} size={36} color={item.color} style={styles.icono} />
-      <Text style={[styles.texto, { color: theme.text }]}>{t(item.labelKey)}</Text>
-    </TouchableOpacity>
-  );
-
   return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? theme.background : '#F2D88F' }]}>
-      {/* ===== Header moderno como Home ===== */}
-      <View style={[styles.topBar, { backgroundColor: isDarkMode ? theme.inputBackground : '#FFF7DA' }]}>
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? theme.background : PALETTE.butter }}>
+      {/* ===== Header estilo UserManagementScreen ===== */}
+      <View
+        style={[
+          styles.topBar,
+          {
+            backgroundColor: isDarkMode ? theme.inputBackground : PALETTE.cream,
+            borderColor: isDarkMode ? (theme.border || '#EADFBF') : '#EADFBF',
+          },
+        ]}
+      >
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.85}>
+          <Ionicons name="arrow-back" size={22} color={isDarkMode ? theme.text : '#1B1B1B'} />
+        </TouchableOpacity>
+
         <View style={styles.titleRow}>
           <Image
-            source={
-              isDarkMode
-                ? require('../styles/logos/LogoDARK.png')
-                : require('../styles/logos/LogoBRIGHT.png')
-            }
+            source={isDarkMode ? require('../styles/logos/LogoDARK.png') : require('../styles/logos/LogoBRIGHT.png')}
             style={styles.logo}
+            resizeMode="contain"
           />
           <View>
-            <Text style={[styles.topTitle, { color: theme.text }]}>{t('top.title')}</Text>
-            <Text style={[styles.topSubtitle, { color: isDarkMode ? theme.secondaryText : '#6698CC' }]}>
-              {t('top.subtitle')}
+            <Text style={[styles.topTitle, { color: isDarkMode ? theme.text : '#1B1B1B' }]}>
+              {t('top.title', { defaultValue: 'Gráficas y Reportes' })}
+            </Text>
+            <Text style={[styles.topSubtitle, { color: isDarkMode ? theme.secondaryText : BRAND.primary }]}>
+              {t('top.subtitle', { defaultValue: 'Indicadores y visualizaciones' })}
             </Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.toggleButton} onPress={toggleDarkMode}>
-          <Ionicons name={isDarkMode ? 'sunny-outline' : 'moon-outline'} size={22} color={theme.text} />
+
+        <TouchableOpacity style={styles.themeToggle} onPress={toggleDarkMode} activeOpacity={0.9}>
+          <Ionicons name={isDarkMode ? 'sunny-outline' : 'moon-outline'} size={20} color={isDarkMode ? theme.text : '#1B1B1B'} />
         </TouchableOpacity>
       </View>
 
-      {/* Lista de gráficas */}
-      <FlatList
-        data={GRAFICAS}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={{ padding: 20, paddingTop: 10, paddingBottom: 100 }}
-      />
+      {/* ===== Contenido: tarjetas ===== */}
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 120 }}>
+        {CARDS.map((c) => (
+          <TouchableOpacity
+            key={c.id}
+            style={[
+              styles.card,
+              { backgroundColor: theme.cardBackground, borderColor: theme.border || '#E5E7EB' },
+            ]}
+            onPress={() => navigation.navigate(c.route)}
+            activeOpacity={0.9}
+          >
+            <View
+              style={[
+                styles.iconBadge,
+                { backgroundColor: isDarkMode ? c.badgeBgDark : c.badgeBgLight },
+              ]}
+            >
+              <Ionicons name={c.icon} size={22} color={c.color} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>
+                {t(c.titleKey, { defaultValue: c.title })}
+              </Text>
+              <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>
+                {t(c.subKey, { defaultValue: c.subtitle })}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
       <BottomNav navigation={navigation} />
     </View>
@@ -73,48 +132,52 @@ export default function PantallaGraficas() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-
-  /* ===== Header ===== */
+  /* Header (copiado del layout de UserManagementScreen) */
   topBar: {
     height: 72,
-    marginHorizontal: 16,
     marginTop: 12,
     marginBottom: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     borderWidth: 1,
     borderRadius: 16,
-    alignItems: 'center',
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    shadowOpacity: 0.10,
-    shadowRadius: 14,
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
     shadowOffset: { width: 0, height: 6 },
-    elevation: 3,
-    borderColor: '#EAD8A6',
+    elevation: 2,
+    marginHorizontal: 16,
   },
-  titleRow: { flexDirection: 'row', alignItems: 'center' },
-  logo: { width: 36, height: 36, marginRight: 10, resizeMode: 'contain' },
-  topTitle: { fontSize: 20, fontWeight: '800' },
-  topSubtitle: { marginTop: 4, fontSize: 12, fontWeight: '700' },
-  toggleButton: { padding: 6, borderRadius: 10 },
+  backBtn: { padding: 8, borderRadius: 10 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', flex: 1, marginLeft: 4 },
+  logo: { width: 30, height: 30, marginRight: 10, borderRadius: 8 },
+  topTitle: { fontSize: 18, fontWeight: '800', lineHeight: 22 },
+  topSubtitle: { marginTop: 2, fontSize: 12, fontWeight: '700' },
+  themeToggle: { padding: 6, borderRadius: 10 },
 
-  /* ===== Cards ===== */
-  card: (theme, isDarkMode) => ({
-    backgroundColor: theme.cardBackground || (isDarkMode ? '#1E1E1E' : '#fff'),
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
+  /* Tarjetas */
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#EAD8A6',
-  }),
-  icono: { marginRight: 15 },
-  texto: { fontSize: 16, flex: 1, flexWrap: 'wrap' },
+    marginBottom: 14,
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
+  },
+  iconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardTitle: { fontSize: 16, fontWeight: '800' },
+  cardSubtitle: { fontSize: 13, marginTop: 2 },
 });

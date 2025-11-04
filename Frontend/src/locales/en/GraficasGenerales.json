@@ -1,0 +1,23 @@
+{
+  "empty": "No data.",
+  "casesByPlace": {
+    "title": "Cases by place",
+    "subtitle": "Every 4 months (municipalities / communities)",
+    "chartTitle": "Reported cases by place (last 4-month cut)",
+    "hint": "Updates every 4 months. Replace DATA_CASOS with backend data.",
+    "period": "Period: {{desde}} to {{hasta}}"
+  },
+  "chronicAges": {
+    "title": "Age ranges (chronic)",
+    "subtitle": "Hypertension & Diabetes — counts",
+    "chartTitle": "Chronic patients by age range",
+    "hint2": "Unique chronic patients: {{total}}",
+    "unknown": "unknown"
+  },
+  "weightVsAgeKids": {
+    "title": "Weight vs. age (children)",
+    "subtitle": "Weight–age relation for child population",
+    "chartTitle": "Scatter: weight (kg) vs age (years)",
+    "hint2": "Shows up to {{años}} years. Total children: {{total}}"
+  }
+}

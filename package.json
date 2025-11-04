@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "@react-native-async-storage/async-storage": "^2.1.2"
+    "@react-native-async-storage/async-storage": "^2.1.2",
+    "react-native-svg": "^15.0.0"
   },
   "devDependencies": {
     "jest": "^30.0.5",

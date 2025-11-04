@@ -16,35 +16,36 @@ export default function ImportacionDatosScreen({ navigation }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? theme.background : PALETTE.butter }}>
-      {/* ===== Top bar ===== */}
+      {/* ===== Header estilo UserManagementScreen ===== */}
       <View
         style={[
           styles.topBar,
           {
             backgroundColor: isDarkMode ? theme.inputBackground : PALETTE.cream,
-            borderColor: theme.border || '#EADFBF',
+            borderColor: isDarkMode ? (theme.border || '#EADFBF') : '#EADFBF',
           },
         ]}
       >
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.85}>
+          <Ionicons name="arrow-back" size={22} color={isDarkMode ? theme.text : '#1B1B1B'} />
+        </TouchableOpacity>
+
         <View style={styles.titleRow}>
           <Image
-            source={
-              isDarkMode
-                ? require('../styles/logos/LogoDARK.png')
-                : require('../styles/logos/LogoBRIGHT.png')
-            }
+            source={isDarkMode ? require('../styles/logos/LogoDARK.png') : require('../styles/logos/LogoBRIGHT.png')}
             style={styles.logo}
             resizeMode="contain"
           />
           <View>
-            <Text style={[styles.topTitle, { color: theme.text }]}>{t('top.title')}</Text>
-            <Text style={[styles.topSubtitle, { color: PALETTE.sea }]}>{t('top.subtitle')}</Text>
+            <Text style={[styles.topTitle, { color: isDarkMode ? theme.text : '#1B1B1B' }]}>{t('top.title')}</Text>
+            <Text style={[styles.topSubtitle, { color: isDarkMode ? theme.secondaryText : PALETTE.sea }]}>
+              {t('top.subtitle')}
+            </Text>
           </View>
         </View>
 
-        {/* Botón de modo oscuro/luz arriba */}
-        <TouchableOpacity style={styles.themeToggle} onPress={toggleDarkMode}>
-          <Ionicons name={isDarkMode ? 'sunny-outline' : 'moon-outline'} size={22} color={theme.text} />
+        <TouchableOpacity style={styles.themeToggle} onPress={toggleDarkMode} activeOpacity={0.85}>
+          <Ionicons name={isDarkMode ? 'sunny-outline' : 'moon-outline'} size={20} color={isDarkMode ? theme.text : '#1B1B1B'} />
         </TouchableOpacity>
       </View>
 
@@ -52,7 +53,7 @@ export default function ImportacionDatosScreen({ navigation }) {
       <View style={styles.content}>
         {/* Card: Cargar desde Excel */}
         <TouchableOpacity
-          style={[styles.card, { backgroundColor: theme.cardBackground }]}
+          style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border || '#E5E7EB' }]}
           onPress={() => {}}
           activeOpacity={0.85}
         >
@@ -61,16 +62,14 @@ export default function ImportacionDatosScreen({ navigation }) {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.cardTitle, { color: theme.text }]}>{t('cards.importExcel.title')}</Text>
-            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>
-              {t('cards.importExcel.subtitle')}
-            </Text>
+            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>{t('cards.importExcel.subtitle')}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
         </TouchableOpacity>
 
         {/* Card: Exportar a Excel */}
         <TouchableOpacity
-          style={[styles.card, { backgroundColor: theme.cardBackground }]}
+          style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border || '#E5E7EB' }]}
           onPress={() => {}}
           activeOpacity={0.85}
         >
@@ -79,16 +78,14 @@ export default function ImportacionDatosScreen({ navigation }) {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.cardTitle, { color: theme.text }]}>{t('cards.exportExcel.title')}</Text>
-            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>
-              {t('cards.exportExcel.subtitle')}
-            </Text>
+            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>{t('cards.exportExcel.subtitle')}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
         </TouchableOpacity>
 
         {/* Card: Mapa de Guatemala */}
         <TouchableOpacity
-          style={[styles.card, { backgroundColor: theme.cardBackground }]}
+          style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border || '#E5E7EB' }]}
           onPress={() => navigation.navigate('MapaDepartamentos')}
           activeOpacity={0.85}
         >
@@ -97,9 +94,23 @@ export default function ImportacionDatosScreen({ navigation }) {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.cardTitle, { color: theme.text }]}>{t('cards.mapGt.title')}</Text>
-            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>
-              {t('cards.mapGt.subtitle')}
-            </Text>
+            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>{t('cards.mapGt.subtitle')}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
+        </TouchableOpacity>
+
+        {/* Card: Gestión de Usuarios */}
+        <TouchableOpacity
+          style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border || '#E5E7EB' }]}
+          onPress={() => navigation.navigate('GestionUsuarios')}
+          activeOpacity={0.85}
+        >
+          <View style={[styles.iconBadge, { backgroundColor: isDarkMode ? '#203244' : '#EAF2FB' }]}>
+            <Ionicons name="people-outline" size={22} color={PALETTE.sea} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>{t('cards.userMgmt.title')}</Text>
+            <Text style={[styles.cardSubtitle, { color: theme.secondaryText }]}>{t('cards.userMgmt.subtitle')}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={theme.secondaryText} />
         </TouchableOpacity>
@@ -111,28 +122,29 @@ export default function ImportacionDatosScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  /* Top bar */
+  /* Header (mismo layout que UserManagementScreen) */
   topBar: {
     height: 72,
-    marginHorizontal: 16,
     marginTop: 12,
     marginBottom: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     borderWidth: 1,
     borderRadius: 16,
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
     shadowOffset: { width: 0, height: 6 },
     elevation: 2,
+    marginHorizontal: 16,
   },
-  titleRow: { flexDirection: 'row', alignItems: 'center' },
-  logo: { width: 34, height: 34, marginRight: 10, borderRadius: 8 },
-  topTitle: { fontSize: 20, fontWeight: '800', lineHeight: 22 },
-  topSubtitle: { marginTop: 4, fontSize: 12, fontWeight: '700' },
-  themeToggle: { marginTop: 8, padding: 6, borderRadius: 10 },
+  backBtn: { padding: 8, borderRadius: 10 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', flex: 1, marginLeft: 4 },
+  logo: { width: 30, height: 30, marginRight: 10, borderRadius: 8 },
+  topTitle: { fontSize: 18, fontWeight: '800', lineHeight: 22 },
+  topSubtitle: { marginTop: 2, fontSize: 12, fontWeight: '700' },
+  themeToggle: { padding: 6, borderRadius: 10 },
 
   /* Contenido */
   content: { flex: 1, padding: 20, paddingBottom: 120 },
