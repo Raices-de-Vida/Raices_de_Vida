@@ -12,7 +12,7 @@ import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
 import { useTranslation } from 'react-i18next';
 
-const API_BASE = 'http://TU-SERVIDOR/api/user-info'; // ⬅️ Cambia esta URL a tu backend
+const API_BASE = 'http://localhost:3001/api/user-info'; // ⬅️ Cambia esta URL a tu backend
 
 const BRAND = {
   primary: '#1E9E55',     // Verde de acento

@@ -3,7 +3,7 @@
 import axios from 'axios';
 
 // Cambia esta base según tu entorno (ENV mejor):
-export const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'http://TU-SERVIDOR/api/statistics';
+export const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'http://localhost:3001/api/statistics';
 
 export async function fetchCasosPorLugar({ meses = 4 } = {}) {
   const { data } = await axios.get(`${API_BASE}/casos-por-lugar`, { params: { meses } });

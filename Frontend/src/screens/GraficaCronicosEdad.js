@@ -1,4 +1,6 @@
 // src/screens/GraficaCronicosEdad.js
+// VERSIÓN CORREGIDA - Se adapta a la estructura del backend actual
+
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Image,
@@ -24,23 +26,88 @@ export default function GraficaCronicosEdad({ navigation }) {
   const [rangos, setRangos] = useState([]);
   const [total, setTotal] = useState(0);
 
+  // ✅ Función para mapear los rangos del backend a los rangos simplificados del frontend
+  const mapearRangos = (distribucion) => {
+    if (!distribucion || !Array.isArray(distribucion)) return {};
+    
+    const rangosSimplificados = {
+      '0-17': 0,
+      '18-29': 0,
+      '30-44': 0,
+      '45-59': 0,
+      '60+': 0,
+      'desconocida': 0
+    };
+
+    distribucion.forEach(item => {
+      const label = item.rango_edad || '';
+      const total = item.total_cronicos || 0;
+      
+      // Mapear rangos del backend a rangos simplificados del frontend
+      if (label.includes('0-17') || label.includes('Pediátrico')) {
+        rangosSimplificados['0-17'] += total;
+      } else if (label.includes('18-29')) {
+        rangosSimplificados['18-29'] += total;
+      } else if (label.includes('30-39') || label.includes('40-49')) {
+        rangosSimplificados['30-44'] += total;
+      } else if (label.includes('50-59')) {
+        rangosSimplificados['45-59'] += total;
+      } else if (label.includes('60') || label.includes('70') || label.includes('80')) {
+        rangosSimplificados['60+'] += total;
+      }
+    });
+
+    return rangosSimplificados;
+  };
+
   const load = useCallback(async () => {
     try {
       setError(null);
       setLoading(true);
       const resp = await fetchCronicosPorEdad();
-      setTotal(resp.total_pacientes_cronicos || 0);
-      const r = resp.rangos || {};
-      // Orden fijo para las barras
+      
+      // ✅ ADAPTACIÓN: El backend devuelve estructura diferente
+      // Backend actual: { fecha_analisis, resumen: {...}, distribucion_por_edad: [...] }
+      // Frontend espera: { total_pacientes_cronicos, rangos: {...} }
+      
+      let totalPacientes = 0;
+      let rangosData = {};
+
+      // Verificar si viene la estructura nueva del backend
+      if (resp.resumen && resp.distribucion_por_edad) {
+        // Calcular total sumando diabetes + hipertension - ambas (para evitar duplicados)
+        totalPacientes = 
+          (resp.resumen.total_pacientes_diabetes || 0) + 
+          (resp.resumen.total_pacientes_hipertension || 0) - 
+          (resp.resumen.pacientes_ambas_condiciones || 0);
+        
+        // Mapear los rangos del backend al formato esperado
+        rangosData = mapearRangos(resp.distribucion_por_edad);
+      } 
+      // Verificar si viene la estructura esperada original
+      else if (resp.total_pacientes_cronicos !== undefined && resp.rangos) {
+        totalPacientes = resp.total_pacientes_cronicos;
+        rangosData = resp.rangos;
+      }
+      // Si no viene ninguna estructura conocida, intentar procesar lo que venga
+      else if (resp.distribucion_por_edad) {
+        totalPacientes = resp.distribucion_por_edad.reduce((sum, r) => sum + (r.total_cronicos || 0), 0);
+        rangosData = mapearRangos(resp.distribucion_por_edad);
+      }
+
+      setTotal(totalPacientes);
+      
+      // Construir array de rangos en orden fijo para las barras
       setRangos([
-        { rango: '0-17', total: r['0-17'] || 0 },
-        { rango: '18-29', total: r['18-29'] || 0 },
-        { rango: '30-44', total: r['30-44'] || 0 },
-        { rango: '45-59', total: r['45-59'] || 0 },
-        { rango: '60+', total: r['60+'] || 0 },
-        { rango: t('unknown', { defaultValue: 'desconocida' }), total: r['desconocida'] || 0 },
+        { rango: '0-17', total: rangosData['0-17'] || 0 },
+        { rango: '18-29', total: rangosData['18-29'] || 0 },
+        { rango: '30-44', total: rangosData['30-44'] || 0 },
+        { rango: '45-59', total: rangosData['45-59'] || 0 },
+        { rango: '60+', total: rangosData['60+'] || 0 },
+        { rango: t('unknown', { defaultValue: 'desconocida' }), total: rangosData['desconocida'] || 0 },
       ]);
     } catch (e) {
+      console.error('Error cargando crónicos por edad:', e);
       setError(e?.response?.data?.error || e.message);
     } finally {
       setLoading(false);
@@ -55,7 +122,7 @@ export default function GraficaCronicosEdad({ navigation }) {
     setRefreshing(false);
   }, [load]);
 
-  // Parámetros del gráfico (se mantienen como los tuyos)
+  // Parámetros del gráfico
   const width = 340, height = 220, padding = 28;
   const barWidth = (width - padding * 2) / Math.max(rangos.length, 1) - 8;
   const maxVal = Math.max(1, ...rangos.map(d => d.total));

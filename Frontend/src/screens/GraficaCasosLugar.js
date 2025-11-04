@@ -1,4 +1,6 @@
 // src/screens/GraficaCasosLugar.js
+// VERSIÓN CORREGIDA para trabajar con la respuesta actual del backend
+
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Image,
@@ -29,8 +31,23 @@ export default function GraficaCasosLugar({ navigation }) {
       setError(null);
       setLoading(true);
       const resp = await fetchCasosPorLugar({ meses: 4 });
-      setRows(resp.data || []); // [{municipio, comunidad, personas_vistas, consultas}]
-      setPeriodo({ desde: resp.desde, hasta: resp.hasta });
+      
+      // ✅ CORREGIDO: Adaptarse a la estructura del backend actual
+      // Backend devuelve: { periodo, fecha_inicio, fecha_fin, casos_por_comunidad: [{comunidad, casos_reportados, porcentaje}] }
+      if (resp.casos_por_comunidad) {
+        setRows(resp.casos_por_comunidad);
+        setPeriodo({ 
+          desde: resp.fecha_inicio, 
+          hasta: resp.fecha_fin 
+        });
+      } else if (resp.data) {
+        // Si cambiaste el backend para usar la estructura nueva
+        setRows(resp.data);
+        setPeriodo({ 
+          desde: resp.desde, 
+          hasta: resp.hasta 
+        });
+      }
     } catch (e) {
       setError(e?.response?.data?.error || e.message);
     } finally {
@@ -46,15 +63,30 @@ export default function GraficaCasosLugar({ navigation }) {
     setRefreshing(false);
   }, [load]);
 
-  // Adaptar a tu forma de pintar las barras
-  const DATA_CASOS = rows.map(r => ({
-    lugar: (r.municipio || r.comunidad)
-      ? `${r.municipio || ''}${r.municipio && r.comunidad ? ' / ' : ''}${r.comunidad || ''}`.trim() || '—'
-      : '—',
-    casos: Number(r.personas_vistas || 0),
-  }));
+  // ✅ CORREGIDO: Adaptarse a ambas estructuras posibles
+  const DATA_CASOS = rows.map(r => {
+    // Si viene del backend actual: {comunidad, casos_reportados, porcentaje}
+    if (r.comunidad && r.casos_reportados !== undefined) {
+      return {
+        lugar: r.comunidad || '—',
+        casos: Number(r.casos_reportados || 0),
+      };
+    }
+    
+    // Si viene del backend nuevo: {municipio, comunidad, personas_vistas, consultas}
+    if (r.municipio || r.comunidad_pueblo) {
+      return {
+        lugar: (r.municipio || r.comunidad_pueblo)
+          ? `${r.municipio || ''}${r.municipio && r.comunidad_pueblo ? ' / ' : ''}${r.comunidad_pueblo || ''}`.trim() || '—'
+          : '—',
+        casos: Number(r.personas_vistas || 0),
+      };
+    }
+    
+    return { lugar: '—', casos: 0 };
+  });
 
-  // Parámetros del gráfico (igual a tu diseño)
+  // Parámetros del gráfico
   const width = 320, height = 200, padding = 28;
   const barWidth = (width - padding * 2) / Math.max(DATA_CASOS.length, 1) - 10;
   const maxVal = Math.max(1, ...DATA_CASOS.map(d => d.casos));
