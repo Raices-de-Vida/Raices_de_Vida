@@ -1,4 +1,4 @@
-name: CI/CD Pipeline - Raíces de Vida
+name: CI/CD Pipeline - Raices de Vida
 
 on:
   push:
@@ -42,12 +42,10 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: Backend/package-lock.json
 
     - name: Instalar dependencias
       working-directory: ./Backend
-      run: npm ci
+      run: npm install
 
     - name: Verificar formato de codigo
       working-directory: ./Backend
@@ -96,11 +94,9 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: Backend/package-lock.json
 
     - name: Instalar dependencias
-      run: npm ci
+      run: npm install
 
     - name: Ejecutar todos los tests
       run: npm test
@@ -197,18 +193,16 @@ jobs:
           - 5432:5432
 
     steps:
-    - name: 📥 Checkout código
+    - name: Checkout codigo
       uses: actions/checkout@v4
 
-    - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: Backend/package-lock.json
 
-    - name: 📦 Instalar dependencias
-      run: npm ci
+    - name: Instalar dependencias
+      run: npm install
 
     - name: Ejecutar Modulo 1 - Autenticacion
       run: npm run test:security:module1
@@ -249,18 +243,16 @@ jobs:
           - 5432:5432
 
     steps:
-    - name: 📥 Checkout código
+    - name: Checkout codigo
       uses: actions/checkout@v4
 
-    - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: Backend/package-lock.json
 
-    - name: 📦 Instalar dependencias
-      run: npm ci
+    - name: Instalar dependencias
+      run: npm install
 
     - name: Ejecutar Modulo 2 - Comunicacion segura
       run: npm run test:security:module2
@@ -301,18 +293,16 @@ jobs:
           - 5432:5432
 
     steps:
-    - name: 📥 Checkout código
+    - name: Checkout codigo
       uses: actions/checkout@v4
 
-    - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: Backend/package-lock.json
 
-    - name: 📦 Instalar dependencias
-      run: npm ci
+    - name: Instalar dependencias
+      run: npm install
 
     - name: Ejecutar Modulo 3 - Autorizacion
       run: npm run test:security:module3
@@ -353,18 +343,16 @@ jobs:
           - 5432:5432
 
     steps:
-    - name: 📥 Checkout código
+    - name: Checkout codigo
       uses: actions/checkout@v4
 
-    - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: Backend/package-lock.json
 
-    - name: 📦 Instalar dependencias
-      run: npm ci
+    - name: Instalar dependencias
+      run: npm install
 
     - name: Ejecutar Modulo 4 - Deteccion de amenazas
       run: npm run test:security:module4
