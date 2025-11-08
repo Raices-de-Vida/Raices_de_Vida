@@ -1,36 +1,60 @@
+version: '3.8'
+
 services:
   backend:
     container_name: raices_backend
-    build: ./Backend
+    build: 
+      context: ./Backend
+      dockerfile: Dockerfile
     ports:
       - "3001:3001"
     environment:
-      - DB_HOST=db
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - DB_NAME=Proyecto1
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: always
-
-  db:
-    container_name: raices_db
-    image: postgres:13
-    environment:
-      - POSTGRES_DB=Proyecto1
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # IMPORTANTE: Asegúrate de que estas variables estén correctas
+      # Opción 1: DATABASE_URL completa (RECOMENDADO)
+      DATABASE_URL: ${DATABASE_URL}
+      
+      # Opción 2: Si prefieres usar variables separadas, descomenta estas:
+      # DB_HOST: ${DB_HOST}
+      # DB_PORT: ${DB_PORT}
+      # DB_USER: ${DB_USER}
+      # DB_PASSWORD: ${DB_PASSWORD}
+      # DB_NAME: ${DB_NAME}
+      
+      # Variables adicionales
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3001
+      
+      # Para Aiven SSL
+      NODE_TLS_REJECT_UNAUTHORIZED: "0"
+    env_file:
+      - .env
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d Proyecto1"]
-      interval: 5s
-      timeout: 5s
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/auth/verify"]
+      interval: 30s
+      timeout: 10s
       retries: 5
-    restart: always
+      start_period: 40s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-volumes:
-  postgres_data:
+# Para desarrollo local con PostgreSQL en Docker, descomentar lo siguiente:
+# db:
+#   container_name: raices_db_local
+#   image: postgres:13
+#   environment:
+#     POSTGRES_DB: ${DB_NAME:-Proyecto1}
+#     POSTGRES_USER: ${DB_USER:-user}
+#     POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+#   ports:
+#     - "5432:5432"
+#   volumes:
+#     - postgres_data:/var/lib/postgresql/data
+#   restart: unless-stopped
+
+# volumes:
+#   postgres_data:
