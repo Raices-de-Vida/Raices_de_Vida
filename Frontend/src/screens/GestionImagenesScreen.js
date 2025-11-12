@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput, Image, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput, Image, Modal, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
@@ -116,34 +116,78 @@ export default function GestionImagenesScreen({ route, navigation }) {
   };
 
   const eliminarImagen = (imagen) => {
-    Alert.alert(
-      t('alerts.deleteTitle'),
-      t('alerts.deleteMsg'),
-      [
-        { text: t('buttons.cancel'), style: 'cancel' },
-        {
-          text: t('buttons.delete'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const response = await fetch(`${API_URL}/api/imagenes/${imagen.id_imagen}`, {
-                method: 'DELETE'
-              });
-
-              if (response.ok) {
-                Alert.alert(t('alerts.successTitle'), t('alerts.deleteSuccess'));
-                cargarImagenes();
-              } else {
-                Alert.alert(t('alerts.errorTitle'), t('alerts.deleteError'));
-              }
-            } catch (error) {
-              console.error('Error al eliminar imagen:', error);
-              Alert.alert(t('alerts.errorTitle'), t('alerts.deleteError'));
+    console.log('[DEBUG 1/5] Función eliminarImagen llamada con ID:', imagen.id_imagen);
+    console.log('[DEBUG 2/5] Mostrando confirmación de eliminación');
+    
+    // Usar confirm nativo en web, Alert en móvil
+    if (Platform.OS === 'web') {
+      const confirmar = window.confirm(`${t('alerts.deleteTitle')}\n\n${t('alerts.deleteMsg')}`);
+      if (!confirmar) {
+        console.log('[DEBUG] Usuario canceló la eliminación');
+        return;
+      }
+      console.log('[DEBUG 3/5] Usuario confirmó eliminación (web), iniciando proceso...');
+      ejecutarEliminacion(imagen);
+    } else {
+      Alert.alert(
+        t('alerts.deleteTitle'),
+        t('alerts.deleteMsg'),
+        [
+          { 
+            text: t('buttons.cancel'), 
+            style: 'cancel',
+            onPress: () => console.log('[DEBUG] Usuario canceló la eliminación')
+          },
+          {
+            text: t('buttons.delete'),
+            style: 'destructive',
+            onPress: () => {
+              console.log('[DEBUG 3/5] Usuario confirmó eliminación (móvil), iniciando proceso...');
+              ejecutarEliminacion(imagen);
             }
           }
+        ]
+      );
+    }
+  };
+
+  const ejecutarEliminacion = async (imagen) => {
+    try {
+      console.log('[DEBUG 4/5] Enviando DELETE a:', `${API_URL}/api/imagenes/${imagen.id_imagen}`);
+      const response = await fetch(`${API_URL}/api/imagenes/${imagen.id_imagen}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
         }
-      ]
-    );
+      });
+
+      console.log('[DEBUG 5/5] Response recibida - status:', response.status, 'ok:', response.ok);
+      
+      if (response.ok) {
+        console.log('[DEBUG ✅] Imagen eliminada exitosamente, recargando lista...');
+        if (Platform.OS === 'web') {
+          alert(`${t('alerts.successTitle')}: ${t('alerts.deleteSuccess')}`);
+        } else {
+          Alert.alert(t('alerts.successTitle'), t('alerts.deleteSuccess'));
+        }
+        await cargarImagenes();
+      } else {
+        const errorText = await response.text();
+        console.error('[DEBUG ❌] Error en response:', errorText);
+        if (Platform.OS === 'web') {
+          alert(`${t('alerts.errorTitle')}: ${t('alerts.deleteError')}\n\nError ${response.status}: ${errorText}`);
+        } else {
+          Alert.alert(t('alerts.errorTitle'), `${t('alerts.deleteError')}\n\nError ${response.status}`);
+        }
+      }
+    } catch (error) {
+      console.error('[DEBUG ❌] Exception capturada:', error.message, error.stack);
+      if (Platform.OS === 'web') {
+        alert(`${t('alerts.errorTitle')}: Error de conexión\n\n${error.message}`);
+      } else {
+        Alert.alert(t('alerts.errorTitle'), `Error de conexión: ${error.message}`);
+      }
+    }
   };
 
   const verImagen = (imagen) => {
@@ -169,11 +213,11 @@ export default function GestionImagenesScreen({ route, navigation }) {
         <View style={{ flex: 1 }}>
           <Text style={[styles.topTitle, { color: theme.text }]}>{t('top.title')}</Text>
           <Text style={[styles.topSubtitle, { color: theme.secondaryText }]}>
-            {paciente.nombre} {paciente.apellido}
+            {`${paciente.nombre}${paciente.apellido ? ' ' + paciente.apellido : ''}`}
           </Text>
         </View>
         <View style={styles.counterBadge}>
-          <Text style={styles.counterText}>{imagenes.length}/{MAX_IMAGES}</Text>
+          <Text style={styles.counterText}>{`${imagenes.length}/${MAX_IMAGES}`}</Text>
         </View>
       </View>
 

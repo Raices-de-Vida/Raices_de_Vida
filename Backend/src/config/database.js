@@ -21,30 +21,38 @@ let sequelize;
 
 // Verificar si hay una URL de conexión proporcionada (Aiven, Render, etc.)
 if (process.env.DATABASE_URL) {
-  console.log('Usando DATABASE_URL para conexión...');
+  console.log('Usando DATABASE_URL para conexion...');
   
-  // Parse la URL para verificar el tipo de servidor
   const isAiven = process.env.DATABASE_URL.includes('aivencloud.com');
   const isRender = process.env.DATABASE_URL.includes('render.com');
   
+  const dialectOptions = isAiven ? {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
+  } : {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
+  };
+  
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
-    dialectOptions: {
-      ssl: {
-        require: true,
-        // Para Aiven y otros servicios cloud que usan certificados self-signed
-        rejectUnauthorized: false
-      }
-    },
-    logging: false,
+    dialectOptions: dialectOptions,
+    logging: console.log,
     define: {
       timestamps: false
     },
     pool: {
       max: 5,
       min: 0,
-      acquire: 30000,
+      acquire: 60000,
       idle: 10000
+    },
+    retry: {
+      max: 3
     }
   });
   
@@ -56,6 +64,8 @@ if (process.env.DATABASE_URL) {
   
 } else {
   // Configuración para desarrollo local o conexión por partes
+  console.log('Usando variables separadas para conexion (Modo Local)...');
+  
   const dbConfig = {
     database: process.env.DB_NAME || 'Proyecto1',
     username: process.env.DB_USER || 'user',
@@ -63,9 +73,15 @@ if (process.env.DATABASE_URL) {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 5432,
     dialect: 'postgres',
-    logging: false,
+    logging: console.log,
     define: {
       timestamps: false
+    },
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 60000,
+      idle: 10000
     },
     retry: {
       max: 5,
@@ -73,54 +89,26 @@ if (process.env.DATABASE_URL) {
     }
   };
 
-  // Detectar si es una base de datos remota por el host
-  const isRemoteDb = 
-    dbConfig.host.includes('.') && 
-    !dbConfig.host.includes('localhost') && 
-    !dbConfig.host.includes('127.0.0.1') &&
-    !dbConfig.host.includes('db'); // 'db' es el nombre del servicio Docker local
+  console.log(`DB_HOST: ${dbConfig.host}`);
+  console.log(`DB_PORT: ${dbConfig.port}`);
+  console.log(`DB_NAME: ${dbConfig.database}`);
+  console.log(`DB_USER: ${dbConfig.username}`);
   
-  if (isRemoteDb) {
-    console.log('Detectada base de datos remota, configurando SSL...');
-    
-    // Construir URL de conexión para bases de datos remotas
-    const connectionString = `postgres://${dbConfig.username}:${dbConfig.password}@${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`;
-    
-    sequelize = new Sequelize(connectionString, {
-      dialect: 'postgres',
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false
-        }
-      },
-      logging: false,
-      define: {
-        timestamps: false
-      },
-      pool: {
-        max: 5,
-        min: 0,
-        acquire: 30000,
-        idle: 10000
-      }
-    });
-  } else {
-    // Conexión local normal sin SSL
-    console.log('Usando conexión local sin SSL...');
-    sequelize = new Sequelize(
-      dbConfig.database,
-      dbConfig.username,
-      dbConfig.password,
-      {
-        host: dbConfig.host,
-        port: dbConfig.port,
-        dialect: dbConfig.dialect,
-        logging: dbConfig.logging,
-        define: dbConfig.define
-      }
-    );
-  }
+  // Conexión local normal sin SSL
+  sequelize = new Sequelize(
+    dbConfig.database,
+    dbConfig.username,
+    dbConfig.password,
+    {
+      host: dbConfig.host,
+      port: dbConfig.port,
+      dialect: dbConfig.dialect,
+      logging: dbConfig.logging,
+      define: dbConfig.define,
+      pool: dbConfig.pool,
+      retry: dbConfig.retry
+    }
+  );
 }
 
 // Función de conexión con reintentos

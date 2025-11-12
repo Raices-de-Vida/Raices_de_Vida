@@ -30,7 +30,6 @@ export default function EditarAlerta({ navigation, route }) {
     setLoading(true);
     try {
       const alertaActualizada = {
-        ...alerta,
         nombre,
         edad: edad ? parseInt(edad, 10) : null,
         ubicacion,
@@ -38,14 +37,21 @@ export default function EditarAlerta({ navigation, route }) {
         descripcion
       };
 
-      // Cambiar la URL a la correcta en cada computadora (protocolo opcionalmente http:)
-      await axios.put(`//localhost:3001/api/alertas/${alerta.alerta_id}`, alertaActualizada);
+      console.log('[EDITAR ALERTA] 📤 Enviando actualización:', alertaActualizada);
+      
+      const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await axios.put(
+        `${API_URL}/api/alertas/${alerta.alerta_id}`, 
+        alertaActualizada
+      );
+      
+      console.log('[EDITAR ALERTA] ✅ Respuesta recibida:', response.data);
 
       Alert.alert(t('alerts.update.title'), t('alerts.update.success'), [
         { text: t('common.ok'), onPress: () => navigation.navigate('Home', { refresh: true }) }
       ]);
     } catch (error) {
-      console.error('Error al actualizar la alerta:', error);
+      console.error('[EDITAR ALERTA] ❌ Error al actualizar:', error.response?.data || error.message);
       Alert.alert(t('alerts.update.title'), t('alerts.update.error'));
     } finally {
       setLoading(false);
@@ -64,7 +70,8 @@ export default function EditarAlerta({ navigation, route }) {
           onPress: async () => {
             setLoading(true);
             try {
-              await axios.delete(`//localhost:3001/api/alertas/${alerta.alerta_id}`);
+              const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+              await axios.delete(`${API_URL}/api/alertas/${alerta.alerta_id}`);
               Alert.alert(t('alerts.delete.successTitle'), t('alerts.delete.success'));
               navigation.navigate('Home', { refresh: true });
             } catch (error) {

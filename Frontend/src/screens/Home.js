@@ -20,8 +20,6 @@ const PALETTE = {
   cream:     '#FFF7DA',
 };
 
-// Cambia esta URL a tu IP local cuando pruebes en dispositivo físico
-// Ejemplo: const API_BASE_URL = 'http://192.168.1.100:3001';
 const API_BASE_URL = 'http://localhost:3001';
 
 export default function Home({ navigation, route }) {
@@ -61,11 +59,11 @@ export default function Home({ navigation, route }) {
     try {
       let alertasData = [];
 
-      // Intentar obtener alertas del backend si hay conexión
+      // Intentar obtener PACIENTES del backend si hay conexión
       if (isConnected) {
         try {
           const token = await AsyncStorage.getItem('token');
-          const response = await fetch(`${API_BASE_URL}/api/alertas`, {
+          const response = await fetch(`${API_BASE_URL}/api/pacientes`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -74,27 +72,31 @@ export default function Home({ navigation, route }) {
           });
 
           if (response.ok) {
-            const data = await response.json();
-            alertasData = Array.isArray(data) ? data.map(alerta => ({
-              alerta_id: alerta.alerta_id,
-              nombre: alerta.nombre_paciente || t('placeholders.noName'),
-              descripcion: alerta.descripcion,
-              comunidad: alerta.comunidad || t('placeholders.noCommunity'),
-              edad: alerta.edad_paciente,
-              estado: alerta.estado || 'Pendiente',
-              tipo_alerta: alerta.tipo_alerta || 'Nutricional',
-              prioridad: alerta.prioridad || 'Media',
-              pendingSync: false,
-            })) : [];
+            const pacientes = await response.json();
+            
+            alertasData = Array.isArray(pacientes) ? pacientes
+              .filter(p => p._flagWorst)
+              .map(paciente => ({
+                alerta_id: paciente.id_paciente,
+                nombre: `${paciente.nombre || ''} ${paciente.apellido || ''}`.trim() || t('placeholders.noName'),
+                descripcion: paciente.motivo_consulta || t('placeholders.noDescription'),
+                comunidad: paciente.comunidad_pueblo || t('placeholders.noCommunity'),
+                edad: paciente.edad,
+                estado: paciente.severidad_manual || paciente._flagWorst || 'Media',
+                tipo_alerta: 'Paciente',
+                prioridad: paciente.severidad_manual || paciente._flagWorst,
+                pendingSync: false,
+                id_paciente: paciente.id_paciente,
+                isClosed: (paciente.severidad_manual || paciente._flagWorst) === 'Baja'
+              })) : [];
           } else {
-            console.warn('Error al obtener alertas del servidor:', response.status);
+            console.warn('Error al obtener pacientes del servidor:', response.status);
           }
         } catch (error) {
-          console.warn('Error de red al obtener alertas:', error.message);
+          console.warn('Error de red al obtener pacientes:', error.message);
         }
       }
 
-      // Agregar alertas pendientes de sincronización (offline)
       const pendingAlerts = (await OfflineStorage.getPendingAlerts?.()) || [];
       const localAlertas = pendingAlerts.map((a) => ({
         alerta_id: a.tempId,
@@ -102,15 +104,22 @@ export default function Home({ navigation, route }) {
         descripcion: a.descripcion,
         comunidad: a.comunidad || t('placeholders.noCommunity'),
         edad: a.edad_paciente,
-        estado: 'Pendiente',
+        estado: a.prioridad || 'Alta',
         tipo_alerta: a.tipo_alerta || 'Nutricional',
         prioridad: a.prioridad || 'Alta',
         pendingSync: true,
+        isClosed: false
       }));
 
-      // Combinar alertas del servidor y locales
       const todas = [...alertasData, ...localAlertas];
-      setAlertas(todas.filter((a) => (activo ? a.estado !== 'Cerrada' : a.estado === 'Cerrada')));
+      
+      setAlertas(todas.filter((a) => {
+        if (activo) {
+          return a.estado !== 'Baja' && !a.isClosed;
+        } else {
+          return a.estado === 'Baja' || a.isClosed;
+        }
+      }));
     } catch (error) {
       console.error('Error general al cargar alertas:', error);
       Alert.alert(
@@ -125,9 +134,33 @@ export default function Home({ navigation, route }) {
   useEffect(() => { fetchAlertas(); }, [activo, isConnected]);
   useEffect(() => { if (route.params?.refresh) fetchAlertas(); }, [route.params?.refresh]);
 
+  const getSeverityColor = (severidad) => {
+    switch(severidad?.toLowerCase()) {
+      case 'crítica':
+      case 'critica':
+        return '#D32F2F'; // Rojo
+      case 'alta':
+        return '#F57C00'; // Naranja oscuro
+      case 'media':
+        return PALETTE.tangerine; // Naranja
+      case 'baja':
+        return '#388E3C'; // Verde
+      default:
+        return PALETTE.sea; // Azul por defecto
+    }
+  };
+
   const renderAlertItem = (a) => (
-    <TouchableOpacity key={a.alerta_id} style={styles.card(theme, isDarkMode)}>
-      <AntDesign name="exclamationcircle" size={28} color={PALETTE.blush} style={{ marginRight: 10 }} />
+    <TouchableOpacity 
+      key={a.alerta_id} 
+      style={styles.card(theme, isDarkMode)}
+      onPress={() => {
+        if (a.id_paciente) {
+          navigation.navigate('DetallePaciente', { paciente: { id_paciente: a.id_paciente } });
+        }
+      }}
+    >
+      <AntDesign name="exclamationcircle" size={28} color={getSeverityColor(a.estado)} style={{ marginRight: 10 }} />
       <View style={{ flex: 1 }}>
         <Text style={[styles.alertName, { color: theme.text }]}>
           {a.nombre}{a.pendingSync && <Text style={styles.pendingBadge}> {t('badges.unsynced')}</Text>}
@@ -140,7 +173,7 @@ export default function Home({ navigation, route }) {
       <Text
         style={[
           styles.alertStatus,
-          { color: a.estado === 'Pendiente' ? PALETTE.tangerine : a.estado === 'Atendida' ? '#2E7D32' : '#1565C0' }
+          { color: getSeverityColor(a.estado) }
         ]}
       >
         {a.estado}

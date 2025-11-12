@@ -72,11 +72,13 @@ exports.createPaciente = async (req, res) => {
       });
     }
     
-    res.status(201).json({ 
-      id_paciente: paciente.id_paciente,
-      paciente,
-      consulta
+    const pacienteCompleto = await Paciente.findByPk(paciente.id_paciente, {
+      include: [
+        { model: Consulta, as: 'consultas' }
+      ]
     });
+    
+    res.status(201).json(pacienteCompleto);
   } catch (err) {
     console.error('Error createPaciente:', err);
     res.status(400).json({ error: err.message });
@@ -112,6 +114,9 @@ exports.getPacientes = async (req, res) => {
       order: [['nombre', 'ASC']],
       limit: Number(limit),
       offset: Number(offset),
+      include: [
+        { model: Consulta, as: 'consultas', order: [['fecha', 'DESC']] }
+      ],
       ...(havingIMC.length > 0
         ? { where: { ...where, peso: { [Op.ne]: null }, estatura: { [Op.ne]: null } },
             having: Paciente.sequelize.literal(havingIMC.join(' AND ')),
@@ -138,11 +143,27 @@ exports.getPacienteById = async (req, res) => {
     });
     if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado' });
     paciente = paciente.toJSON();
+    
+    // Calcular IMC
     if (paciente.peso && paciente.estatura) {
       const imc = Number(paciente.peso) / Math.pow(Number(paciente.estatura)/100,2);
       paciente.imc = Number(imc.toFixed(2));
       paciente.imc_categoria = classifyIMC(imc);
     }
+    
+    if (paciente.severidad_manual) {
+      paciente._flagWorst = paciente.severidad_manual;
+      console.log('Usando severidad manual:', paciente.severidad_manual);
+    } else if (paciente.alertasMedicas && paciente.alertasMedicas.length > 0) {
+      const prioridadMap = { 'Crítica': 4, 'Alta': 3, 'Media': 2, 'Baja': 1 };
+      const maxPrioridad = Math.max(...paciente.alertasMedicas.map(a => prioridadMap[a.prioridad_medica] || 0));
+      paciente._flagWorst = Object.keys(prioridadMap).find(k => prioridadMap[k] === maxPrioridad) || null;
+      console.log('Calculando severidad desde alertas:', paciente._flagWorst);
+    } else {
+      paciente._flagWorst = null;
+      console.log('No hay severidad ni alertas');
+    }
+    
     res.json(paciente);
   } catch (err) {
     console.error('Error getPacienteById:', err);
@@ -155,30 +176,39 @@ exports.updatePaciente = async (req, res) => {
     const paciente = await Paciente.findByPk(req.params.id);
     if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado' });
 
-    // Extraer datos de consulta si vienen en el body
     const { consulta, ...datosPaciente } = req.body;
     
-    // Actualizar datos del paciente (tabla Pacientes)
+    
+    if (datosPaciente.severidad_manual !== undefined) {
+    }
+    
     await paciente.update(datosPaciente);
     
-    // Si vienen datos de consulta, actualizar o crear
     if (consulta && Object.keys(consulta).length > 0) {
-      // Buscar la última consulta del paciente
       const ultimaConsulta = await Consulta.findOne({
         where: { id_paciente: req.params.id },
-        order: [['created_at', 'DESC']]
+        order: [['fecha', 'DESC']]
       });
+      
       
       if (ultimaConsulta) {
         // Actualizar última consulta
         await ultimaConsulta.update(consulta);
+        console.log('Consulta actualizada. Nuevos valores:', {
+          tipo_consulta: ultimaConsulta.tipo_consulta,
+          chief_complaint: ultimaConsulta.chief_complaint
+        });
       } else {
         // Crear nueva consulta
-        await Consulta.create({
+        console.log('Creando nueva consulta');
+        const nuevaConsulta = await Consulta.create({
           id_paciente: req.params.id,
           ...consulta
         });
+        console.log('Consulta creada:', nuevaConsulta.id_consulta);
       }
+    } else {
+      console.log('No se recibieron datos de consulta');
     }
     
     // Recargar paciente con relaciones
@@ -637,21 +667,27 @@ exports.reclassifySeverity = async (req, res) => {
     }
 
     // Obtener signos vitales actuales del paciente
-    const { presion_sistolica, presion_diastolica, glucosa, saturacion_oxigeno, temperatura } = paciente;
+    const { 
+      presion_arterial_sistolica, 
+      presion_arterial_diastolica, 
+      glucosa, 
+      saturacion_oxigeno, 
+      temperatura 
+    } = paciente;
     
     // Calcular severidad basada en signos vitales
     let severidad = 'Baja';
     const flags = [];
 
     // Presión arterial
-    if (presion_sistolica && presion_diastolica) {
-      if (presion_sistolica >= 180 || presion_diastolica >= 120) {
+    if (presion_arterial_sistolica && presion_arterial_diastolica) {
+      if (presion_arterial_sistolica >= 180 || presion_arterial_diastolica >= 120) {
         flags.push({ nivel: 'Crítica', desc: 'Hipertensión severa' });
-      } else if (presion_sistolica >= 160 || presion_diastolica >= 100) {
+      } else if (presion_arterial_sistolica >= 160 || presion_arterial_diastolica >= 100) {
         flags.push({ nivel: 'Alta', desc: 'Hipertensión moderada' });
-      } else if (presion_sistolica >= 140 || presion_diastolica >= 90) {
+      } else if (presion_arterial_sistolica >= 140 || presion_arterial_diastolica >= 90) {
         flags.push({ nivel: 'Media', desc: 'Hipertensión leve' });
-      } else if (presion_sistolica < 90 || presion_diastolica < 60) {
+      } else if (presion_arterial_sistolica < 90 || presion_arterial_diastolica < 60) {
         flags.push({ nivel: 'Alta', desc: 'Hipotensión' });
       }
     }
@@ -707,10 +743,11 @@ exports.reclassifySeverity = async (req, res) => {
     // Guardar nueva severidad como alerta manual
     await AlertaMedica.create({
       id_paciente: id,
+      tipo_alerta_medica: 'Signos Vitales Críticos',
       descripcion_medica: `Reclasificación automática de severidad (${flags.map(f => f.desc).join(', ') || 'Sin alertas'})`,
       prioridad_medica: severidad,
       fecha_alerta: new Date(),
-      resuelta: false
+      estado_alerta: 'Pendiente'
     });
 
     res.json({ 

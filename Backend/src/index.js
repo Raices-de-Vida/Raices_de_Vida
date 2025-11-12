@@ -58,6 +58,11 @@ app.use('/api/statistics', statisticsRoutes);
 if (process.env.NODE_ENV !== 'production') {
   app.post('/api/dev/seed', async (req, res) => {
     try {
+      // Sincronizar modelos (crea tablas si no existen)
+      console.log('Sincronizando modelos (creando tablas)...');
+      await sequelize.sync({ force: true }); // CUIDADO: Elimina y recrea todas las tablas
+      console.log('Tablas creadas correctamente');
+      
       const nombres = ['Ana','Luis','María','Carlos','Sofía','José','Lucía','Pedro','Elena','Miguel','Laura','Jorge'];
       const comunidades = ['San Pedro','San Juan','Sololá','Atitlán','Panajachel','Santa Clara'];
       const gen = () => (Math.random() < 0.5 ? 'F' : 'M');
@@ -101,52 +106,23 @@ if (process.env.NODE_ENV !== 'production') {
         }
       }
       //user demo
+      console.log('Creando usuario demo...');
+      
       let demoUser = await User.findOne({ where: { email: 'demo@seed.local' } });
       if (!demoUser) {
-        demoUser = await User.create({ nombre: 'Demo', apellido: 'Seed', email: 'demo@seed.local', password: 'demo123', rol: 'ONG', estado: true });
-      }
-
-      //casos críticos demo
-      const responsables = [{ tipo_responsable: 'ONG', id_responsable: 1 }, { tipo_responsable: 'Voluntario', id_responsable: 2 }];
-      const estadosCaso = ['Detectado','En Atención','Derivado','Resuelto','Seguimiento'];
-      const casos = [];
-      for (let k=0;k<8;k++) {
-        const resp = responsables[rnd(0, responsables.length-1)];
-        const caso = await CasoCritico.create({
-          id_familia: rnd(1, 50),
-          descripcion: `Caso demo ${k+1}: Necesita atencion`,
-          nivel_urgencia: Math.random() < 0.5 ? 'Alto' : 'Crítico',
-          sintomas: 'Fiebre, tos seca',
-          acciones_tomadas: 'Derivación a centro de salud',
-          estado: estadosCaso[rnd(0, estadosCaso.length-1)],
-          id_responsable: resp.id_responsable,
-          tipo_responsable: resp.tipo_responsable,
-          requiere_traslado: Math.random() < 0.3,
-          observaciones: 'Observación demo'
+        demoUser = await User.create({ 
+          nombre: 'Demo', 
+          apellido: 'Seed', 
+          email: 'demo@seed.local', 
+          password: 'demo123', // Sin hashear - el beforeCreate hook lo hará
+          rol: 'ONG', 
+          estado: true 
         });
-        casos.push(caso);
+        console.log('Usuario demo creado: demo@seed.local / demo123');
       }
 
-      //alertas asociadas a casos
-      const tiposAlert = ['Médica','Nutricional','Psicosocial','Urgente'];
-      const prioridades = ['Baja','Media','Alta','Crítica'];
-      const estadosAlert = ['Pendiente','Atendida','Escalada','Cerrada'];
-      const alerts = [];
-      for (let m=0;m<16;m++) {
-        const caso = casos[rnd(0, casos.length-1)];
-        const a = await Alerta.create({
-          tipo_alerta: tiposAlert[rnd(0, tiposAlert.length-1)],
-          descripcion: `Alerta demo ${m+1} asociada a caso ${caso.id_caso}`,
-          estado: estadosAlert[rnd(0, estadosAlert.length-1)],
-          prioridad: prioridades[rnd(0, prioridades.length-1)],
-          caso_id: caso.id_caso,
-          usuario_id: demoUser.id_usuario,
-          observaciones: 'Observación alerta demo'
-        });
-        alerts.push(a);
-      }
-
-      res.json({ ok: true, pacientes: created.length, casos: casos.length, alertas: alerts.length });
+      console.log(`Seed completado: ${created.length} pacientes creados`);
+      res.json({ ok: true, pacientes: created.length, usuario: 'demo@seed.local' });
     } catch (e) {
       console.error('seed error', e);
       res.status(500).json({ error: e.message });

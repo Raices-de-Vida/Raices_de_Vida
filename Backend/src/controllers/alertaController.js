@@ -6,13 +6,36 @@ const AlertaMedica = require('../models/AlertaMedica');
 exports.getAllAlertas = async (req, res) => {
   try {
     const alertas = await Alerta.findAll({
-      include: [{
-        model: CasoCritico,
-        attributes: ['id_caso', 'descripcion', 'nivel_urgencia'],
-        as: 'caso'
-      }]
+      include: [
+        {
+          model: CasoCritico,
+          attributes: ['id_caso', 'descripcion', 'nivel_urgencia'],
+          as: 'caso',
+          include: [{
+            model: Paciente,
+            attributes: ['id_paciente', 'severidad_manual'],
+            as: 'paciente'
+          }]
+        }
+      ]
     });
-    res.json(alertas);
+    
+    // Mapear alertas con la severidad correcta del paciente
+    const alertasConSeveridad = alertas.map(alerta => {
+      const alertaJSON = alerta.toJSON();
+      
+      // Si hay severidad manual, usar esa; si no, usar la calculada
+      if (alertaJSON.caso?.paciente) {
+        const paciente = alertaJSON.caso.paciente;
+        alertaJSON.severidad_paciente = paciente.severidad_manual || alertaJSON.caso.nivel_urgencia;
+      } else {
+        alertaJSON.severidad_paciente = alertaJSON.caso?.nivel_urgencia || 'Media';
+      }
+      
+      return alertaJSON;
+    });
+    
+    res.json(alertasConSeveridad);
   } catch (error) {
     console.error('Error al obtener alertas:', error);
     res.status(500).json({ error: 'Error al obtener las alertas' });
@@ -56,8 +79,19 @@ exports.updateAlerta = async (req, res) => {
       return res.status(404).json({ error: 'Alerta no encontrada' });
     }
 
-    //update solo campos permitidos
-    const camposPermitidos = ['estado', 'respuesta', 'prioridad', 'observaciones'];
+    //update campos permitidos (expandido para permitir edición completa)
+    const camposPermitidos = [
+      'estado', 
+      'respuesta', 
+      'prioridad', 
+      'observaciones',
+      'nombre',
+      'edad',
+      'ubicacion',
+      'comunidad',
+      'descripcion'
+    ];
+    
     camposPermitidos.forEach(campo => {
       if (req.body[campo] !== undefined) {
         alerta[campo] = req.body[campo];
@@ -65,8 +99,10 @@ exports.updateAlerta = async (req, res) => {
     });
 
     await alerta.save();
+    console.log('[ALERTAS] ✅ Alerta actualizada:', alerta.alerta_id);
     res.json(alerta);
   } catch (error) {
+    console.error('[ALERTAS] ❌ Error al actualizar alerta:', error);
     res.status(400).json({ error: error.message });
   }
 };

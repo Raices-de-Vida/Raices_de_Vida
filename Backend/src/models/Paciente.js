@@ -55,9 +55,9 @@ const Paciente = sequelize.define('Pacientes', {
   abortos_espontaneos: { type: DataTypes.INTEGER, defaultValue: 0 },
   abortos_inducidos: { type: DataTypes.INTEGER, defaultValue: 0 },
   usa_anticonceptivos: { type: DataTypes.BOOLEAN, defaultValue: false },
-  metodo_anticonceptivo: {
-    type: DataTypes.ENUM('Ninguno', 'Pastillas', 'Inyección', 'DIU', 'Condón', 'Natural', 'Otro'),
-    defaultValue: 'Ninguno'
+  metodo_anticonceptivo: { 
+    type: DataTypes.STRING(50), 
+    allowNull: true 
   },
 
   // Estado y metadatos
@@ -67,6 +67,12 @@ const Paciente = sequelize.define('Pacientes', {
   },
   fecha_ultima_actualizacion: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   observaciones_generales: { type: DataTypes.TEXT },
+
+  severidad_manual: { 
+    type: DataTypes.ENUM('Baja', 'Media', 'Alta', 'Crítica'),
+    allowNull: true,
+    comment: 'Severidad establecida manualmente por el usuario, anula el cálculo automático'
+  },
 
   // FK (coinciden con tu DB)
   id_comunidad: { type: DataTypes.INTEGER },

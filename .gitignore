@@ -1,10 +1,14 @@
-# Ignorar dependencias
-node_modules/
 .env
+.env.local
+.env*.local
+Backend/.env
+Backend/.env.local
+*.env
+
+node_modules/
 .expo/
 .expo-shared/
 package-lock.json
 
-# Archivos temporales
 *.log
 .DS_Store

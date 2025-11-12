@@ -57,12 +57,28 @@ exports.login = async (req, res) => {
       return res.status(400).json({ error: 'Email y contraseña son requeridos' });
     }
 
-    const user = await User.findOne({ where: { email: email.trim() } });
+    // Búsqueda case-insensitive usando Sequelize.where con Op.iLike
+    const { Op } = require('sequelize');
+    const user = await User.findOne({ 
+      where: { 
+        email: { 
+          [Op.iLike]: email.trim() 
+        } 
+      } 
+    });
     
-    if (!user || !(await user.validPassword(password))) {
+    
+    if (!user) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+    
+    const isPasswordValid = await user.validPassword(password);
+    
+    if (!isPasswordValid) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
+    
     // Devuelve sólo el objeto user
     return res.json({
       id:           user.id_usuario,
@@ -102,8 +118,16 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: 'Formato de email inválido' });
     }
 
-    // Verificar si el usuario ya existe
-    const existingUser = await User.findOne({ where: { email: email.trim() } });
+    // Verificar si el usuario ya existe (case-insensitive)
+    const { Op } = require('sequelize');
+    const existingUser = await User.findOne({ 
+      where: { 
+        email: { 
+          [Op.iLike]: email.trim() 
+        } 
+      } 
+    });
+    
     if (existingUser) {
       return res.status(409).json({ error: 'El email ya está registrado' });
     }

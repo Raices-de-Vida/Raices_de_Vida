@@ -67,7 +67,7 @@ export default function WelcomeScreen({ navigation }) {
   const titleCol  = isDarkMode ? theme.text          : PALETTE.blush;
   const subCol    = isDarkMode ? theme.secondaryText : PALETTE.sea;
   const btnPrim   = isDarkMode ? theme.primaryButton : PALETTE.tangerine;
-  const btnSec    = isDarkMode ? theme.secondaryButton : PALETTE.sea;
+  const btnSec    = isDarkMode ? '#FFFFFF' : PALETTE.sea;
   const leafA     = isDarkMode ? theme.border : PALETTE.sea;
   const leafB     = isDarkMode ? theme.error  : 'rgba(240,140,33,0.3)';
   const leafC     = isDarkMode ? theme.card   : 'rgba(227,104,136,0.28)';
