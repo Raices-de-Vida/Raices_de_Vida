@@ -5,6 +5,7 @@ const Signos = require('../models/SignosVitalesHistorial');
 const CirugiaPaciente = require('../models/CirugiaPaciente');
 const HistorialMedico = require('../models/HistorialMedico');
 const AlertaMedica = require('../models/AlertaMedica');
+const Visita = require('../models/Visita');
 const { fillConsultSummaryPDF } = require('../services/pdfService');
 
 exports.createPaciente = async (req, res) => {
@@ -138,7 +139,13 @@ exports.getPacienteById = async (req, res) => {
         { model: Signos, as: 'signos', order: [['fecha_toma', 'DESC']] },
         { model: CirugiaPaciente, as: 'cirugias' },
         { model: HistorialMedico, as: 'historial' },
-        { model: AlertaMedica, as: 'alertasMedicas', order: [['fecha_alerta', 'DESC']] }
+        { model: AlertaMedica, as: 'alertasMedicas', order: [['fecha_alerta', 'DESC']] },
+        { 
+          model: Visita, 
+          as: 'visitas', 
+          include: [{ model: Consulta, as: 'consulta' }],
+          order: [['fecha_visita', 'DESC'], ['numero_instancia', 'ASC']]
+        }
       ]
     });
     if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado' });
@@ -760,3 +767,314 @@ exports.reclassifySeverity = async (req, res) => {
     res.status(500).json({ error: 'Error al reclasificar severidad', details: err.message });
   }
 };
+
+// ============================================
+// VISIT MANAGEMENT (HISTORIAL DE VISITAS)
+// ============================================
+
+/**
+ * GET /api/pacientes/:id/visitas
+ * Obtener todas las visitas de un paciente
+ */
+exports.getVisitas = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const visitas = await Visita.findAll({
+      where: { id_paciente: id },
+      include: [
+        {
+          model: Consulta,
+          as: 'consulta'
+        }
+      ],
+      order: [['fecha_visita', 'DESC'], ['numero_instancia', 'ASC']]
+    });
+    
+    res.json(visitas);
+  } catch (err) {
+    console.error('Error getVisitas:', err);
+    res.status(500).json({ error: 'Error al obtener visitas', details: err.message });
+  }
+};
+
+/**
+ * POST /api/pacientes/:id/visitas
+ * Crear una nueva visita para un paciente
+ */
+exports.createVisita = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { fecha_visita, usuario_registro, observaciones, consulta } = req.body;
+    
+    // Verificar si el paciente existe
+    const paciente = await Paciente.findByPk(id);
+    if (!paciente) {
+      return res.status(404).json({ error: 'Paciente no encontrado' });
+    }
+    
+    // Determinar el número de instancia para el mismo día
+    const fechaSinHora = new Date(fecha_visita);
+    fechaSinHora.setHours(0, 0, 0, 0);
+    
+    const visitasMismoDia = await Visita.findAll({
+      where: {
+        id_paciente: id,
+        fecha_visita: {
+          [Op.gte]: fechaSinHora,
+          [Op.lt]: new Date(fechaSinHora.getTime() + 24 * 60 * 60 * 1000)
+        }
+      }
+    });
+    
+    const numero_instancia = visitasMismoDia.length + 1;
+    
+    // Crear la visita
+    const nuevaVisita = await Visita.create({
+      id_paciente: id,
+      fecha_visita,
+      numero_instancia,
+      usuario_registro,
+      observaciones
+    });
+    
+    // Si se proporciona información de consulta, crearla
+    if (consulta) {
+      await Consulta.create({
+        ...consulta,
+        id_paciente: id,
+        id_visita: nuevaVisita.id_visita
+      });
+    }
+    
+    // Recargar con consulta incluida
+    const visitaCompleta = await Visita.findByPk(nuevaVisita.id_visita, {
+      include: [{ model: Consulta, as: 'consulta' }]
+    });
+    
+    res.status(201).json(visitaCompleta);
+  } catch (err) {
+    console.error('Error createVisita:', err);
+    res.status(500).json({ error: 'Error al crear visita', details: err.message });
+  }
+};
+
+/**
+ * GET /api/pacientes/:id/visitas/:visitId
+ * Obtener datos completos de una visita específica
+ */
+exports.getVisitaById = async (req, res) => {
+  try {
+    const { id, visitId } = req.params;
+    
+    const visita = await Visita.findOne({
+      where: { 
+        id_visita: visitId,
+        id_paciente: id 
+      },
+      include: [
+        {
+          model: Consulta,
+          as: 'consulta'
+        }
+      ]
+    });
+    
+    if (!visita) {
+      return res.status(404).json({ error: 'Visita no encontrada' });
+    }
+    
+    res.json(visita);
+  } catch (err) {
+    console.error('Error getVisitaById:', err);
+    res.status(500).json({ error: 'Error al obtener visita', details: err.message });
+  }
+};
+
+/**
+ * PUT /api/pacientes/:id/visitas/:visitId
+ * Actualizar datos de una visita específica (y su consulta asociada)
+ */
+exports.updateVisita = async (req, res) => {
+  try {
+    const { id, visitId } = req.params;
+    const { observaciones, consulta } = req.body;
+    
+    // Actualizar visita
+    const visita = await Visita.findOne({
+      where: { id_visita: visitId, id_paciente: id }
+    });
+    
+    if (!visita) {
+      return res.status(404).json({ error: 'Visita no encontrada' });
+    }
+    
+    if (observaciones !== undefined) {
+      await visita.update({ observaciones });
+    }
+    
+    // Actualizar consulta si existe
+    if (consulta) {
+      const consultaExistente = await Consulta.findOne({
+        where: { id_visita: visitId }
+      });
+      
+      if (consultaExistente) {
+        await consultaExistente.update(consulta);
+      } else {
+        // Crear consulta si no existe
+        await Consulta.create({
+          ...consulta,
+          id_paciente: id,
+          id_visita: visitId
+        });
+      }
+    }
+    
+    // Recargar visita con consulta
+    const visitaActualizada = await Visita.findByPk(visitId, {
+      include: [{ model: Consulta, as: 'consulta' }]
+    });
+    
+    res.json(visitaActualizada);
+  } catch (err) {
+    console.error('Error updateVisita:', err);
+    res.status(500).json({ error: 'Error al actualizar visita', details: err.message });
+  }
+};
+
+/**
+ * POST /api/pacientes/migrate-visitas
+ * Migrar datos existentes - crear primera visita para cada paciente
+ */
+exports.migrateToVisitas = async (req, res) => {
+  try {
+    const pacientes = await Paciente.findAll({
+      include: [{ model: Consulta, as: 'consultas' }]
+    });
+    
+    let migrados = 0;
+    let errores = [];
+    
+    for (const paciente of pacientes) {
+      try {
+        // Verificar si ya tiene visitas
+        const visitasExistentes = await Visita.count({
+          where: { id_paciente: paciente.id_paciente }
+        });
+        
+        if (visitasExistentes > 0) {
+          continue; // Ya tiene visitas, saltar
+        }
+        
+        // Crear primera visita usando fecha_registro del paciente
+        const primeraVisita = await Visita.create({
+          id_paciente: paciente.id_paciente,
+          fecha_visita: paciente.fecha_registro || new Date(),
+          numero_instancia: 1,
+          usuario_registro: paciente.usuario_registro,
+          observaciones: 'Visita inicial (migración automática)'
+        });
+        
+        // Vincular consultas existentes a esta primera visita
+        if (paciente.consultas && paciente.consultas.length > 0) {
+          for (const consulta of paciente.consultas) {
+            await consulta.update({ id_visita: primeraVisita.id_visita });
+          }
+        }
+        
+        migrados++;
+      } catch (err) {
+        errores.push({
+          id_paciente: paciente.id_paciente,
+          nombre: paciente.nombre,
+          error: err.message
+        });
+      }
+    }
+    
+    res.json({
+      mensaje: 'Migración completada',
+      pacientes_totales: pacientes.length,
+      pacientes_migrados: migrados,
+      errores: errores.length > 0 ? errores : undefined
+    });
+  } catch (err) {
+    console.error('Error migrateToVisitas:', err);
+    res.status(500).json({ error: 'Error en migración', details: err.message });
+  }
+};
+
+/**
+ * POST /api/pacientes/check-duplicates
+ * Buscar pacientes similares (para detección de duplicados)
+ */
+exports.checkDuplicates = async (req, res) => {
+  try {
+    const { nombre, genero, edad, fecha_nacimiento, comunidad_pueblo } = req.body;
+    
+    if (!nombre || !genero) {
+      return res.status(400).json({ 
+        error: 'Se requiere nombre y género para buscar duplicados' 
+      });
+    }
+    
+    // Construir consulta de búsqueda
+    const whereClause = {
+      nombre: { [Op.iLike]: `%${nombre}%` }, // Case-insensitive partial match
+      genero
+    };
+    
+    // Búsqueda por edad (±2 años) o fecha de nacimiento
+    if (edad) {
+      const edadNum = parseInt(edad);
+      whereClause.edad = {
+        [Op.between]: [edadNum - 2, edadNum + 2]
+      };
+    } else if (fecha_nacimiento) {
+      whereClause.fecha_nacimiento = fecha_nacimiento;
+    }
+    
+    // Si se proporciona comunidad, filtrar por ella también
+    if (comunidad_pueblo) {
+      whereClause.comunidad_pueblo = { [Op.iLike]: `%${comunidad_pueblo}%` };
+    }
+    
+    const similares = await Paciente.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: Visita,
+          as: 'visitas',
+          order: [['fecha_visita', 'DESC']],
+          limit: 1 // Solo la última visita
+        }
+      ],
+      limit: 5 // Máximo 5 resultados
+    });
+    
+    // Formatear resultados
+    const resultados = similares.map(p => ({
+      id_paciente: p.id_paciente,
+      nombre: p.nombre,
+      apellido: p.apellido,
+      genero: p.genero,
+      edad: p.edad,
+      fecha_nacimiento: p.fecha_nacimiento,
+      comunidad_pueblo: p.comunidad_pueblo,
+      ultima_visita: p.visitas && p.visitas.length > 0 
+        ? p.visitas[0].fecha_visita 
+        : p.fecha_registro,
+      total_visitas: p.visitas ? p.visitas.length : 0
+    }));
+    
+    res.json({
+      encontrados: resultados.length,
+      pacientes: resultados
+    });
+  } catch (err) {
+    console.error('Error checkDuplicates:', err);
+    res.status(500).json({ error: 'Error al buscar duplicados', details: err.message });
+  }
+};
+

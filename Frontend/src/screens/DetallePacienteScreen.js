@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager, TextInput, Alert, ActivityIndicator, Modal, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Pressable } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import OfflineStorage from '../services/OfflineStorage';
 import ConnectivityService from '../services/ConnectivityService';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
-import { getTheme } from '../styles/theme';
+import { getTheme, brandColors } from '../styles/theme';
 import { useTranslation } from 'react-i18next';
 import { 
   CharCounterInput, 
@@ -16,6 +16,33 @@ import {
   VitalSignInput 
 } from '../components/ValidatedInput';
 import { validatePatientData, VITAL_RANGES } from '../utils/validation';
+
+// Helper: Format date input with automatic slashes (DD/MM/YYYY)
+const formatDateInput = (value) => {
+  // Remove all non-digits
+  const digits = value.replace(/\D/g, '');
+  
+  // Build formatted string
+  let formatted = '';
+  if (digits.length > 0) {
+    formatted = digits.substring(0, 2); // DD
+    if (digits.length >= 3) {
+      formatted += '/' + digits.substring(2, 4); // /MM
+    }
+    if (digits.length >= 5) {
+      formatted += '/' + digits.substring(4, 8); // /YYYY
+    }
+  }
+  
+  return formatted;
+};
+
+// Helper: Convert DD/MM/YYYY to YYYY-MM-DD for API
+const convertToISO = (dmyDate) => {
+  if (!dmyDate || dmyDate.length !== 10) return '';
+  const [day, month, year] = dmyDate.split('/');
+  return `${year}-${month}-${day}`;
+};
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -49,6 +76,20 @@ export default function DetallePacienteScreen({ route, navigation }) {
   const [validationErrors, setValidationErrors] = useState([]);
   const [showSeverityModal, setShowSeverityModal] = useState(false);
   const [vitalsEdited, setVitalsEdited] = useState(false);
+
+  //🆕 Estados para gestión de visitas (historial)
+  const [visitas, setVisitas] = useState(paciente.visitas || []);
+  const [currentVisitId, setCurrentVisitId] = useState(null);
+  const [loadingVisits, setLoadingVisits] = useState(false);
+  const [showVisitsDropdown, setShowVisitsDropdown] = useState(false);
+  
+  // 🆕 Modal Nueva Visita
+  const [showNewVisitModal, setShowNewVisitModal] = useState(false);
+  const [newVisitDate, setNewVisitDate] = useState(new Date().toISOString().split('T')[0]);
+  const [newVisitObservaciones, setNewVisitObservaciones] = useState('');
+
+  // Estilo de sección consistente con el tema actual
+  const themedSectionStyle = { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder };
 
   // Helper: Parsear fecha YYYY-MM-DD a componentes separados
   const parseLMPDate = (dateString) => {
@@ -281,6 +322,13 @@ export default function DetallePacienteScreen({ route, navigation }) {
         if (res.ok) {
           const freshData = await res.json();
           setPaciente(freshData);
+          setVisitas(freshData.visitas || []);
+          
+          // Si hay visitas, seleccionar la más reciente por defecto
+          if (freshData.visitas && freshData.visitas.length > 0) {
+            setCurrentVisitId(freshData.visitas[0].id_visita);
+          }
+          
           setLocalPeso(freshData.peso?.toString() || '');
           setLocalAltura(freshData.estatura?.toString() || '');
           setLocalSeverity(freshData._flagWorst || '');
@@ -297,6 +345,182 @@ export default function DetallePacienteScreen({ route, navigation }) {
       loadPatient();
     }
   }, [pacienteParam?.id_paciente]);
+
+  // 🆕 Helper: Formatear fecha de visita con instancias
+  const formatVisitDate = (visita) => {
+    if (!visita) return '';
+    const date = new Date(visita.fecha_visita);
+    const formatted = date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    
+    // Buscar si hay otras visitas el mismo día
+    const sameDay = visitas.filter(v => {
+      const vDate = new Date(v.fecha_visita);
+      return vDate.toDateString() === date.toDateString();
+    });
+    
+    // Si hay múltiples instancias el mismo día, mostrar número
+    if (sameDay.length > 1) {
+      return `${formatted} (${t('visits.instance', { number: visita.numero_instancia })})`;
+    }
+    
+    return formatted;
+  };
+
+  // 🆕 Cargar datos de visita específica
+  const loadVisitData = (visitId) => {
+    const visita = visitas.find(v => v.id_visita === visitId);
+    if (!visita) return;
+
+    setCurrentVisitId(visitId);
+    
+    // Cargar datos de consulta de esta visita si existe
+    if (visita.consulta) {
+      const c = visita.consulta;
+      setEditData(prev => ({
+        ...prev,
+        tipo_consulta: c.tipo_consulta || '',
+        consult_other_text: c.consult_other_text || '',
+        chief_complaint: c.chief_complaint || '',
+        vitamins: c.vitamins?.toString() || '',
+        albendazole: c.albendazole?.toString() || '',
+        paciente_en_ayuno: c.paciente_en_ayuno || false,
+        medicamento_bp_tomado: c.medicamento_bp_tomado || false,
+        medicamento_bs_tomado: c.medicamento_bs_tomado || false,
+        historia_enfermedad_actual: c.historia_enfermedad_actual || '',
+        diagnosticos_previos: c.diagnosticos_previos || '',
+        cirugias_previas: c.cirugias_previas || '',
+        medicamentos_actuales: c.medicamentos_actuales || '',
+        examen_corazon: c.examen_corazon || '',
+        examen_pulmones: c.examen_pulmones || '',
+        examen_abdomen: c.examen_abdomen || '',
+        examen_ginecologico: c.examen_ginecologico || '',
+        impresion: c.impresion || '',
+        plan: c.plan || '',
+        rx_notes: c.rx_notes || '',
+        further_consult_gensurg: c.further_consult?.toLowerCase().includes('gen') || false,
+        further_consult_gyn: c.further_consult?.toLowerCase().includes('gyn') || false,
+        further_consult_other: c.further_consult?.toLowerCase().includes('other') || false,
+        further_consult_other_text: c.further_consult_other_text || '',
+        provider: c.provider || '',
+        interprete: c.interprete || '',
+        surgical_date: c.surgical_date || '',
+        surgical_history: c.surgical_history || '',
+        surgical_exam: c.surgical_exam || '',
+        surgical_impression: c.surgical_impression || '',
+        surgical_plan: c.surgical_plan || '',
+        surgical_meds: c.surgical_meds || '',
+        surgical_consult_gensurg: c.surgical_consult?.toLowerCase().includes('gen') || false,
+        surgical_consult_gyn: c.surgical_consult?.toLowerCase().includes('gyn') || false,
+        surgical_consult_other: c.surgical_consult?.toLowerCase().includes('other') || false,
+        surgical_consult_other_text: c.surgical_consult_other_text || '',
+        surgical_surgeon: c.surgical_surgeon || '',
+        surgical_interpreter: c.surgical_interpreter || '',
+        surgical_notes: c.surgical_notes || '',
+        rx_slips_attached: c.rx_slips_attached || false
+      }));
+    }
+  };
+
+  // 🆕 Abrir modal de nueva visita
+  const openNewVisitModal = () => {
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, '0');
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const yyyy = today.getFullYear();
+    setNewVisitDate(`${dd}/${mm}/${yyyy}`);
+    setNewVisitObservaciones('');
+    setShowNewVisitModal(true);
+  };
+
+  // 🆕 Crear nueva visita desde modal
+  const confirmCreateNewVisit = async () => {
+    if (!newVisitObservaciones.trim()) {
+      Alert.alert(t('visits.requiredField'), t('visits.enterReason'));
+      return;
+    }
+
+    if (!newVisitDate || newVisitDate.length !== 10) {
+      Alert.alert(t('visits.invalidDate'), t('visits.enterValidDate'));
+      return;
+    }
+
+    try {
+      setLoadingVisits(true);
+      setShowNewVisitModal(false);
+      
+      const isoDate = convertToISO(newVisitDate);
+      
+      const res = await fetch(`http://localhost:3001/api/pacientes/${paciente.id_paciente}/visitas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fecha_visita: isoDate,
+          observaciones: newVisitObservaciones
+        })
+      });
+      
+      if (res.ok) {
+        const nuevaVisita = await res.json();
+        setVisitas(prev => [nuevaVisita, ...prev]);
+        setCurrentVisitId(nuevaVisita.id_visita);
+        
+        // Limpiar todos los campos del formulario para la nueva visita vacía
+        setEditData(prev => ({
+          ...prev,
+          tipo_consulta: '',
+          consult_other_text: '',
+          chief_complaint: '',
+          vitamins: '',
+          albendazole: '',
+          historia_enfermedad_actual: '',
+          diagnosticos_previos: '',
+          cirugias_previas: '',
+          medicamentos_actuales: '',
+          examen_corazon: '',
+          examen_pulmones: '',
+          examen_abdomen: '',
+          examen_ginecologico: '',
+          impresion: '',
+          plan: '',
+          rx_notes: '',
+          further_consult_gensurg: false,
+          further_consult_gyn: false,
+          further_consult_other: false,
+          further_consult_other_text: '',
+          provider: '',
+          interprete: '',
+          surgical_date: '',
+          surgical_history: '',
+          surgical_exam: '',
+          surgical_impression: '',
+          surgical_plan: '',
+          surgical_meds: '',
+          surgical_consult_gensurg: false,
+          surgical_consult_gyn: false,
+          surgical_consult_other: false,
+          surgical_consult_other_text: '',
+          surgical_surgeon: '',
+          surgical_interpreter: '',
+          surgical_notes: '',
+          rx_slips_attached: false
+        }));
+        
+        Alert.alert(t('visits.success'), t('visits.visitCreated'));
+      }
+    } catch (e) {
+      console.error('Error creating visit:', e);
+      Alert.alert(t('visits.error'), t('visits.couldNotCreate'));
+    } finally {
+      setLoadingVisits(false);
+    }
+  };
+
+  // 🆕 Cargar datos cuando cambia la visita seleccionada
+  useEffect(() => {
+    if (currentVisitId && visitas.length > 0) {
+      loadVisitData(currentVisitId);
+    }
+  }, [currentVisitId]);
 
   const toggle = key => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setOpen(o=>({...o,[key]:!o[key]})); };
 
@@ -386,6 +610,7 @@ export default function DetallePacienteScreen({ route, navigation }) {
       
       // ✅ DATOS DE CONSULTA (objeto separado para el backend)
       consulta: {
+        id_visita: currentVisitId, // 🆕 Asociar consulta a visita específica
         tipo_consulta: editData.tipo_consulta || 'Other',
         consult_other_text: editData.consult_other_text ?? null,
         chief_complaint: editData.chief_complaint || 'N/A',
@@ -1010,7 +1235,7 @@ export default function DetallePacienteScreen({ route, navigation }) {
   const section = (title, key, rows) => {
     const isOpen = open[key];
     return (
-      <View style={[styles.section,{backgroundColor: isDarkMode? '# 1E1E1E':'#fff', borderColor:isDarkMode? '#333':'#EAD8A6'}]}>
+      <View style={[styles.section, themedSectionStyle]}>
         <TouchableOpacity onPress={()=>toggle(key)} style={styles.sectionHeader} activeOpacity={0.8}>
           <Text style={styles.sectionTitle}>{title}</Text>
           <Ionicons name={isOpen? 'chevron-up':'chevron-down'} size={18} color={theme.secondaryText} />
@@ -1025,9 +1250,133 @@ export default function DetallePacienteScreen({ route, navigation }) {
     );
   };
 
+  // Modal para Nueva Visita
+  const NewVisitModal = () => {
+    if (!showNewVisitModal) return null;
+
+    return (
+      <Modal
+        transparent
+        visible={showNewVisitModal}
+        animationType="fade"
+        onRequestClose={() => setShowNewVisitModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View 
+            style={[
+              styles.modalContent,
+              {
+                backgroundColor: isDarkMode ? '#1E1E1E' : '#FFFFFF'
+              }
+            ]}
+          >
+                {/* Title - centered */}
+                <Text style={[styles.modalTitle, { color: isDarkMode ? '#FFF' : '#1B1B1B' }]}>
+                  {t('visits.modalTitle')}
+                </Text>
+
+                {/* Subtitle - centered */}
+                <Text style={[styles.modalSubtitle, { color: theme.secondaryText }]}>
+                  {t('visits.modalSubtitle')}
+                </Text>
+
+                {/* Date Field */}
+                <View style={{ marginBottom: 20 }}>
+                  <Text style={[styles.label, { color: theme.text, marginBottom: 8 }]}>
+                    {t('visits.dateLabel')}
+                  </Text>
+                  <TextInput
+                    value={newVisitDate}
+                    onChangeText={(text) => setNewVisitDate(formatDateInput(text))}
+                    placeholder={t('visits.datePlaceholder')}
+                    placeholderTextColor={theme.secondaryText}
+                    keyboardType="numeric"
+                    maxLength={10}
+                    autoFocus
+                    blurOnSubmit={false}
+                    style={[
+                      styles.editInput,
+                      {
+                        color: theme.text,
+                        backgroundColor: isDarkMode ? '#2A2A2A' : '#FFFFFF',
+                        borderColor: brandColors.butter
+                      }
+                    ]}
+                    accessibilityLabel={t('visits.dateLabel')}
+                    returnKeyType="next"
+                  />
+                </View>
+
+                {/* Reason Field */}
+                <View style={{ marginBottom: 24 }}>
+                  <Text style={[styles.label, { color: theme.text, marginBottom: 8 }]}>
+                    {t('visits.reasonLabel')}
+                  </Text>
+                  <TextInput
+                    value={newVisitObservaciones}
+                    onChangeText={setNewVisitObservaciones}
+                    placeholder={t('visits.reasonPlaceholder')}
+                    placeholderTextColor={theme.secondaryText}
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                    blurOnSubmit={false}
+                    style={[
+                      styles.editInput,
+                      {
+                        color: theme.text,
+                        backgroundColor: isDarkMode ? '#2A2A2A' : '#FFFFFF',
+                        borderColor: brandColors.butter,
+                        minHeight: 100
+                      }
+                    ]}
+                    accessibilityLabel={t('visits.reasonLabel')}
+                  />
+                </View>
+
+                {/* Buttons */}
+                <View style={{ gap: 12 }}>
+                  <TouchableOpacity
+                    onPress={confirmCreateNewVisit}
+                    style={[
+                      styles.saveBtn,
+                      {
+                        backgroundColor: brandColors.tangerine,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.saveBtnTxt}>{t('visits.create')}</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    onPress={() => setShowNewVisitModal(false)}
+                    style={[
+                      styles.modalCancelButton,
+                      {
+                        backgroundColor: '#DC2626'
+                      }
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.modalCancelText, { color: '#FFFFFF' }]}>
+                      {t('visits.cancel')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        );
+      };
+
   return (
     <>
       <SeverityModal />
+      <NewVisitModal />
       <View style={{flex:1, backgroundColor: theme.background}}>
         {/* Header con nombre del paciente */}
         <View style={[styles.header, {borderBottomWidth:1, borderBottomColor:'#E5E7EB'}]}>
@@ -1042,22 +1391,141 @@ export default function DetallePacienteScreen({ route, navigation }) {
         </View>
       </View>
 
-      {/* Tabs de navegación */}
-      <View style={styles.tabsRow}>
-        {[
-          {k:'resumen',lbl:t('tabs.summary')},
-          {k:'clinico',lbl:t('tabs.clinical')},
-          {k:'pagina1',lbl:t('tabs.consult1')},
-          {k:'pagina2',lbl:t('tabs.consult2')}
-        ].map(ti => (
-          <TouchableOpacity key={ti.k} onPress={()=>setTab(ti.k)} style={[styles.tabBtn, tab===ti.k && styles.tabBtnActive]}>
-            <Text style={[styles.tabTxt, tab===ti.k && styles.tabTxtActive]}>{ti.lbl}</Text>
-          </TouchableOpacity>
-        ))}
+      {/* 🔄 Historial de Visitas - Contenedor estilo sección estándar (sin colapsar) */}
+      <View style={[styles.section, themedSectionStyle, { marginTop: 20, marginHorizontal: 16 }]}>
+        {/* Header con título */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{t('visits.title')}</Text>
+        </View>
+        
+        {/* Texto descriptivo */}
+        <Text style={[styles.visitDescriptionText, { color: theme.secondaryText }]}>
+          {visitas.length === 0 ? 'Este paciente no ha sido atendido' : 
+           visitas.length === 1 ? 'Este paciente ha sido atendido 1 vez' : 
+           `Este paciente ha sido atendido ${visitas.length} veces`}
+        </Text>
+
+        {/* Dropdown de Visitas */}
+        {loadingVisits ? (
+          <View style={[styles.visitLoadingRow, { marginTop: 16 }]}>
+            <ActivityIndicator size="small" color="#F08C21" />
+            <Text style={[styles.visitLoadingText, { color: theme.secondaryText }]}>{t('visits.loadingVisits')}</Text>
+          </View>
+        ) : visitas.length === 0 ? (
+          <Text style={[styles.noVisitsText, { color: theme.secondaryText, marginTop: 16 }]}>{t('visits.emptyHint')}</Text>
+        ) : (
+          <View style={{ marginTop: 16 }}>
+            {/* Botón del dropdown */}
+            <TouchableOpacity
+              onPress={() => setShowVisitsDropdown(!showVisitsDropdown)}
+              style={[
+                stylesCx.dropdownButton,
+                { borderColor: brandColors.butter, backgroundColor: 'transparent' }
+              ]}
+              activeOpacity={0.7}
+            >
+              <Text style={[stylesCx.dropdownButtonText, { color: theme.text }]}>
+                {currentVisitId 
+                  ? formatVisitDate(visitas.find(v => v.id_visita === currentVisitId))
+                  : 'Seleccionar visita'}
+              </Text>
+              <Ionicons 
+                name={showVisitsDropdown ? 'chevron-up' : 'chevron-down'} 
+                size={20} 
+                color={theme.text} 
+              />
+            </TouchableOpacity>
+
+            {/* Lista desplegable */}
+            {showVisitsDropdown && (
+              <View style={[
+                stylesCx.dropdownList,
+                { 
+                  backgroundColor: 'transparent',
+                  borderColor: brandColors.butter
+                }
+              ]}>
+                <ScrollView 
+                  style={stylesCx.dropdownScrollView}
+                  nestedScrollEnabled={true}
+                  showsVerticalScrollIndicator={true}
+                >
+                  {/* Ordenar visitas por fecha (más reciente primero) */}
+                  {[...visitas].sort((a, b) => {
+                    const dateA = new Date(a.fecha_visita || a.fecha_instancia);
+                    const dateB = new Date(b.fecha_visita || b.fecha_instancia);
+                    return dateB - dateA;
+                  }).map((v, index) => {
+                    const active = v.id_visita === currentVisitId;
+                    return (
+                      <TouchableOpacity
+                        key={v.id_visita}
+                        onPress={() => {
+                          setCurrentVisitId(v.id_visita);
+                          setShowVisitsDropdown(false);
+                        }}
+                        style={[
+                          stylesCx.dropdownItem,
+                          active && stylesCx.dropdownItemActive,
+                          active && { backgroundColor: '#6698CC' },
+                          !active && { backgroundColor: 'transparent' }
+                        ]}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[
+                          stylesCx.dropdownItemText,
+                          { color: active ? '#FFF' : theme.text }
+                        ]}>
+                          {formatVisitDate(v)}
+                        </Text>
+                        {active && (
+                          <Ionicons name="checkmark" size={20} color="#FFF" />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+        )}
       </View>
 
-      {/* Barra de acciones debajo de los tabs */}
-      <View style={styles.actionBar}>
+      {/* Fila combinada: Tabs (izquierda) + Botones de acción (derecha) */}
+      <View style={styles.combinedActionRow}>
+        {/* Tabs de navegación a la izquierda */}
+        <View style={styles.leftTabsContainer}>
+          <TouchableOpacity 
+            onPress={()=>setTab('resumen')} 
+            style={[styles.tabBtn, tab==='resumen' && styles.tabBtnActive]}
+          >
+            <Text style={[styles.tabTxt, tab==='resumen' && styles.tabTxtActive]}>
+              {t('tabs.summary')}
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            onPress={()=>setTab('clinico')} 
+            style={[styles.tabBtn, tab==='clinico' && styles.tabBtnActive]}
+          >
+            <Text style={[styles.tabTxt, tab==='clinico' && styles.tabTxtActive]}>
+              {t('tabs.clinical')}
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            onPress={openNewVisitModal}
+            style={[styles.tabBtn, { backgroundColor: '#6698CC', borderColor: '#6698CC' }]}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.tabTxt, { color: '#FFFFFF', fontWeight: '900' }]}>
+              {t('visits.newVisit')} +
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Botones de acción a la derecha */}
+        <View style={styles.rightActionButtons}>
         <View style={{flexDirection:'row', alignItems:'center', gap:8, marginLeft:'auto'}}>
           {/* Botón de EDITAR (solo visible cuando NO está en modo edición) */}
           {!editMode && (
@@ -1112,9 +1580,10 @@ export default function DetallePacienteScreen({ route, navigation }) {
             {t('badges.manual')}
           </Text>
         )}
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={{padding:16, paddingBottom:90}}>
+      <ScrollView contentContainerStyle={{padding:16, paddingBottom:90}} keyboardShouldPersistTaps="handled">
         {/* Botones de acción (fuera de la caja problemática) */}
         <View style={{flexDirection:'row', gap:12, marginBottom:16}}>
           <TouchableOpacity
@@ -1138,8 +1607,25 @@ export default function DetallePacienteScreen({ route, navigation }) {
             {!editMode ? (
               // ===== VISTA DE SOLO LECTURA EXPANDIDA =====
               <>
+                {/* 🆕 Razón de la Visita - Estilo idéntico a Identificación (sin minimizar) */}
+                {(() => {
+                  if (!visitas.length || !currentVisitId) return null;
+                  const currentVisit = visitas.find(v => v.id_visita === currentVisitId);
+                  if (!currentVisit?.observaciones) return null;
+                  return (
+                    <View style={[styles.section, themedSectionStyle]}> 
+                      <View style={styles.sectionHeader}> 
+                        <Text style={styles.sectionTitle}>{t('visits.reasonDisplay')}</Text>
+                      </View>
+                      <View style={styles.readOnlyRow}>
+                        <Text style={[styles.readOnlyValue, { color: theme.text }]}>{currentVisit.observaciones}</Text>
+                      </View>
+                    </View>
+                  );
+                })()}
+
                 {/* 1. IDENTIFICACIÓN - Solo Lectura */}
-                <View style={[styles.section,{backgroundColor: isDarkMode? '#1E1E1E':'#fff', borderColor:isDarkMode? '#333':'#EAD8A6'}]}>
+                <View style={[styles.section, themedSectionStyle]}>
                   <TouchableOpacity onPress={()=>toggle('ident')} style={styles.sectionHeader} activeOpacity={0.8}>
                     <Text style={styles.sectionTitle}>{t('sections.ident')}</Text>
                     <Ionicons name={open.ident? 'chevron-up':'chevron-down'} size={18} color={theme.secondaryText} />
@@ -1181,7 +1667,7 @@ export default function DetallePacienteScreen({ route, navigation }) {
                 </View>
 
                 {/* 2. SIGNOS VITALES - Solo Lectura */}
-                <View style={[styles.section,{backgroundColor: isDarkMode? '#1E1E1E':'#fff', borderColor:isDarkMode? '#333':'#EAD8A6'}]}>
+                <View style={[styles.section, themedSectionStyle]}>
                   <TouchableOpacity onPress={()=>toggle('clin')} style={styles.sectionHeader} activeOpacity={0.8}>
                     <Text style={styles.sectionTitle}>{t('sections.clin')}</Text>
                     <Ionicons name={open.clin? 'chevron-up':'chevron-down'} size={18} color={theme.secondaryText} />
@@ -1238,7 +1724,7 @@ export default function DetallePacienteScreen({ route, navigation }) {
                 </View>
 
                 {/* 3. TIPO DE CONSULTA - Solo Lectura */}
-                <View style={[styles.section,{backgroundColor: isDarkMode? '#1E1E1E':'#fff', borderColor:isDarkMode? '#333':'#EAD8A6'}]}>
+                <View style={[styles.section, themedSectionStyle]}>
                   <TouchableOpacity onPress={()=>toggle('consultType')} style={styles.sectionHeader} activeOpacity={0.8}>
                     <Text style={styles.sectionTitle}>{t('sections.consultType')}</Text>
                     <Ionicons name={open.consultType? 'chevron-up':'chevron-down'} size={18} color={theme.secondaryText} />
@@ -1264,7 +1750,7 @@ export default function DetallePacienteScreen({ route, navigation }) {
                 </View>
 
                 {/* 4. ALERGIAS - Solo Lectura */}
-                <View style={[styles.section,{backgroundColor: isDarkMode? '#1E1E1E':'#fff', borderColor:isDarkMode? '#333':'#EAD8A6'}]}>
+                <View style={[styles.section, themedSectionStyle]}>
                   <TouchableOpacity onPress={()=>toggle('allergies')} style={styles.sectionHeader} activeOpacity={0.8}>
                     <Text style={styles.sectionTitle}>{t('sections.allergiesAndMeds')}</Text>
                     <Ionicons name={open.allergies? 'chevron-up':'chevron-down'} size={18} color={theme.secondaryText} />
@@ -1294,7 +1780,7 @@ export default function DetallePacienteScreen({ route, navigation }) {
                 </View>
 
                 {/* 5. HÁBITOS ACTUALES - Solo Lectura */}
-                <View style={[styles.section,{backgroundColor: isDarkMode? '#1E1E1E':'#fff', borderColor:isDarkMode? '#333':'#EAD8A6'}]}>
+                <View style={[styles.section, themedSectionStyle]}>
                   <TouchableOpacity onPress={()=>toggle('currentHabits')} style={styles.sectionHeader} activeOpacity={0.8}>
                     <Text style={styles.sectionTitle}>{t('sections.currentHabits')}</Text>
                     <Ionicons name={open.currentHabits? 'chevron-up':'chevron-down'} size={18} color={theme.secondaryText} />
@@ -1324,7 +1810,7 @@ export default function DetallePacienteScreen({ route, navigation }) {
                 </View>
 
                 {/* 6. HÁBITOS PASADOS - Solo Lectura */}
-                <View style={[styles.section,{backgroundColor: isDarkMode? '#1E1E1E':'#fff', borderColor:isDarkMode? '#333':'#EAD8A6'}]}>
+                <View style={[styles.section, themedSectionStyle]}>
                   <TouchableOpacity onPress={()=>toggle('pastHabits')} style={styles.sectionHeader} activeOpacity={0.8}>
                     <Text style={styles.sectionTitle}>{t('sections.pastHabits')}</Text>
                     <Ionicons name={open.pastHabits? 'chevron-up':'chevron-down'} size={18} color={theme.secondaryText} />
@@ -1357,7 +1843,7 @@ export default function DetallePacienteScreen({ route, navigation }) {
               // ===== MODO EDICIÓN (todos los campos editables) =====
               <>
             {/* 1. IDENTIFICACIÓN */}
-            <View style={[styles.section,{backgroundColor: isDarkMode? '#1E1E1E':'#fff', borderColor:isDarkMode? '#333':'#EAD8A6'}]}>
+            <View style={[styles.section, themedSectionStyle]}>
               <TouchableOpacity onPress={()=>toggle('ident')} style={styles.sectionHeader} activeOpacity={0.8}>
                 <Text style={styles.sectionTitle}>{t('sections.ident')}</Text>
                 <Ionicons name={open.ident? 'chevron-up':'chevron-down'} size={18} color={theme.secondaryText} />
@@ -1484,7 +1970,7 @@ export default function DetallePacienteScreen({ route, navigation }) {
                 </View>
 
                 {/* 2. SIGNOS VITALES */}
-                <View style={[styles.section,{backgroundColor: isDarkMode? '#1E1E1E':'#fff', borderColor:isDarkMode? '#333':'#EAD8A6'}]}>
+                <View style={[styles.section, themedSectionStyle]}>
                   <TouchableOpacity onPress={()=>toggle('clin')} style={styles.sectionHeader} activeOpacity={0.8}>
                     <Text style={styles.sectionTitle}>{t('sections.clin')}</Text>
                     <Ionicons name={open.clin? 'chevron-up':'chevron-down'} size={18} color={theme.secondaryText} />
@@ -1641,7 +2127,7 @@ export default function DetallePacienteScreen({ route, navigation }) {
                 </View>
 
                 {/* 3. TIPO DE CONSULTA */}
-                <View style={[styles.section,{backgroundColor: isDarkMode? '#1E1E1E':'#fff', borderColor:isDarkMode? '#333':'#EAD8A6'}]}>
+                <View style={[styles.section, themedSectionStyle]}>
                   <TouchableOpacity onPress={()=>toggle('consult')} style={styles.sectionHeader} activeOpacity={0.8}>
                     <Text style={styles.sectionTitle}>Tipo de Consulta</Text>
                     <Ionicons name={open.consult? 'chevron-up':'chevron-down'} size={18} color={theme.secondaryText} />
@@ -1692,7 +2178,7 @@ export default function DetallePacienteScreen({ route, navigation }) {
                 </View>
 
                 {/* 4. ALERGIAS Y MEDICAMENTOS PREVENTIVOS */}
-                <View style={[styles.section,{backgroundColor: isDarkMode? '#1E1E1E':'#fff', borderColor:isDarkMode? '#333':'#EAD8A6'}]}>
+                <View style={[styles.section, themedSectionStyle]}>
                   <TouchableOpacity onPress={()=>toggle('meds')} style={styles.sectionHeader} activeOpacity={0.8}>
                     <Text style={styles.sectionTitle}>Alergias y Medicamentos Preventivos</Text>
                     <Ionicons name={open.meds? 'chevron-up':'chevron-down'} size={18} color={theme.secondaryText} />
@@ -1750,7 +2236,7 @@ export default function DetallePacienteScreen({ route, navigation }) {
                 </View>
 
                 {/* 5. HÁBITOS ACTUALES */}
-                <View style={[styles.section,{backgroundColor: isDarkMode? '#1E1E1E':'#fff', borderColor:isDarkMode? '#333':'#EAD8A6'}]}>
+                <View style={[styles.section, themedSectionStyle]}>
                   <TouchableOpacity onPress={()=>toggle('habits')} style={styles.sectionHeader} activeOpacity={0.8}>
                     <Text style={styles.sectionTitle}>Hábitos Actuales</Text>
                     <Ionicons name={open.habits? 'chevron-up':'chevron-down'} size={18} color={theme.secondaryText} />
@@ -1824,7 +2310,7 @@ export default function DetallePacienteScreen({ route, navigation }) {
                 </View>
 
                 {/* 6. HÁBITOS PASADOS */}
-                <View style={[styles.section,{backgroundColor: isDarkMode? '#1E1E1E':'#fff', borderColor:isDarkMode? '#333':'#EAD8A6'}]}>
+                <View style={[styles.section, themedSectionStyle]}>
                   <TouchableOpacity onPress={()=>toggle('pasthabits')} style={styles.sectionHeader} activeOpacity={0.8}>
                     <Text style={styles.sectionTitle}>{t('sections.pastHabits')}</Text>
                     <Ionicons name={open.pasthabits? 'chevron-up':'chevron-down'} size={18} color={theme.secondaryText} />
@@ -2918,69 +3404,317 @@ export default function DetallePacienteScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header:{ flexDirection:'row', alignItems:'center', paddingHorizontal:16, paddingTop:14, paddingBottom:10 },
-  title:{ fontSize:20, fontWeight:'800', maxWidth:200 },
-  subtitle:{ fontSize:12, fontWeight:'600' },
-  actionBar:{ paddingHorizontal:16, paddingVertical:8 },
-  severityChip:{ paddingHorizontal:10, paddingVertical:6, borderRadius:20 },
-  severityTxt:{ color:'#fff', fontWeight:'800', fontSize:12, textTransform:'uppercase' },
-  actionCircleBtn:{ 
-    width:36, 
-    height:36, 
-    borderRadius:18, 
+  header:{ 
+    flexDirection:'row', 
     alignItems:'center', 
-    justifyContent:'center',
+    paddingHorizontal:16, 
+    paddingTop:16, 
+    paddingBottom:12,
+    backgroundColor:'transparent'
+  },
+  title:{ 
+    fontSize:22, 
+    fontWeight:'900', 
+    maxWidth:220,
+    letterSpacing:0.3
+  },
+  subtitle:{ 
+    fontSize:12, 
+    fontWeight:'700',
+    letterSpacing:0.4,
+    marginTop:2
+  },
+  actionBar:{ 
+    paddingHorizontal:16, 
+    paddingVertical:10,
+    backgroundColor:'transparent'
+  },
+  severityChip:{ 
+    paddingHorizontal:12, 
+    paddingVertical:7, 
+    borderRadius:20,
     shadowColor:'#000',
     shadowOpacity:0.15,
     shadowRadius:4,
     shadowOffset:{width:0,height:2},
     elevation:3
   },
-  reclassifyBtn:{ 
-    width:32, 
-    height:32, 
-    borderRadius:16, 
+  severityTxt:{ 
+    color:'#fff', 
+    fontWeight:'900', 
+    fontSize:12, 
+    textTransform:'uppercase',
+    letterSpacing:0.6
+  },
+  actionCircleBtn:{ 
+    width:40, 
+    height:40, 
+    borderRadius:20, 
     alignItems:'center', 
     justifyContent:'center',
     shadowColor:'#000',
-    shadowOpacity:0.1,
+    shadowOpacity:0.18,
+    shadowRadius:8,
+    shadowOffset:{width:0,height:3},
+    elevation:4
+  },
+  reclassifyBtn:{ 
+    width:36, 
+    height:36, 
+    borderRadius:18, 
+    alignItems:'center', 
+    justifyContent:'center',
+    shadowColor:'#000',
+    shadowOpacity:0.12,
+    shadowRadius:6,
+    shadowOffset:{width:0,height:2},
+    elevation:3
+  },
+  readOnlyRow:{ 
+    marginBottom:14, 
+    paddingBottom:10, 
+    borderBottomWidth:1.5, 
+    borderBottomColor:brandColors.butter 
+  },
+  readOnlyValue:{ 
+    fontSize:15, 
+    fontWeight:'600', 
+    marginTop:6,
+    letterSpacing:0.2
+  },
+  tabsRow:{ 
+    flexDirection:'row', 
+    paddingHorizontal:16, 
+    columnGap:10, 
+    marginTop:8, 
+    marginBottom:6 
+  },
+  tabBtn:{ 
+    paddingHorizontal:18, 
+    paddingVertical:11, 
+    borderRadius:20, 
+    backgroundColor:'#F3F4F6',
+    shadowColor:'#000',
+    shadowOpacity:0.08,
     shadowRadius:4,
     shadowOffset:{width:0,height:2},
     elevation:2
   },
-  readOnlyRow:{ marginBottom:12, paddingBottom:8, borderBottomWidth:1, borderBottomColor:'#F3F4F6' },
-  readOnlyValue:{ fontSize:14, fontWeight:'500', marginTop:4 },
-  tabsRow:{ flexDirection:'row', paddingHorizontal:16, columnGap:10, marginTop:8, marginBottom:4 },
-  tabBtn:{ paddingHorizontal:16, paddingVertical:8, borderRadius:20, backgroundColor:'#E5E7EB' },
-  tabBtnActive:{ backgroundColor:'#2D60C8' },
-  tabTxt:{ fontSize:13, fontWeight:'700', color:'#374151' },
-  tabTxtActive:{ color:'#fff' },
-  section:{ borderWidth:1, borderRadius:14, padding:14, marginBottom:14 },
-  sectionHeader:{ flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:8 },
-  sectionTitle:{ fontSize:14, fontWeight:'800', color:'#6B7280', textTransform:'uppercase' },
-  row:{ marginBottom:8 },
-  label:{ fontSize:12, fontWeight:'600', marginBottom:2 },
-  value:{ fontSize:14, fontWeight:'500' },
-  center:{ flex:1, alignItems:'center', justifyContent:'center' },
-  severityEditBar:{ flexDirection:'row', flexWrap:'wrap', columnGap:8, rowGap:8, paddingHorizontal:16, marginBottom:4 },
-  sevOpt:{ paddingHorizontal:12, paddingVertical:6, backgroundColor:'#E5E7EB', borderRadius:16 },
-  sevOptActive:{ backgroundColor:'#2D60C8' },
-  sevOptTxt:{ fontSize:12, fontWeight:'700', color:'#374151' },
-  sevOptTxtActive:{ color:'#fff' },
-  saveBtn:{ paddingHorizontal:16, paddingVertical:8, backgroundColor:'#16A34A', borderRadius:18 },
-  saveBtnTxt:{ color:'#fff', fontWeight:'800', fontSize:12 },
-  inlineEditRow:{ flexDirection:'row', columnGap:14, marginBottom:12 },
-  editField:{ flex:1 },
-  editInput:{ borderWidth:1, borderColor:'#E5E7EB', borderRadius:10, paddingHorizontal:10, paddingVertical:6, marginTop:4 },
-  radio:{ width:20, height:20, borderRadius:10, borderWidth:2, borderColor:'#E5E7EB', backgroundColor:'#FFF' },
-  radioActive:{ backgroundColor:'#2D60C8', borderColor:'#2D60C8' },
-  toggle:{ width:24, height:24, borderRadius:4, borderWidth:2, borderColor:'#E5E7EB', backgroundColor:'#FFF', alignItems:'center', justifyContent:'center' },
-  toggleActive:{ backgroundColor:'#2D60C8', borderColor:'#2D60C8' },
-  actionsContainer:{ flexDirection:'row', paddingHorizontal:16, marginBottom:8, gap:10 },
-  actionBtn:{ flex:1, flexDirection:'row', alignItems:'center', justifyContent:'center', paddingVertical:10, paddingHorizontal:12, borderRadius:12, columnGap:6 },
-  exportBtn:{ backgroundColor:'#F08C21' },
-  imagesBtn:{ backgroundColor:'#6698CC' },
-  actionBtnText:{ color:'#fff', fontWeight:'700', fontSize:13 },
+  tabBtnActive:{ 
+    backgroundColor:brandColors.tangerine,
+    shadowColor:'#F08C21',
+    shadowOpacity:0.3,
+    shadowRadius:8,
+    shadowOffset:{width:0,height:3},
+    elevation:5
+  },
+  tabTxt:{ 
+    fontSize:13, 
+    fontWeight:'700', 
+    color:'#374151', 
+    letterSpacing:0.4 
+  },
+  tabTxtActive:{ 
+    color:'#FFFFFF',
+    fontWeight:'900',
+    letterSpacing:0.5
+  },
+  section:{ 
+    borderWidth:1.5, 
+    borderRadius:18, 
+    padding:16, 
+    marginBottom:16,
+    shadowColor:'#000',
+    shadowOpacity:0.06,
+    shadowRadius:8,
+    shadowOffset:{width:0,height:2},
+    elevation:2
+  },
+  sectionHeader:{ 
+    flexDirection:'row', 
+    justifyContent:'space-between', 
+    alignItems:'center', 
+    marginBottom:10 
+  },
+  sectionTitle:{ 
+    fontSize:14, 
+    fontWeight:'900', 
+    color:'#6B7280', 
+    textTransform:'uppercase',
+    letterSpacing:0.8
+  },
+  row:{ 
+    marginBottom:10 
+  },
+  label:{ 
+    fontSize:12, 
+    fontWeight:'700', 
+    marginBottom:4,
+    letterSpacing:0.3
+  },
+  value:{ 
+    fontSize:14, 
+    fontWeight:'600',
+    letterSpacing:0.2
+  },
+  center:{ 
+    flex:1, 
+    alignItems:'center', 
+    justifyContent:'center' 
+  },
+  severityEditBar:{ 
+    flexDirection:'row', 
+    flexWrap:'wrap', 
+    columnGap:10, 
+    rowGap:10, 
+    paddingHorizontal:16, 
+    marginBottom:6 
+  },
+  sevOpt:{ 
+    paddingHorizontal:14, 
+    paddingVertical:8, 
+    backgroundColor:'#F8F9FA', 
+    borderRadius:18, 
+    borderWidth:2, 
+    borderColor:brandColors.butter 
+  },
+  sevOptActive:{ 
+    backgroundColor:brandColors.tangerine, 
+    borderColor:brandColors.tangerine,
+    shadowColor:'#F08C21',
+    shadowOpacity:0.25,
+    shadowRadius:6,
+    shadowOffset:{width:0,height:2},
+    elevation:4
+  },
+  sevOptTxt:{ 
+    fontSize:12, 
+    fontWeight:'700', 
+    color:'#2A2A2A',
+    letterSpacing:0.4
+  },
+  sevOptTxtActive:{ 
+    color:'#FFFFFF',
+    fontWeight:'900'
+  },
+  saveBtn:{ 
+    paddingHorizontal:20, 
+    paddingVertical:12, 
+    backgroundColor:brandColors.tangerine, 
+    borderRadius:22, 
+    shadowColor:'#F08C21', 
+    shadowOpacity:0.35, 
+    shadowRadius:8, 
+    shadowOffset:{width:0,height:4}, 
+    elevation:6 
+  },
+  saveBtnTxt:{ 
+    color:'#FFFFFF', 
+    fontWeight:'900', 
+    fontSize:14, 
+    letterSpacing:0.6,
+    textTransform:'uppercase'
+  },
+  inlineEditRow:{ 
+    flexDirection:'row', 
+    columnGap:16, 
+    marginBottom:14 
+  },
+  editField:{ 
+    flex:1 
+  },
+  editInput:{ 
+    borderWidth:2, 
+    borderColor:brandColors.butter, 
+    borderRadius:14, 
+    paddingHorizontal:14, 
+    paddingVertical:10, 
+    marginTop:6, 
+    backgroundColor:'#FFFFFF',
+    fontSize:14,
+    fontWeight:'600'
+  },
+  radio:{ 
+    width:22, 
+    height:22, 
+    borderRadius:11, 
+    borderWidth:2, 
+    borderColor:brandColors.butter, 
+    backgroundColor:'#FFFFFF' 
+  },
+  radioActive:{ 
+    backgroundColor:brandColors.sea, 
+    borderColor:brandColors.sea 
+  },
+  toggle:{ 
+    width:26, 
+    height:26, 
+    borderRadius:7, 
+    borderWidth:2, 
+    borderColor:brandColors.butter, 
+    backgroundColor:'#FFFFFF', 
+    alignItems:'center', 
+    justifyContent:'center' 
+  },
+  toggleActive:{ 
+    backgroundColor:brandColors.sea, 
+    borderColor:brandColors.sea 
+  },
+  actionsContainer:{ 
+    flexDirection:'row', 
+    paddingHorizontal:16, 
+    marginBottom:10, 
+    gap:12 
+  },
+  actionBtn:{ 
+    flex:1, 
+    flexDirection:'row', 
+    alignItems:'center', 
+    justifyContent:'center', 
+    paddingVertical:12, 
+    paddingHorizontal:14, 
+    borderRadius:16, 
+    columnGap:8,
+    shadowColor:'#000',
+    shadowOpacity:0.15,
+    shadowRadius:6,
+    shadowOffset:{width:0,height:3},
+    elevation:4
+  },
+  exportBtn:{ 
+    backgroundColor:brandColors.tangerine 
+  },
+  imagesBtn:{ 
+    backgroundColor:brandColors.sea 
+  },
+  actionBtnText:{ 
+    color:'#fff', 
+    fontWeight:'800', 
+    fontSize:13,
+    letterSpacing:0.5
+  },
+  
+  // Fila combinada: Tabs + Botones de acción
+  combinedActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: 'transparent'
+  },
+  leftTabsContainer: {
+    flexDirection: 'row',
+    columnGap: 10,
+    flex: 1,
+    flexWrap: 'wrap'
+  },
+  rightActionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginLeft: 12
+  },
   
   // Estilos del modal de severidad
   modalOverlay:{ 
@@ -2989,104 +3723,259 @@ const styles = StyleSheet.create({
     left:0, 
     right:0, 
     bottom:0, 
-    backgroundColor:'rgba(0,0,0,0.5)', 
+    backgroundColor:'rgba(0,0,0,0.55)', 
     justifyContent:'center', 
     alignItems:'center', 
     zIndex:9999 
   },
   modalContent:{ 
     backgroundColor:'#FFFFFF', 
-    borderRadius:12, 
-    padding:24, 
-    width:'85%', 
-    maxWidth:400, 
+    borderRadius:20, 
+    padding:28, 
+    width:'88%', 
+    maxWidth:420, 
     shadowColor:'#000', 
-    shadowOpacity:0.25, 
-    shadowRadius:4, 
-    elevation:5 
+    shadowOpacity:0.3, 
+    shadowRadius:16, 
+    elevation:10 
   },
   modalTitle:{ 
-    fontSize:20, 
-    fontWeight:'700', 
+    fontSize:22, 
+    fontWeight:'900', 
     color:'#1B1B1B', 
     marginBottom:8, 
-    textAlign:'center' 
+    textAlign:'center',
+    letterSpacing:0.4
   },
   modalSubtitle:{ 
     fontSize:14, 
     color:'#687076', 
-    marginBottom:20, 
-    textAlign:'center' 
+    marginBottom:24, 
+    textAlign:'center',
+    lineHeight:20,
+    fontWeight:'500'
   },
-  severityButtons:{ gap:10 },
+  severityButtons:{ 
+    gap:12 
+  },
   severityButton:{ 
-    paddingVertical:14, 
-    paddingHorizontal:20, 
-    borderRadius:8, 
+    paddingVertical:16, 
+    paddingHorizontal:22, 
+    borderRadius:16, 
     borderWidth:2, 
     borderColor:'#E9E2C6', 
     backgroundColor:'#FFFFFF', 
-    alignItems:'center' 
+    alignItems:'center',
+    shadowColor:'#000',
+    shadowOpacity:0.04,
+    shadowRadius:4,
+    shadowOffset:{width:0,height:2},
+    elevation:1
   },
   severityButtonActive:{ 
     borderColor:'#F08C21', 
-    backgroundColor:'#FFF7DA' 
+    backgroundColor:'#FFF7DA',
+    shadowColor:'#F08C21',
+    shadowOpacity:0.2,
+    shadowRadius:8,
+    elevation:3
   },
   severityButtonText:{ 
     fontSize:16, 
-    fontWeight:'600', 
-    color:'#687076' 
+    fontWeight:'700', 
+    color:'#687076',
+    letterSpacing:0.3
   },
   severityButtonTextActive:{ 
-    color:'#F08C21' 
+    color:'#F08C21',
+    fontWeight:'900'
   },
   modalCancelButton:{ 
-    marginTop:16, 
-    paddingVertical:12, 
-    alignItems:'center' 
+    marginTop:18, 
+    paddingVertical:14, 
+    alignItems:'center',
+    borderRadius:16
   },
   modalCancelText:{ 
     fontSize:15, 
-    color:'#687076', 
-    fontWeight:'600' 
+    color:'#FFFFFF', 
+    fontWeight:'800',
+    letterSpacing:0.5
   },
   changeSeverityButton:{ 
     flexDirection:'row', 
     alignItems:'center', 
     marginLeft:12, 
-    paddingVertical:6, 
-    paddingHorizontal:12, 
-    borderRadius:6, 
-    borderWidth:1, 
-    borderColor:'#F08C21' 
+    paddingVertical:7, 
+    paddingHorizontal:14, 
+    borderRadius:18, 
+    borderWidth:2, 
+    borderColor:'#F08C21',
+    backgroundColor:'#FFF7DA'
   },
   changeSeverityText:{ 
-    marginLeft:4, 
+    marginLeft:6, 
     fontSize:13, 
     color:'#F08C21', 
-    fontWeight:'600' 
+    fontWeight:'800',
+    letterSpacing:0.4
   }
 });
 
 styles.groupHeader = {
-  fontSize:12,
-  fontWeight:'800',
-  marginTop:16,
-  marginBottom:6,
-  letterSpacing:0.5,
+  fontSize:13,
+  fontWeight:'900',
+  marginTop:20,
+  marginBottom:8,
+  letterSpacing:0.8,
   textTransform:'uppercase'
 };
 
 // ---- Subcomponentes (sin cambios de estilos) ----
 const stylesCx = StyleSheet.create({
-  label:{ fontSize:11, fontWeight:'700', textTransform:'uppercase', letterSpacing:0.5 },
-  underInput:{ borderBottomWidth:1, borderColor:'#B0B5BC', paddingVertical:4, fontSize:13, minWidth:60 },
-  underMini:{ borderBottomWidth:1, borderColor:'#B0B5BC', paddingVertical:2, fontSize:12, textAlign:'center' },
-  inlineWrap:{ flexDirection:'row', flexWrap:'wrap', columnGap:16, rowGap:8, marginTop:6 },
-  subHeader:{ fontSize:14, fontWeight:'800', marginTop:18, marginBottom:8 },
-  smallLabel:{ fontSize:11, fontWeight:'700' },
-  chip:{ paddingHorizontal:10, paddingVertical:4, borderRadius:14, backgroundColor:'#E5E7EB' },
-  sectionSep:{ height:1, backgroundColor:'#E5E7EB', marginVertical:16 }
+  label:{ 
+    fontSize:12, 
+    fontWeight:'800', 
+    textTransform:'uppercase', 
+    letterSpacing:0.6 
+  },
+  underInput:{ 
+    borderBottomWidth:1.5, 
+    borderColor:'#B0B5BC', 
+    paddingVertical:6, 
+    fontSize:14, 
+    minWidth:64,
+    fontWeight:'600'
+  },
+  underMini:{ 
+    borderBottomWidth:1.5, 
+    borderColor:'#B0B5BC', 
+    paddingVertical:3, 
+    fontSize:13, 
+    textAlign:'center',
+    fontWeight:'700'
+  },
+  inlineWrap:{ 
+    flexDirection:'row', 
+    flexWrap:'wrap', 
+    columnGap:18, 
+    rowGap:10, 
+    marginTop:8 
+  },
+  subHeader:{ 
+    fontSize:15, 
+    fontWeight:'900', 
+    marginTop:20, 
+    marginBottom:10,
+    letterSpacing:0.4
+  },
+  smallLabel:{ 
+    fontSize:12, 
+    fontWeight:'800',
+    letterSpacing:0.3
+  },
+  chip:{ 
+    paddingHorizontal:12, 
+    paddingVertical:6, 
+    borderRadius:16, 
+    backgroundColor:'#E5E7EB' 
+  },
+  sectionSep:{ 
+    height:1.5, 
+    backgroundColor:'#E5E7EB', 
+    marginVertical:18 
+  },
+  
+  // 🔄 Historial de Visitas - Texto descriptivo y contenedor responsive
+  visitDescriptionText: {
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    marginBottom: 14,
+    marginTop: 4
+  },
+  
+  // 🔄 Dropdown de Visitas
+  dropdownButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: brandColors.butter,
+    backgroundColor: 'transparent',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2
+  },
+  dropdownButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.4,
+    flex: 1,
+    marginRight: 8
+  },
+  dropdownList: {
+    marginTop: 8,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: brandColors.butter,
+    maxHeight: 250,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+    overflow: 'hidden'
+  },
+  dropdownScrollView: {
+    maxHeight: 250
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginVertical: 0,
+    marginHorizontal: 4,
+    borderRadius: 12,
+    borderBottomWidth: 0
+  },
+  dropdownItemActive: {
+    shadowColor: '#6698CC',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.4,
+    flex: 1
+  },
+  
+  visitLoadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10
+  },
+  visitLoadingText: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.3
+  },
+  noVisitsText: {
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    fontStyle: 'italic'
+  }
 });
 
 function UnderlineInput({ label, value, onChange, long, placeholder }) {

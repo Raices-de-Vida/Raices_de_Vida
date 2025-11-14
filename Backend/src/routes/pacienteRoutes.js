@@ -11,6 +11,10 @@ router.post('/', /*authenticate,*/ /*authorize(['ONG','Lider Comunitario']),*/ c
 // Rutas específicas (ANTES de /:id para evitar conflictos)
 router.get('/flags-summary', /*authenticate,*/ ctrl.getFlagsSummary);
 
+// Migración y búsqueda de duplicados (rutas específicas primero)
+router.post('/migrate-visitas', /*authenticate,*/ ctrl.migrateToVisitas);
+router.post('/check-duplicates', /*authenticate,*/ ctrl.checkDuplicates);
+
 router.get('/:id', /*authenticate,*/ ctrl.getPacienteById);
 router.put('/:id', /*authenticate,*/ ctrl.updatePaciente);
 // Actualización básica (peso, estatura, override de severidad manual -> crea alerta manual)
@@ -34,5 +38,11 @@ router.post('/:id/reclassify', /*authenticate,*/ ctrl.reclassifySeverity);
 
 // Exportación a PDF
 router.get('/:id/exportar-pdf', /*authenticate,*/ ctrl.exportarPDF);
+
+// Gestión de Visitas (historial)
+router.get('/:id/visitas', /*authenticate,*/ ctrl.getVisitas);
+router.post('/:id/visitas', /*authenticate,*/ ctrl.createVisita);
+router.get('/:id/visitas/:visitId', /*authenticate,*/ ctrl.getVisitaById);
+router.put('/:id/visitas/:visitId', /*authenticate,*/ ctrl.updateVisita);
 
 module.exports = router;

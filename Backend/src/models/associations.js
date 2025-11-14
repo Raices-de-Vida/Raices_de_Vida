@@ -14,6 +14,7 @@ const CirugiaPaciente = require('./CirugiaPaciente');
 const HistorialMedico = require('./HistorialMedico');
 const AlertaMedica = require('./AlertaMedica');
 const ImagenPaciente = require('./ImagenPaciente');
+const Visita = require('./Visita');
 
 User.belongsTo(Ong, {
   foreignKey: 'id_referencia',
@@ -60,6 +61,16 @@ Alerta.belongsTo(User, { foreignKey: 'usuario_id', targetKey: 'id_usuario', as: 
 User.hasMany(Alerta, { foreignKey: 'usuario_id', sourceKey: 'id_usuario', as: 'alertas_generadas' });
 
 /* Paciente y sus módulos */
+
+// Relación Paciente <-> Visita
+Paciente.hasMany(Visita, { foreignKey: 'id_paciente', as: 'visitas' });
+Visita.belongsTo(Paciente, { foreignKey: 'id_paciente', as: 'paciente' });
+
+// Relación Visita <-> Consulta (una visita puede tener una consulta)
+Visita.hasOne(Consulta, { foreignKey: 'id_visita', as: 'consulta' });
+Consulta.belongsTo(Visita, { foreignKey: 'id_visita', as: 'visita' });
+
+// Mantener relación directa Paciente <-> Consulta para compatibilidad
 Paciente.hasMany(Consulta, { foreignKey: 'id_paciente', as: 'consultas' });
 Consulta.belongsTo(Paciente, { foreignKey: 'id_paciente', as: 'paciente' });
 
@@ -84,5 +95,6 @@ Paciente.belongsTo(Familia,   { foreignKey: 'id_familia',   as: 'familia' });
 Paciente.belongsTo(Comunidad, { foreignKey: 'id_comunidad', as: 'comunidad' });
 Paciente.belongsTo(User,      { foreignKey: 'usuario_registro', as: 'registradoPor' });
 
+Visita.belongsTo(User, { foreignKey: 'usuario_registro', as: 'registradoPor' });
 Signos.belongsTo(User, { foreignKey: 'usuario_registro', as: 'tomadoPor' });
 

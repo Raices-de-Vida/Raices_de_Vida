@@ -5,6 +5,11 @@ const sequelize = require('../config/database');
 const Consulta = sequelize.define('Consultas', {
   id_consulta: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   id_paciente: { type: DataTypes.INTEGER, allowNull: false },
+  id_visita: { 
+    type: DataTypes.INTEGER, 
+    allowNull: true,
+    comment: 'FK a la visita específica. NULL para consultas existentes (migración)' 
+  },
   fecha: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   idioma: { type: DataTypes.STRING(100) },
   tipo_consulta: { type: DataTypes.ENUM('Diabetes', 'HTN', 'Respiratory', 'Other'), allowNull: false },
